@@ -1,0 +1,124 @@
+/* =========================================
+   LANDING PAGE
+========================================= */
+
+.landing-page {
+  width: 100%;
+  min-height: 100vh;
+
+  background: #ffffff;
+
+  color: #20366f;
+
+  overflow-x: hidden;
+}
+
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+
+.landing-page main {
+  width: 100%;
+}
+
+
+/* =========================================
+   COMMON CONTAINER
+========================================= */
+
+.landing-page .page-container {
+  width: min(1180px, 92%);
+
+  margin: 0 auto;
+}
+
+
+/* =========================================
+   SECTIONS
+========================================= */
+
+.landing-page section {
+  width: 100%;
+}
+
+
+/* =========================================
+   SMOOTH SCROLL
+========================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+/* =========================================
+   SECTION SCROLL OFFSET
+   Prevents navbar from covering sections
+========================================= */
+
+#home,
+#about,
+#how-it-works,
+#contact {
+  scroll-margin-top: 80px;
+}
+
+
+/* =========================================
+   COMMON TEXT
+========================================= */
+
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page p {
+  margin-top: 0;
+}
+
+
+/* =========================================
+   LINKS
+========================================= */
+
+.landing-page a {
+  text-decoration: none;
+}
+
+
+/* =========================================
+   SELECTION
+========================================= */
+
+.landing-page ::selection {
+  background: #e5a900;
+  color: #20366f;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .landing-page .page-container {
+    width: 90%;
+  }
+
+  #home,
+  #about,
+  #how-it-works,
+  #contact {
+    scroll-margin-top: 70px;
+  }
+}
+
+
+@media (max-width: 480px) {
+
+  .landing-page .page-container {
+    width: 92%;
+  }
+}

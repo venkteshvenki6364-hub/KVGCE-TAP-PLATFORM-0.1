@@ -1,0 +1,848 @@
+/* =========================================
+   CONTACT + FOOTER
+   ONE CONTINUOUS DARK BLUE SECTION
+========================================= */
+
+.contact-footer {
+  width: 100%;
+
+  background: #20366f;
+
+  color: #ffffff;
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   COMMON CONTAINER
+========================================= */
+
+.page-container {
+  width: min(1400px, 86%);
+
+  margin: 0 auto;
+}
+
+
+/* =========================================
+   CONTACT SECTION
+========================================= */
+
+.contact-section {
+  padding: 95px 0 85px;
+}
+
+
+.contact-layout {
+  display: grid;
+
+  grid-template-columns: 1.15fr 0.85fr;
+
+  gap: 90px;
+
+  align-items: center;
+}
+
+
+/* =========================================
+   CONTACT LEFT
+========================================= */
+
+.section-eyebrow {
+  margin: 0 0 14px;
+
+  color: #c9dcff;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  letter-spacing: 2.5px;
+}
+
+
+.section-eyebrow::before {
+  content: "";
+
+  display: inline-block;
+
+  width: 28px;
+  height: 3px;
+
+  margin-right: 10px;
+
+  vertical-align: middle;
+
+  border-radius: 10px;
+
+  background: #e5a900;
+}
+
+
+.contact-title {
+  max-width: 650px;
+
+  margin: 0 0 20px;
+
+  color: #ffffff;
+
+  font-size: clamp(36px, 4vw, 52px);
+
+  font-weight: 850;
+
+  line-height: 1.12;
+
+  letter-spacing: -1px;
+}
+
+
+.contact-lead {
+  max-width: 680px;
+
+  margin: 0 0 40px;
+
+  color: #dce7ff;
+
+  font-size: 17px;
+
+  line-height: 1.75;
+}
+
+
+/* =========================================
+   CONTACT DETAILS
+========================================= */
+
+.contact-details {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 25px;
+}
+
+
+.contact-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+
+.contact-icon {
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.22);
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+
+
+.contact-item:hover .contact-icon {
+  transform: translateY(-4px);
+
+  background: rgba(255, 255, 255, 0.15);
+}
+
+
+.contact-icon svg {
+  width: 23px;
+  height: 23px;
+
+  fill: none;
+
+  stroke: #ffffff;
+
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
+}
+
+
+.contact-item-content h3 {
+  margin: 0 0 5px;
+
+  color: #ffffff;
+
+  font-size: 17px;
+
+  font-weight: 800;
+}
+
+
+.contact-item-content p {
+  margin: 0;
+
+  color: #c9dcff;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   RIGHT HIGHLIGHT
+========================================= */
+
+.contact-right {
+  display: flex;
+
+  justify-content: flex-end;
+}
+
+
+.contact-highlight {
+  width: 100%;
+
+  max-width: 470px;
+
+  padding: 42px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.07);
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.12);
+
+  backdrop-filter: blur(8px);
+
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+
+.contact-highlight:hover {
+  transform: translateY(-6px);
+
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+
+.highlight-number {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 58px;
+  height: 58px;
+
+  margin-bottom: 22px;
+
+  border-radius: 16px;
+
+  background: #e5a900;
+
+  color: #20366f;
+
+  font-size: 20px;
+
+  font-weight: 900;
+}
+
+
+.contact-highlight h3 {
+  margin: 0 0 15px;
+
+  color: #ffffff;
+
+  font-size: 28px;
+
+  line-height: 1.25;
+}
+
+
+.contact-highlight p {
+  margin: 0 0 28px;
+
+  color: #c9dcff;
+
+  font-size: 15px;
+
+  line-height: 1.7;
+}
+
+
+.contact-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-height: 50px;
+
+  padding: 0 20px;
+
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  color: #20366f;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+
+
+.contact-button:hover {
+  transform: translateY(-3px);
+
+  background: #e5a900;
+}
+
+
+.contact-button span {
+  font-size: 19px;
+
+  transition: transform 0.25s ease;
+}
+
+
+.contact-button:hover span {
+  transform: translateX(4px);
+}
+
+
+/* =========================================
+   FOOTER DIVIDER
+========================================= */
+
+.footer-divider {
+  width: 86%;
+
+  height: 1px;
+
+  margin: 0 auto;
+
+  background: rgba(255, 255, 255, 0.18);
+}
+
+
+/* =========================================
+   FOOTER TOP
+========================================= */
+
+.footer-top {
+  padding: 58px 0;
+}
+
+
+.footer-grid {
+  display: grid;
+
+  grid-template-columns:
+    2fr 1fr 1fr 1.2fr;
+
+  gap: 55px;
+}
+
+
+/* =========================================
+   FOOTER BRAND
+========================================= */
+
+.footer-brand h3 {
+  margin: 0 0 12px;
+
+  color: #ffffff;
+
+  font-size: 22px;
+
+  font-weight: 850;
+}
+
+
+.footer-brand p {
+  max-width: 320px;
+
+  margin: 0 0 10px;
+
+  color: #dce7ff;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+
+.footer-brand span {
+  display: block;
+
+  color: #c9dcff;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   FOOTER COLUMNS
+========================================= */
+
+.footer-column {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  gap: 11px;
+}
+
+
+.footer-column h4 {
+  margin: 0 0 9px;
+
+  color: #ffffff;
+
+  font-size: 16px;
+
+  font-weight: 800;
+}
+
+
+.footer-column a {
+  color: #c9dcff;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.footer-column a:hover {
+  color: #ffffff;
+
+  transform: translateX(5px);
+}
+
+
+.footer-column p {
+  margin: 0;
+
+  color: #c9dcff;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   BOTTOM
+========================================= */
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+  padding: 20px 0;
+}
+
+
+.footer-bottom-inner {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 20px;
+}
+
+
+.footer-bottom p {
+  margin: 0;
+
+  color: #b9c9e8;
+
+  font-size: 12px;
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1000px) {
+
+  .contact-layout {
+    grid-template-columns: 1fr;
+
+    gap: 55px;
+  }
+
+
+  .contact-right {
+    justify-content: flex-start;
+  }
+
+
+  .contact-highlight {
+    max-width: 600px;
+  }
+
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+
+  .page-container {
+    width: calc(100% - 40px);
+  }
+
+
+  .contact-section {
+    padding: 65px 0;
+  }
+
+
+  .contact-title {
+    font-size: 34px;
+
+    letter-spacing: -0.5px;
+  }
+
+
+  .contact-lead {
+    font-size: 15px;
+  }
+
+
+  .contact-highlight {
+    padding: 28px;
+
+    border-radius: 20px;
+  }
+
+
+  .contact-highlight h3 {
+    font-size: 24px;
+  }
+
+
+  .footer-top {
+    padding: 45px 0;
+  }
+
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+
+    gap: 35px;
+  }
+
+
+  .footer-bottom-inner {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+}
+/* =========================================
+   MESSAGE FLOATING BUTTON
+========================================= */
+
+.message-floating {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+
+  width: 58px;
+  height: 58px;
+
+  z-index: 1000;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #25852a;
+  color: #ffffff;
+
+  font-size: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+
+  transition: all 0.25s ease;
+}
+
+.message-floating:hover {
+  transform: scale(1.08);
+  background: #2e9834;
+}
+
+.message-floating.active {
+  background: #e5a900;
+  color: #20366f;
+}
+
+
+/* =========================================
+   MESSAGE POPUP
+========================================= */
+
+.message-popup {
+  position: fixed;
+
+  right: 28px;
+  bottom: 98px;
+
+  width: 330px;
+
+  z-index: 999;
+
+  padding: 22px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+
+  animation: messagePopup 0.25s ease;
+}
+
+@keyframes messagePopup {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =========================================
+   POPUP HEADER
+========================================= */
+
+.popup-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 18px;
+}
+
+.popup-header h3 {
+  margin: 0 0 5px;
+
+  color: #20366f;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.popup-header p {
+  margin: 0;
+
+  color: #7b879c;
+
+  font-size: 11px;
+}
+
+
+/* CLOSE BUTTON */
+
+.popup-close {
+  border: none;
+
+  background: transparent;
+
+  color: #7b879c;
+
+  font-size: 24px;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.popup-close:hover {
+  color: #20366f;
+}
+
+
+/* =========================================
+   POPUP FORM
+========================================= */
+
+.message-popup form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.message-popup input,
+.message-popup textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  border: 1px solid #dce2eb;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #f7f9fc;
+
+  color: #20366f;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  transition: 0.2s ease;
+}
+
+.message-popup input::placeholder,
+.message-popup textarea::placeholder {
+  color: #8d98aa;
+}
+
+.message-popup input:focus,
+.message-popup textarea:focus {
+  border-color: #20366f;
+
+  background: #ffffff;
+}
+
+.message-popup textarea {
+  resize: vertical;
+
+  min-height: 80px;
+}
+
+
+/* =========================================
+   SEND BUTTON
+========================================= */
+
+.popup-send {
+  width: 100%;
+
+  height: 42px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #25852a;
+
+  color: #ffffff;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  transition: 0.2s ease;
+}
+
+.popup-send:hover {
+  background: #2e9834;
+
+  transform: translateY(-1px);
+}
+
+.popup-send span {
+  font-size: 16px;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+  .message-floating {
+    right: 18px;
+    bottom: 18px;
+
+    width: 54px;
+    height: 54px;
+  }
+
+  .message-popup {
+    right: 15px;
+    bottom: 85px;
+
+    width: calc(100% - 30px);
+    max-width: 350px;
+  }
+}
