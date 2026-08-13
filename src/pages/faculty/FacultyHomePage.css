@@ -1,0 +1,211 @@
+.faculty-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alert-success {
+  background: #dcfce7;
+  border: 1px solid #4ade80;
+  color: #166534;
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.faculty-tabs {
+  display: flex;
+  gap: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.fac-tab {
+  background: none;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.fac-tab:hover {
+  background: #f1f5f9;
+  color: var(--primary-color);
+}
+
+.fac-tab.active {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.f-stat-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.f-stat-card h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.f-num {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0.3rem 0;
+  color: var(--primary-color);
+}
+
+.f-num.gold { color: #b45309; }
+.f-num.green { color: #16a34a; }
+
+.f-stat-card span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.fac-sec-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.fac-sec-card.max-600 {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.fac-sec-card h3 {
+  margin: 0 0 1.25rem 0;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+.faculty-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.faculty-table th {
+  background: #f8fafc;
+  padding: 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.faculty-table td {
+  padding: 0.9rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.88rem;
+}
+
+.score-tag {
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.active-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cat-pill {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.approve-btn {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reject-btn {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.small-action-btn {
+  background: var(--primary-color);
+  color: #ffffff;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.f-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.f-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.f-group input, .f-group select, .f-group textarea {
+  padding: 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.submit-fb-btn {
+  background: var(--primary-color);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
