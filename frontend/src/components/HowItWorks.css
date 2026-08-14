@@ -1,0 +1,704 @@
+/* =========================================================
+   HOW IT WORKS - TAP
+   Theme: KVGCE / Education / Professional Dashboard
+   ========================================================= */
+
+.how-section {
+  position: relative;
+  padding: 110px 0;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(79, 145, 255, 0.08), transparent 30%),
+    radial-gradient(circle at 90% 80%, rgba(31, 46, 109, 0.08), transparent 32%),
+    #f7f9fd;
+  overflow: hidden;
+}
+
+.page-container {
+  width: min(1180px, 92%);
+  margin: 0 auto;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.how-header {
+  max-width: 780px;
+  margin: 0 auto 65px;
+  text-align: center;
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  color: #315dcc;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.section-eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 2px;
+  background: #315dcc;
+  border-radius: 10px;
+}
+
+.section-title {
+  margin: 0;
+  color: #14204d;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.section-lead {
+  margin: 20px auto 0;
+  color: #667085;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.how-lead {
+  max-width: 720px;
+}
+
+/* =========================================================
+   PROCESS SECTION
+   ========================================================= */
+
+.how-process {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.process-row {
+  display: grid;
+  grid-template-columns: 1fr 70px 1fr 70px 1fr;
+  align-items: center;
+  gap: 0;
+}
+
+/* =========================================================
+   PROCESS CARD
+   ========================================================= */
+
+.process-card {
+  position: relative;
+  min-height: 245px;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #e4e9f3;
+  border-radius: 22px;
+  box-shadow: 0 12px 35px rgba(31, 46, 109, 0.07);
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.process-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(49, 93, 204, 0.06),
+    transparent 45%
+  );
+  pointer-events: none;
+}
+
+.process-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(49, 93, 204, 0.3);
+  box-shadow: 0 20px 45px rgba(31, 46, 109, 0.13);
+}
+
+.process-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.process-number {
+  color: #d7deef;
+  font-size: 2.2rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+
+.process-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  color: #315dcc;
+  background: #edf3ff;
+  border: 1px solid #dce7ff;
+  border-radius: 15px;
+  transition:
+    color 0.3s ease,
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.process-card:hover .process-icon {
+  color: #fff;
+  background: #315dcc;
+  transform: rotate(-5deg) scale(1.06);
+}
+
+.process-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.process-card h3 {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 11px;
+  color: #182653;
+  font-size: 1.18rem;
+  font-weight: 750;
+}
+
+.process-card p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: #69748b;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   PROCESS CONNECTORS
+   ========================================================= */
+
+.process-connector {
+  position: relative;
+  height: 2px;
+  background: #d6deef;
+}
+
+.process-connector::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid #315dcc;
+  border-right: 2px solid #315dcc;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.process-connector span {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 45%;
+  height: 3px;
+  background: linear-gradient(90deg, #315dcc, #6da0ff);
+  border-radius: 10px;
+  transform: translateY(-50%);
+}
+
+/* =========================================================
+   ROLES PANEL
+   ========================================================= */
+
+.roles-panel,
+.flow-panel {
+  margin-top: 110px;
+}
+
+.roles-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.roles-header .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.45rem);
+}
+
+/* =========================================================
+   ROLES GRID
+   ========================================================= */
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.role-card {
+  position: relative;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e3e8f2;
+  border-radius: 24px;
+  box-shadow: 0 12px 35px rgba(31, 46, 109, 0.07);
+  overflow: hidden;
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.role-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 4px;
+  background: #315dcc;
+}
+
+.role-card.student::before {
+  background: #315dcc;
+}
+
+.role-card.faculty::before {
+  background: #e0a52c;
+}
+
+.role-card.admin::before {
+  background: #1f2e6d;
+}
+
+.role-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 22px 45px rgba(31, 46, 109, 0.13);
+}
+
+.role-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 22px;
+  place-items: center;
+  color: #315dcc;
+  background: #edf3ff;
+  border-radius: 17px;
+}
+
+.role-card.faculty .role-icon {
+  color: #b77b00;
+  background: #fff6df;
+}
+
+.role-card.admin .role-icon {
+  color: #1f2e6d;
+  background: #e9edfb;
+}
+
+.role-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.role-card h3 {
+  margin: 0 0 10px;
+  color: #172450;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.role-card > p {
+  min-height: 58px;
+  margin: 0 0 22px;
+  color: #68748b;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.role-card ul {
+  display: grid;
+  gap: 11px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.role-card li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #34405e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.role-card li::before {
+  content: "✓";
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  color: #315dcc;
+  background: #edf3ff;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.role-card.faculty li::before {
+  color: #a56d00;
+  background: #fff4d8;
+}
+
+.role-card.admin li::before {
+  color: #1f2e6d;
+  background: #e9edfb;
+}
+
+/* =========================================================
+   FLOW PANEL
+   ========================================================= */
+
+.flow-panel {
+  position: relative;
+  padding: 55px 40px;
+  background: #1f2e6d;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(31, 46, 109, 0.2);
+}
+
+.flow-panel::before {
+  content: "";
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  right: -150px;
+  top: -180px;
+  background: rgba(110, 160, 255, 0.16);
+  border-radius: 50%;
+}
+
+.flow-panel::after {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  left: -120px;
+  bottom: -130px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+}
+
+.flow-panel .roles-header {
+  position: relative;
+  z-index: 2;
+}
+
+.flow-panel .section-eyebrow {
+  color: #9fc2ff;
+}
+
+.flow-panel .section-eyebrow::before {
+  background: #9fc2ff;
+}
+
+.flow-panel .section-title {
+  color: #ffffff;
+}
+
+/* =========================================================
+   FLOW STEPS
+   ========================================================= */
+
+.flow-stack {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 42px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 9px 15px 9px 10px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.flow-step:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-4px);
+}
+
+.flow-index {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #1f2e6d;
+  background: #ffffff;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.flow-step strong {
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.flow-arrow {
+  color: #83aaff;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+/* =========================================================
+   REVEAL ANIMATION
+   ========================================================= */
+
+.reveal-up {
+  animation: revealUp 0.8s ease both;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up,
+  .process-card,
+  .process-icon,
+  .role-card,
+  .flow-step {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 950px) {
+  .how-section {
+    padding: 85px 0;
+  }
+
+  .process-row {
+    grid-template-columns: 1fr 40px 1fr 40px 1fr;
+  }
+
+  .process-card {
+    min-height: 260px;
+    padding: 22px;
+  }
+
+  .roles-grid {
+    grid-template-columns: 1fr;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+
+  .role-card > p {
+    min-height: auto;
+  }
+
+  .flow-panel {
+    padding: 48px 25px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .how-section {
+    padding: 70px 0;
+  }
+
+  .page-container {
+    width: min(92%, 540px);
+  }
+
+  .how-header {
+    margin-bottom: 45px;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .section-lead {
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .process-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .process-card {
+    width: 100%;
+    min-height: auto;
+    padding: 25px;
+  }
+
+  .process-connector {
+    width: 2px;
+    height: 38px;
+    background: #d6deef;
+  }
+
+  .process-connector::after {
+    display: none;
+  }
+
+  .process-connector span {
+    left: 50%;
+    top: 0;
+    width: 3px;
+    height: 55%;
+    transform: translateX(-50%);
+  }
+
+  .roles-panel,
+  .flow-panel {
+    margin-top: 75px;
+  }
+
+  .roles-grid {
+    gap: 18px;
+  }
+
+  .role-card {
+    padding: 26px;
+  }
+
+  .flow-panel {
+    padding: 42px 20px;
+    border-radius: 24px;
+  }
+
+  .flow-stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .flow-step {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .flow-arrow {
+    align-self: center;
+    padding: 5px 0;
+    font-size: 1.1rem;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 420px) {
+  .how-section {
+    padding: 55px 0;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+  }
+
+  .section-eyebrow {
+    font-size: 0.7rem;
+  }
+
+  .process-card {
+    padding: 21px;
+    border-radius: 18px;
+  }
+
+  .process-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .process-number {
+    font-size: 1.8rem;
+  }
+
+  .process-card h3 {
+    font-size: 1.05rem;
+  }
+
+  .process-card p,
+  .role-card > p,
+  .role-card li {
+    font-size: 0.85rem;
+  }
+
+  .role-card {
+    padding: 23px;
+    border-radius: 20px;
+  }
+
+  .flow-panel {
+    padding: 35px 16px;
+  }
+}
+.process-group {
+  display: contents;
+}

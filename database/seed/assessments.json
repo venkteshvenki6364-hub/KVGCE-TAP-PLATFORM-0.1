@@ -1,0 +1,10 @@
+[
+  {
+    "id": "assess-1",
+    "title": "National Aptitude Assessment 2026",
+    "category": "Aptitude",
+    "duration_minutes": 30,
+    "total_marks": 20,
+    "is_published": true
+  }
+]

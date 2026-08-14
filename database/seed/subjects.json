@@ -1,0 +1,5 @@
+[
+  { "subject_code": "21CS61", "name": "System Software and Compiler Design", "credits": 4 },
+  { "subject_code": "21CS62", "name": "Computer Networks", "credits": 4 },
+  { "subject_code": "21CS63", "name": "Web Technologies", "credits": 3 }
+]

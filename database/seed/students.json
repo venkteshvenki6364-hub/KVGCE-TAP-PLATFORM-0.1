@@ -1,0 +1,22 @@
+[
+  {
+    "student_id": "4KV21CS042",
+    "full_name": "Student User",
+    "email": "student@kvgce.edu.in",
+    "department": "Computer Science & Engineering",
+    "course": "B.E. Computer Science",
+    "semester": 6,
+    "year": 3,
+    "phone": "+91 9876543210"
+  },
+  {
+    "student_id": "4KV21CS088",
+    "full_name": "Rahul Kumar",
+    "email": "rahul.cs@kvgce.edu.in",
+    "department": "Computer Science & Engineering",
+    "course": "B.E. Computer Science",
+    "semester": 6,
+    "year": 3,
+    "phone": "+91 9741234567"
+  }
+]

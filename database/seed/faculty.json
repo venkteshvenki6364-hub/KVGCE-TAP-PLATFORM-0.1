@@ -1,0 +1,10 @@
+[
+  {
+    "faculty_id": "FAC-CS-01",
+    "full_name": "Faculty User",
+    "email": "faculty@kvgce.edu.in",
+    "department": "Computer Science & Engineering",
+    "designation": "Associate Professor",
+    "phone": "+91 9876543211"
+  }
+]
