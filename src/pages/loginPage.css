@@ -1,402 +1,469 @@
-/* =========================================
-   LOGIN PAGE
-========================================= */
+/* =========================================================
+   KVGCE LOGIN PAGE
+   Matches the supplied 1536 × 1024 reference design
+   ========================================================= */
 
 * {
   box-sizing: border-box;
 }
 
-.login-page {
+.login-root {
   min-height: 100vh;
+  width: 100%;
   position: relative;
+  overflow: hidden;
 
-  background: #f8fbff;
-
-  overflow-x: hidden;
+  background:
+    linear-gradient(180deg,
+      #ffffff 0%,
+      #ffffff 66%,
+      #f7fbff 78%,
+      #eaf5ff 100%);
 
   font-family:
     "Segoe UI",
     Arial,
+    Helvetica,
     sans-serif;
 
-  color: #334155;
+  color: #172033;
 }
 
 
-/* =========================================
-   TOP BLUE BACKGROUND
-========================================= */
+/* =========================================================
+   TOP BLUE ACCENT
+   ========================================================= */
 
-.login-top-bg {
+.top-accent-bar {
   position: absolute;
-
   top: 0;
   left: 0;
 
   width: 100%;
-  height: 155px;
+  height: 156px;
 
-  background: #0d47a1;
+  background: #063d91;
 
   z-index: 0;
 }
 
 
-/* =========================================
-   MAIN CONTENT
-========================================= */
+/* =========================================================
+   MAIN PAGE
+   ========================================================= */
 
-.login-main {
+.login-page-container {
   position: relative;
+  z-index: 2;
 
-  z-index: 1;
-
-  width: calc(100% - 52px);
-  max-width: 1480px;
-
-  min-height: calc(100vh - 28px);
-
-  margin: 14px auto;
-
-  padding:
-    20px 20px
-    35px;
-
-  background: #ffffff;
-
-  border-radius: 7px;
-
-  box-shadow:
-    0 5px 18px
-    rgba(15, 23, 42, 0.12);
+  width: 100%;
+  min-height: 100vh;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  padding-top: 27px;
+  padding-bottom: 25px;
 }
 
 
-/* =========================================
-   LOGO
-========================================= */
+/* =========================================================
+   BACK TO HOME
+   Hidden because it is not visible in reference image
+   ========================================================= */
 
-.login-logo {
+.nav-back-row {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+
+  display: none;
+}
+
+.back-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.college-logo-wrapper {
+  width: 235px;
+  height: 235px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 0;
+  margin-bottom: 0;
+
+  position: relative;
+  z-index: 3;
+}
+
+.emblem-img {
   width: 220px;
   height: 220px;
 
   object-fit: contain;
 
-  margin-top: 0;
-
-  margin-bottom: 0;
+  display: block;
 }
 
 
-/* =========================================
+/* =========================================================
    COLLEGE TITLE
-========================================= */
+   ========================================================= */
 
-.login-main h1 {
-  margin: -3px 0 6px;
+.main-college-title {
+  margin: 0;
 
-  color: #17377d;
+  color: #10357d;
 
-  font-size: 36px;
-
+  font-size: 35px;
+  line-height: 1.2;
   font-weight: 700;
 
   text-align: center;
+
+  letter-spacing: -0.4px;
 }
 
+.main-college-subtitle {
+  margin: 8px 0 0;
 
-.login-subtitle {
-  margin: 0;
-
-  color: #64748b;
+  color: #6d778a;
 
   font-size: 21px;
+  line-height: 1.3;
+
+  font-weight: 400;
 
   text-align: center;
 }
 
 
-/* =========================================
+/* =========================================================
    LOGIN / SIGNUP HEADING
-========================================= */
+   ========================================================= */
 
-.login-heading {
+.divider-heading-row {
+  width: 445px;
+
   display: flex;
-
   align-items: center;
-
   justify-content: center;
+  gap: 18px;
 
-  gap: 20px;
-
-  width: 450px;
-
-  max-width: 90%;
-
-  margin:
-    20px 0
-    28px;
+  margin-top: 24px;
+  margin-bottom: 31px;
 }
 
-
-.login-heading span {
+.divider-heading-row .line {
+  height: 2px;
   flex: 1;
 
-  height: 2px;
-
-  background: #174ea6;
+  background: #124a9e;
 
   position: relative;
 }
 
-
-.login-heading span::after {
+.divider-heading-row .line::after {
   content: "";
 
   position: absolute;
-
-  right: -5px;
-
-  top: 50%;
-
-  transform: translateY(-50%);
 
   width: 8px;
   height: 8px;
 
+  background: #124a9e;
+
   border-radius: 50%;
 
-  background: #174ea6;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-
-.login-heading span:last-child::after {
-  right: auto;
-  left: -5px;
+.divider-heading-row .line:first-child::after {
+  right: -4px;
 }
 
+.divider-heading-row .line:last-child::after {
+  left: -4px;
+}
 
-.login-heading h2 {
+.divider-heading-row h2 {
   margin: 0;
 
-  color: #17377d;
+  color: #10357d;
 
-  font-size: 42px;
+  font-size: 43px;
+  line-height: 1;
 
   font-weight: 700;
+
+  white-space: nowrap;
 }
 
 
-/* =========================================
-   ROLE TABS
-========================================= */
+/* =========================================================
+   ROLE SWITCHER
+   ========================================================= */
 
-.role-tabs {
-  width: 740px;
+.role-switcher-bar {
+  width: 738px;
+  height: 56px;
 
-  max-width: 100%;
+  display: flex;
 
-  display: grid;
-
-  grid-template-columns:
-    repeat(3, 1fr);
-
-  border: 1px solid #cbd5e1;
-
+  border: 1px solid #cfd5df;
   border-radius: 7px;
 
   overflow: hidden;
 
+  background: #f8fafc;
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
   margin-bottom: 18px;
 }
 
+.role-btn {
+  flex: 1;
 
-.role-tab {
-  height: 55px;
-
-  border: none;
-
-  border-right: 1px solid #cbd5e1;
-
-  background: #ffffff;
-
-  color: #0f4ba8;
-
-  font-size: 20px;
-
-  font-weight: 700;
-
-  cursor: pointer;
+  height: 100%;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
   gap: 12px;
 
-  transition: all 0.25s ease;
+  border: none;
+  border-right: 1px solid #d2d7df;
+
+  background: #f8fafc;
+
+  color: #0b4da2;
+
+  font-family: inherit;
+
+  font-size: 20px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-
-.role-tab:last-child {
+.role-btn:last-child {
   border-right: none;
 }
 
-
-.role-tab:hover {
-  background: #f0f6ff;
+.role-btn:hover {
+  background: #eef4fc;
 }
 
-
-.role-tab.active {
-  background: #0f4da8;
+.role-btn.active {
+  background: #084da5;
 
   color: #ffffff;
+
+  box-shadow: inset 0 0 0 1px #084da5;
+}
+
+.role-svg {
+  width: 25px;
+  height: 25px;
+
+  flex-shrink: 0;
 }
 
 
-.role-icon {
-  font-size: 22px;
-}
+/* =========================================================
+   FORM CARD
+   ========================================================= */
 
-
-/* =========================================
-   LOGIN CARD
-========================================= */
-
-.login-card {
-  width: 740px;
-
-  max-width: 100%;
-
-  padding: 28px 30px 20px;
+.form-card-box {
+  width: 738px;
 
   background: #ffffff;
 
-  border-radius: 11px;
+  border-radius: 10px;
+
+  padding: 28px 31px 25px;
 
   box-shadow:
-    0 5px 18px
-    rgba(15, 23, 42, 0.12);
+    0 4px 18px rgba(0, 0, 0, 0.10),
+    0 1px 4px rgba(0, 0, 0, 0.04);
 
-  border: 1px solid #eef2f7;
+  position: relative;
+  z-index: 5;
 }
 
 
-/* =========================================
-   FORM GROUP
-========================================= */
+/* =========================================================
+   ALERTS
+   ========================================================= */
 
-.form-group {
-  margin-bottom: 22px;
+.alert-message {
+  width: 100%;
+
+  padding: 10px 13px;
+
+  margin-bottom: 15px;
+
+  border-radius: 6px;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.alert-message.error {
+  background: #fff1f1;
+  color: #c62828;
+
+  border: 1px solid #f3c3c3;
+}
+
+.alert-message.success {
+  background: #effaf1;
+  color: #218838;
+
+  border: 1px solid #bde5c5;
 }
 
 
-.form-group label {
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.auth-form-body {
+  width: 100%;
+}
+
+.field-group {
+  width: 100%;
+
+  margin-bottom: 25px;
+}
+
+.field-group label {
   display: block;
 
   margin-bottom: 9px;
 
-  color: #374151;
+  color: #414957;
 
   font-size: 18px;
-
   font-weight: 600;
 }
 
 
-/* =========================================
-   INPUT WRAPPER
-========================================= */
+/* =========================================================
+   INPUT CONTAINER
+   ========================================================= */
 
-.input-wrapper {
+.input-rel-box {
+  width: 100%;
+  height: 58px;
+
   position: relative;
 
-  width: 100%;
+  display: flex;
+  align-items: center;
 
-  height: 58px;
-}
-
-
-.input-wrapper input {
-  width: 100%;
-  height: 100%;
-
-  padding:
-    0 48px;
-
-  border:
-    1px solid #cbd5e1;
+  border: 1px solid #d1d7e0;
 
   border-radius: 7px;
 
   background: #ffffff;
 
-  color: #334155;
-
-  font-size: 18px;
-
-  outline: none;
-
   transition:
-    border 0.2s ease,
+    border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-
-.input-wrapper input::placeholder {
-  color: #8a94a6;
-}
-
-
-.input-wrapper input:focus {
-  border-color: #2b65b5;
+.input-rel-box:focus-within {
+  border-color: #0a50a8;
 
   box-shadow:
-    0 0 0 3px
-    rgba(43, 101, 181, 0.1);
+    0 0 0 3px rgba(10, 80, 168, 0.09);
 }
 
 
-/* =========================================
-   INPUT ICON
-========================================= */
+/* =========================================================
+   LEFT ICON
+   ========================================================= */
 
-.input-icon {
-  position: absolute;
+.icon-left {
+  width: 55px;
 
-  left: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  top: 50%;
-
-  transform: translateY(-50%);
+  color: #8a93a1;
 
   font-size: 20px;
 
-  color: #7d8795;
-
-  z-index: 2;
+  flex-shrink: 0;
 }
 
 
-/* =========================================
-   PASSWORD TOGGLE
-========================================= */
+/* =========================================================
+   INPUT
+   ========================================================= */
 
-.password-toggle {
+.input-rel-box input {
+  width: 100%;
+  height: 100%;
+
+  padding: 0 52px 0 0;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #343b48;
+
+  font-family: inherit;
+
+  font-size: 18px;
+}
+
+.input-rel-box input::placeholder {
+  color: #858e9e;
+  opacity: 1;
+}
+
+
+/* =========================================================
+   PASSWORD EYE
+   ========================================================= */
+
+.eye-btn {
   position: absolute;
 
   right: 15px;
-
   top: 50%;
 
   transform: translateY(-50%);
+
+  width: 30px;
+  height: 35px;
+
+  padding: 0;
 
   border: none;
 
@@ -404,401 +471,479 @@
 
   color: #7d8795;
 
-  font-size: 20px;
+  font-size: 19px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   cursor: pointer;
+}
 
-  padding: 5px;
+.eye-btn:hover {
+  color: #164e9f;
 }
 
 
-/* =========================================
-   FORM OPTIONS
-========================================= */
+/* =========================================================
+   REMEMBER / FORGOT ROW
+   ========================================================= */
 
-.form-options {
+.options-flex-row {
+  width: 100%;
+
   display: flex;
-
+  align-items: center;
   justify-content: space-between;
 
-  align-items: center;
-
-  margin:
-    4px 0
-    20px;
+  margin-top: -1px;
+  margin-bottom: 20px;
 }
 
-
-.remember {
+.remember-lbl {
   display: flex;
-
   align-items: center;
 
-  gap: 10px;
+  gap: 11px;
+
+  color: #515966;
 
   font-size: 16px;
 
-  color: #4b5563;
-
   cursor: pointer;
 }
 
-
-.remember input {
+.remember-lbl input {
   width: 19px;
   height: 19px;
 
+  margin: 0;
+
+  accent-color: #0a50a8;
+
   cursor: pointer;
 }
 
-
-.forgot-password {
+.forgot-link {
   border: none;
-
   background: transparent;
 
-  color: #0560d9;
+  padding: 0;
+
+  color: #075dd2;
+
+  font-family: inherit;
 
   font-size: 16px;
 
   cursor: pointer;
 }
 
-
-.forgot-password:hover {
+.forgot-link:hover {
   text-decoration: underline;
 }
 
 
-/* =========================================
-   MAIN LOGIN BUTTON
-========================================= */
+/* =========================================================
+   GREEN LOGIN BUTTON
+   ========================================================= */
 
-.main-login-btn {
+.green-submit-btn {
   width: 100%;
-
-  height: 56px;
-
-  border: none;
-
-  border-radius: 6px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #25a043,
-      #20983d
-    );
-
-  color: #ffffff;
-
-  font-size: 20px;
-
-  font-weight: 700;
-
-  letter-spacing: 0.3px;
-
-  cursor: pointer;
+  height: 55px;
 
   display: flex;
-
   align-items: center;
-
   justify-content: center;
 
   gap: 12px;
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-
-.main-login-btn:hover {
-  background:
-    linear-gradient(
-      135deg,
-      #218c3b,
-      #177a31
-    );
-
-  transform: translateY(-1px);
-
-  box-shadow:
-    0 6px 15px
-    rgba(32, 152, 61, 0.25);
-}
-
-
-.main-login-btn:active {
-  transform: translateY(0);
-}
-
-
-.submit-icon {
-  font-size: 25px;
-
-  font-weight: 400;
-}
-
-
-/* =========================================
-   LOGIN / SIGNUP SWITCH
-========================================= */
-
-.switch-auth {
-  text-align: center;
-
-  margin-top: 20px;
-
-  color: #64748b;
-
-  font-size: 15px;
-}
-
-
-.switch-auth button {
-  margin-left: 6px;
-
   border: none;
+  border-radius: 7px;
 
-  background: transparent;
+  background: #269d3d;
 
-  color: #075ec9;
+  color: #ffffff;
 
+  font-family: inherit;
+
+  font-size: 20px;
   font-weight: 700;
 
   cursor: pointer;
 
-  font-size: 15px;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+}
+
+.green-submit-btn:hover {
+  background: #218c36;
+
+  box-shadow:
+    0 4px 10px rgba(38, 157, 61, 0.20);
+}
+
+.green-submit-btn:active {
+  transform: translateY(1px);
+}
+
+.green-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.arrow-icon {
+  font-size: 27px;
+  line-height: 1;
+
+  transform: translateY(-1px);
 }
 
 
-.switch-auth button:hover {
+/* =========================================================
+   LOGIN / SIGNUP SWITCH
+   ========================================================= */
+
+.auth-switch-text {
+  margin-top: 19px;
+
+  text-align: center;
+
+  color: #697382;
+
+  font-size: 15px;
+}
+
+.auth-switch-text button {
+  border: none;
+  background: transparent;
+
+  padding: 0;
+
+  color: #075dd2;
+
+  font-family: inherit;
+
+  font-size: inherit;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.auth-switch-text button:hover {
   text-decoration: underline;
 }
 
 
-/* =========================================
+/* =========================================================
    FOOTER
-========================================= */
+   ========================================================= */
 
-.login-footer {
-  margin-top: auto;
+.login-copyright-footer {
+  margin-top: 35px;
 
-  padding-top: 30px;
-
-  color: #64748b;
+  color: #687486;
 
   font-size: 16px;
 
   text-align: center;
+
+  position: relative;
+  z-index: 5;
 }
 
 
-/* =========================================
-   DECORATIVE BOTTOM WAVES
-========================================= */
+/* =========================================================
+   DECORATIVE LIGHT BLUE WAVES
+   ========================================================= */
 
-.login-page::after {
+.login-root::before {
   content: "";
 
-  position: fixed;
+  position: absolute;
 
-  left: 0;
-  bottom: 0;
+  left: -5%;
+  bottom: -55px;
 
-  width: 100%;
-
-  height: 180px;
+  width: 110%;
+  height: 280px;
 
   background:
-    linear-gradient(
-      170deg,
-      transparent 40%,
-      rgba(219, 238, 255, 0.7) 41%,
-      rgba(232, 244, 255, 0.8) 62%,
-      transparent 63%
-    );
+    linear-gradient(165deg,
+      transparent 0%,
+      transparent 20%,
+      rgba(220, 238, 252, 0.80) 20.5%,
+      rgba(237, 247, 255, 0.85) 42%,
+      rgba(220, 238, 252, 0.65) 65%,
+      rgba(247, 252, 255, 0.9) 100%);
 
-  pointer-events: none;
+  border-radius: 50% 50% 0 0 / 25% 25% 0 0;
+
+  transform: rotate(-1.5deg);
 
   z-index: 0;
+
+  pointer-events: none;
+}
+
+.login-root::after {
+  content: "";
+
+  position: absolute;
+
+  left: -8%;
+  bottom: -105px;
+
+  width: 116%;
+  height: 235px;
+
+  background:
+    linear-gradient(165deg,
+      transparent 0%,
+      transparent 28%,
+      rgba(191, 222, 248, 0.70) 29%,
+      rgba(226, 241, 253, 0.80) 48%,
+      rgba(244, 250, 255, 0.95) 70%,
+      #ffffff 100%);
+
+  border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+
+  transform: rotate(1deg);
+
+  z-index: 1;
+
+  pointer-events: none;
 }
 
 
-/* =========================================
+/* =========================================================
    TABLET
-========================================= */
+   ========================================================= */
 
 @media (max-width: 900px) {
-
-  .login-main {
-    width: calc(100% - 30px);
-
-    padding-left: 15px;
-    padding-right: 15px;
+  .top-accent-bar {
+    height: 120px;
   }
 
-
-  .login-logo {
-    width: 180px;
-    height: 180px;
+  .login-page-container {
+    padding-top: 18px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
-
-  .login-main h1 {
-    font-size: 30px;
+  .college-logo-wrapper {
+    width: 190px;
+    height: 190px;
   }
 
+  .emblem-img {
+    width: 175px;
+    height: 175px;
+  }
 
-  .login-subtitle {
+  .main-college-title {
+    font-size: 29px;
+  }
+
+  .main-college-subtitle {
     font-size: 17px;
   }
 
+  .divider-heading-row {
+    width: min(445px, 90%);
+  }
 
-  .login-heading h2 {
+  .divider-heading-row h2 {
     font-size: 36px;
   }
 
-
-  .role-tabs,
-  .login-card {
-    width: 680px;
+  .role-switcher-bar,
+  .form-card-box {
+    width: min(738px, 100%);
   }
 }
 
 
-/* =========================================
+/* =========================================================
    MOBILE
-========================================= */
+   ========================================================= */
 
 @media (max-width: 600px) {
-
-  .login-top-bg {
-    height: 100px;
+  .login-root {
+    min-height: 100svh;
   }
 
-
-  .login-main {
-    width: calc(100% - 16px);
-
-    margin: 8px auto;
-
-    padding:
-      15px
-      10px
-      25px;
-
-    border-radius: 6px;
+  .top-accent-bar {
+    height: 95px;
   }
 
+  .login-page-container {
+    padding-top: 10px;
+    padding-bottom: 20px;
+  }
 
-  .login-logo {
+  .college-logo-wrapper {
+    width: 145px;
+    height: 145px;
+  }
+
+  .emblem-img {
     width: 135px;
     height: 135px;
   }
 
+  .main-college-title {
+    width: 95%;
 
-  .login-main h1 {
     font-size: 23px;
-
     line-height: 1.25;
   }
 
+  .main-college-subtitle {
+    width: 90%;
 
-  .login-subtitle {
+    margin-top: 6px;
+
     font-size: 14px;
-
-    line-height: 1.5;
-
-    max-width: 95%;
+    line-height: 1.4;
   }
 
+  .divider-heading-row {
+    width: 90%;
 
-  .login-heading {
-    margin:
-      20px 0
-      20px;
+    gap: 10px;
 
-    gap: 12px;
+    margin-top: 20px;
+    margin-bottom: 20px;
   }
 
-
-  .login-heading h2 {
-    font-size: 30px;
+  .divider-heading-row h2 {
+    font-size: 31px;
   }
 
+  .role-switcher-bar {
+    width: 92%;
+    height: 52px;
 
-  .role-tabs {
-    grid-template-columns: 1fr;
-
-    border-radius: 7px;
+    margin-bottom: 14px;
   }
 
+  .role-btn {
+    gap: 5px;
 
-  .role-tab {
-    height: 50px;
-
-    border-right: none;
-
-    border-bottom:
-      1px solid #cbd5e1;
+    font-size: 14px;
   }
 
-
-  .role-tab:last-child {
-    border-bottom: none;
+  .role-svg {
+    width: 20px;
+    height: 20px;
   }
 
+  .form-card-box {
+    width: 92%;
 
-  .login-card {
-    padding:
-      22px
-      16px
-      18px;
+    padding: 21px 18px 20px;
+
+    border-radius: 9px;
   }
 
-
-  .form-group label {
-    font-size: 16px;
+  .field-group {
+    margin-bottom: 19px;
   }
 
+  .field-group label {
+    margin-bottom: 7px;
 
-  .input-wrapper {
+    font-size: 15px;
+  }
+
+  .input-rel-box {
     height: 52px;
   }
 
+  .icon-left {
+    width: 47px;
 
-  .input-wrapper input {
-    font-size: 16px;
+    font-size: 17px;
   }
 
-
-  .form-options {
-    align-items: flex-start;
-
-    gap: 10px;
+  .input-rel-box input {
+    font-size: 15px;
   }
 
-
-  .remember,
-  .forgot-password {
-    font-size: 14px;
+  .options-flex-row {
+    margin-bottom: 17px;
   }
 
+  .remember-lbl,
+  .forgot-link {
+    font-size: 13px;
+  }
 
-  .main-login-btn {
+  .remember-lbl {
+    gap: 7px;
+  }
+
+  .remember-lbl input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .green-submit-btn {
     height: 52px;
 
     font-size: 17px;
   }
 
-
-  .login-footer {
+  .auth-switch-text {
     font-size: 13px;
+  }
 
-    padding-top: 25px;
+  .login-copyright-footer {
+    margin-top: 25px;
+
+    padding: 0 15px;
+
+    font-size: 12px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .main-college-title {
+    font-size: 20px;
+  }
+
+  .main-college-subtitle {
+    font-size: 12px;
+  }
+
+  .role-btn {
+    font-size: 12px;
+  }
+
+  .role-svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .form-card-box {
+    width: 94%;
+    padding: 18px 14px;
+  }
+
+  .options-flex-row {
+    gap: 10px;
+  }
+
+  .remember-lbl,
+  .forgot-link {
+    font-size: 12px;
   }
 }

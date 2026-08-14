@@ -123,98 +123,104 @@ function LoginPage() {
     }
   };
 
-  const fillDemoCredentials = (targetRole) => {
-    handleRoleChange(targetRole);
-  };
-
   return (
-    <div className="login-page">
-      <div className="login-top-bg"></div>
+    <div className="login-root">
+      {/* TOP BLUE ACCENT BAR */}
+      <div className="top-accent-bar"></div>
 
-      <main className="login-main">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: "480px", marginBottom: "1rem" }}>
-          <Link to="/" style={{ color: "#ffffff", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: "500", background: "rgba(255,255,255,0.15)", padding: "0.4rem 0.9rem", borderRadius: "6px" }}>
+      <div className="login-page-container">
+        {/* BACK TO HOME NAV */}
+        <div className="nav-back-row">
+          <Link to="/" className="back-link">
             ← Back to Home
           </Link>
         </div>
 
-        <img
-          src="/KVGCE_logo.png"
-          alt="KVG College of Engineering"
-          className="login-logo"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.style.display = "none";
-          }}
-        />
+        {/* EMBLEM LOGO */}
+        <div className="college-logo-wrapper">
+          <img
+            src="/KVGCE_logo.png"
+            alt="KVG College of Engineering Emblem"
+            className="emblem-img"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/kvg_logo.png";
+            }}
+          />
+        </div>
 
-        <h1>KVG College of Engineering</h1>
-        <p className="login-subtitle">
-          TAP — Activity Tracking & Skill Management System
+        {/* COLLEGE HEADINGS */}
+        <h1 className="main-college-title">
+          Welcome to KVG College of Engineering
+        </h1>
+        <p className="main-college-subtitle">
+          Academy of Liberal Education (R), Sullia, Dakshina Kannada
         </p>
 
-        <div className="login-heading">
-          <span></span>
-          <h2>{isSignup ? "Student Sign Up" : "Portal Login"}</h2>
-          <span></span>
+        {/* DECORATIVE LOGIN / SIGNUP DIVIDER */}
+        <div className="divider-heading-row">
+          <div className="line"></div>
+          <h2>{isSignup ? "Sign Up" : "Login"}</h2>
+          <div className="line"></div>
         </div>
 
-        {/* ROLE SELECTION TABS */}
-        <div className="role-tabs">
+        {/* ROLE SELECTION TABS BAR */}
+        <div className="role-switcher-bar">
           <button
             type="button"
-            className={role === "student" ? "role-tab active" : "role-tab"}
+            className={`role-btn ${role === "student" ? "active" : ""}`}
             onClick={() => handleRoleChange("student")}
           >
-            <span className="role-icon">🎓</span> Student
+            <svg className="role-svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4l7 3.82 7-3.82v-4L12 17l-7-3.82z" />
+            </svg>
+            Student
           </button>
 
           <button
             type="button"
-            className={role === "faculty" ? "role-tab active" : "role-tab"}
+            className={`role-btn ${role === "faculty" ? "active" : ""}`}
             onClick={() => handleRoleChange("faculty")}
           >
-            <span className="role-icon">👨‍🏫</span> Faculty
+            <svg className="role-svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+            Faculty
           </button>
 
           <button
             type="button"
-            className={role === "admin" ? "role-tab active" : "role-tab"}
+            className={`role-btn ${role === "admin" ? "active" : ""}`}
             onClick={() => handleRoleChange("admin")}
           >
-            <span className="role-icon">🛡️</span> Admin
+            <svg className="role-svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            Admin
           </button>
         </div>
 
-        {/* DEMO ACCESSIBILITY HELPER */}
-        <div style={{ background: "#f1f5f9", padding: "0.6rem", borderRadius: "8px", marginBottom: "1rem", textAlign: "center", fontSize: "0.85rem", color: "#334155" }}>
-          <strong>Quick Demo Fill:</strong>{" "}
-          <button type="button" onClick={() => fillDemoCredentials("student")} style={{ background: "#1F2E6D", color: "#fff", border: "none", padding: "2px 8px", borderRadius: "4px", margin: "0 2px", cursor: "pointer", fontSize: "0.78rem" }}>Student</button>
-          <button type="button" onClick={() => fillDemoCredentials("faculty")} style={{ background: "#0284c7", color: "#fff", border: "none", padding: "2px 8px", borderRadius: "4px", margin: "0 2px", cursor: "pointer", fontSize: "0.78rem" }}>Faculty</button>
-          <button type="button" onClick={() => fillDemoCredentials("admin")} style={{ background: "#475569", color: "#fff", border: "none", padding: "2px 8px", borderRadius: "4px", margin: "0 2px", cursor: "pointer", fontSize: "0.78rem" }}>Admin</button>
-        </div>
-
-        {/* FORM CARD */}
-        <div className="login-card">
+        {/* COMPACT FORM CARD */}
+        <div className="form-card-box">
           {(localError || authError) && (
-            <div style={{ background: "#fee2e2", border: "1px solid #f87171", color: "#991b1b", padding: "0.75rem", borderRadius: "6px", marginBottom: "1rem", fontSize: "0.9rem" }}>
+            <div className="alert-message error">
               ⚠️ {localError || authError}
             </div>
           )}
 
           {successMsg && (
-            <div style={{ background: "#dcfce7", border: "1px solid #4ade80", color: "#166534", padding: "0.75rem", borderRadius: "6px", marginBottom: "1rem", fontSize: "0.9rem" }}>
+            <div className="alert-message success">
               ✅ {successMsg}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="auth-form-body">
             {isSignup && role === "student" && (
               <>
-                <div className="form-group">
+                <div className="field-group">
                   <label>Full Name</label>
-                  <div className="input-wrapper">
-                    <span className="input-icon">👤</span>
+                  <div className="input-rel-box">
+                    <span className="icon-left">👤</span>
                     <input
                       type="text"
                       name="name"
@@ -226,10 +232,10 @@ function LoginPage() {
                   </div>
                 </div>
 
-                <div className="form-group">
+                <div className="field-group">
                   <label>Email Address</label>
-                  <div className="input-wrapper">
-                    <span className="input-icon">✉</span>
+                  <div className="input-rel-box">
+                    <span className="icon-left">✉</span>
                     <input
                       type="email"
                       name="email"
@@ -244,14 +250,14 @@ function LoginPage() {
             )}
 
             {role === "student" && (
-              <div className="form-group">
-                <label>{isSignup ? "Student ID / USN" : "Student ID / USN or Email"}</label>
-                <div className="input-wrapper">
-                  <span className="input-icon">👤</span>
+              <div className="field-group">
+                <label>User ID</label>
+                <div className="input-rel-box">
+                  <span className="icon-left">👤</span>
                   <input
                     type="text"
                     name="userId"
-                    placeholder="e.g. 4KV21CS042 or student@kvgce.edu.in"
+                    placeholder="Enter your User ID"
                     value={formData.userId}
                     onChange={handleChange}
                     required
@@ -261,10 +267,10 @@ function LoginPage() {
             )}
 
             {(role === "faculty" || role === "admin") && (
-              <div className="form-group">
-                <label>Email or Phone Number</label>
-                <div className="input-wrapper">
-                  <span className="input-icon">✉</span>
+              <div className="field-group">
+                <label>User ID / Email</label>
+                <div className="input-rel-box">
+                  <span className="icon-left">👤</span>
                   <input
                     type="text"
                     name="phone"
@@ -277,37 +283,38 @@ function LoginPage() {
               </div>
             )}
 
-            <div className="form-group">
+            <div className="field-group">
               <label>Password</label>
-              <div className="input-wrapper">
-                <span className="input-icon">🔒</span>
+              <div className="input-rel-box">
+                <span className="icon-left">🔒</span>
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Enter your password"
+                  placeholder="Enter your Password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="eye-btn"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Toggle password"
                 >
-                  {showPassword ? "👁️" : "👁️‍🗨️"}
+                  👁️
                 </button>
               </div>
             </div>
 
             {isSignup && role === "student" && (
-              <div className="form-group">
+              <div className="field-group">
                 <label>Confirm Password</label>
-                <div className="input-wrapper">
-                  <span className="input-icon">🔒</span>
+                <div className="input-rel-box">
+                  <span className="icon-left">🔒</span>
                   <input
                     type="password"
                     name="confirmPassword"
-                    placeholder="Confirm your password"
+                    placeholder="Confirm your Password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
@@ -317,30 +324,34 @@ function LoginPage() {
             )}
 
             {!isSignup && (
-              <div className="form-options">
-                <label className="remember">
+              <div className="options-flex-row">
+                <label className="remember-lbl">
                   <input type="checkbox" defaultChecked />
                   <span>Remember me</span>
                 </label>
-                <button type="button" className="forgot-password" onClick={() => alert("Password reset link will be sent to your registered email.")}>
+                <button
+                  type="button"
+                  className="forgot-link"
+                  onClick={() => alert("Password reset link sent to your registered email.")}
+                >
                   Forgot Password?
                 </button>
               </div>
             )}
 
-            <button type="submit" className="main-login-btn" disabled={loading}>
+            <button type="submit" className="green-submit-btn" disabled={loading}>
               {loading ? (
                 "AUTHENTICATING..."
               ) : (
                 <>
-                  <span className="submit-icon">→</span>
-                  {isSignup ? "CREATE ACCOUNT" : `LOGIN AS ${role.toUpperCase()}`}
+                  <span className="arrow-icon">→</span>
+                  {isSignup ? "SIGN UP" : "LOGIN"}
                 </>
               )}
             </button>
           </form>
 
-          <div className="switch-auth">
+          <div className="auth-switch-text">
             {isSignup ? (
               <>
                 Already have an account?{" "}
@@ -365,10 +376,11 @@ function LoginPage() {
           </div>
         </div>
 
-        <footer className="login-footer">
-          © 2026 KVG College of Engineering. All rights reserved.
+        {/* COPYRIGHT FOOTER */}
+        <footer className="login-copyright-footer">
+          © 2025 KVG College of Engineering. All rights reserved.
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

@@ -54,11 +54,11 @@ function Navbar({ activeSection = "home" }) {
             <h1>KVG College of Engineering</h1>
 
             <p className="college-tagline">
-              Academy of Liberal Education(R)
+              Academy of Liberal Educations(R)
             </p>
 
             <p className="college-subtext">
-              VTU Affiliated &amp; AICTE Recognized • Sullia-574327
+              Affiliated to Visvesvaraya Technological University | (VTU), Belagavi &amp; recognized by AICTE | Sullia-574327, D.K. Karnataka
             </p>
           </div>
         </a>
@@ -87,22 +87,34 @@ function Navbar({ activeSection = "home" }) {
           className={`nav-menu ${menuOpen ? "is-open" : ""}`}
         >
           {/* NAV LINKS */}
-          {navLinks.map((link) => {
-            const isActive = activeSection === link.id;
-
-            return (
-              <a
-                key={link.id}
-                href={link.href}
-                className={`nav-link ${
-                  isActive ? "active" : ""
-                }`}
-                onClick={closeMenu}
-              >
-                {link.label}
-              </a>
-            );
-          })}
+          <a
+            href="#home"
+            className={`nav-link ${activeSection === "home" ? "active" : ""}`}
+            onClick={closeMenu}
+          >
+            Home
+          </a>
+          <a
+            href="#about"
+            className={`nav-link ${activeSection === "about" ? "active" : ""}`}
+            onClick={closeMenu}
+          >
+            About
+          </a>
+          <a
+            href="#how-it-works"
+            className={`nav-link ${activeSection === "how-it-works" ? "active" : ""}`}
+            onClick={closeMenu}
+          >
+            How it Works
+          </a>
+          <a
+            href="#contact"
+            className={`nav-link ${activeSection === "contact" ? "active" : ""}`}
+            onClick={closeMenu}
+          >
+            Contact us
+          </a>
 
           {/* =========================
               LOGIN BUTTON
@@ -120,7 +132,7 @@ function Navbar({ activeSection = "home" }) {
               <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-4.42 0-8 2.69-8 6v1h16v-1c0-3.31-3.58-6-8-6Z" />
             </svg>
 
-            <span>Login</span>
+            <span>login</span>
           </Link>
         </nav>
       </div>

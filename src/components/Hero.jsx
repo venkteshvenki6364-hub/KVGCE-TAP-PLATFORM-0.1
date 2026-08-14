@@ -4,27 +4,35 @@ import "./Hero.css";
 const slides = [
   {
     image: "/kvgce_college_photo.jpg",
-    eyebrow: "WELCOME TO",
-    title: "KVG COLLEGE OF ENGINEERING",
-    subtitle: "Student Skill Assessment & Training Platform",
+    welcome: "Welcome to",
+    highlight: "KVG COLLEGE OF ENGINEERING",
+    title: "TAP-Activity Tracking and Management System",
     description:
-      "A smart platform to assess student skills, track learning activities, analyze performance, and build career readiness.",
+      "A smart platform for students to assess their skills, track their performance, and improve their career readiness.",
   },
   {
     image: "/kvgce_college_photo.jpg",
-    eyebrow: "KVGCE • TAP",
-    title: "LEARN • ASSESS • IMPROVE",
-    subtitle: "Everything You Need in One Platform",
+    welcome: "Empowering Futures at",
+    highlight: "KVG COLLEGE OF ENGINEERING",
+    title: "Continuous Assessment & Analytics Platform",
     description:
-      "TAP connects students, faculty, and administrators through one centralized platform for continuous skill development.",
+      "A unified portal connecting students, faculty, and administration to accelerate technical and professional growth.",
   },
   {
     image: "/kvgce_college_photo.jpg",
-    eyebrow: "SMART STUDENT DEVELOPMENT",
-    title: "BUILD YOUR FUTURE",
-    subtitle: "Track Your Skills. Measure Your Growth.",
+    welcome: "Skill Development with",
+    highlight: "KVG COLLEGE OF ENGINEERING",
+    title: "AI-Powered Learning & Tracking Engine",
     description:
-      "Take assessments, track your activities, understand your performance, and prepare yourself for a successful career.",
+      "Practice coding, solve aptitude challenges, track certifications, and prepare for top campus placement opportunities.",
+  },
+  {
+    image: "/kvgce_college_photo.jpg",
+    welcome: "Academic Excellence at",
+    highlight: "KVG COLLEGE OF ENGINEERING",
+    title: "Real-time Verification & Performance Insights",
+    description:
+      "Faculty feedback, institutional leaderboards, and detailed analytics to maximize student placement success.",
   },
 ];
 
@@ -68,31 +76,20 @@ function Hero() {
       {/* Hero Content */}
       <div className="hero-content">
 
-        <div className="hero-eyebrow">
-          {slide.eyebrow}
-        </div>
-
-        <h1 key={`title-${currentSlide}`}>
-          {slide.title}
+        <h1 key={`title-${currentSlide}`} className="hero-main-title">
+          <span className="hero-welcome">{slide.welcome}</span>
+          <span className="hero-highlight">{slide.highlight}</span>
+          <span className="hero-subtitle-line">{slide.title}</span>
         </h1>
 
-        <h2 key={`subtitle-${currentSlide}`}>
-          {slide.subtitle}
-        </h2>
-
-        <p key={`description-${currentSlide}`}>
+        <p key={`description-${currentSlide}`} className="hero-description">
           {slide.description}
         </p>
 
         <div className="hero-buttons">
 
-          <a href="#about" className="hero-btn primary-btn">
-            Explore TAP
-            <span>→</span>
-          </a>
-
-          <a href="#how-it-works" className="hero-btn secondary-btn">
-            Learn More
+          <a href="#about" className="hero-btn get-started-btn">
+            Get Started
           </a>
 
         </div>
