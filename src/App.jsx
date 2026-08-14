@@ -32,6 +32,22 @@ function App() {
 
           {/* Student Protected Routes */}
           <Route
+            path="/student"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <StudentHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/home"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <StudentHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/dashboard"
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
@@ -130,6 +146,22 @@ function App() {
 
           {/* Faculty Protected Routes */}
           <Route
+            path="/faculty"
+            element={
+              <ProtectedRoute allowedRoles={["faculty", "admin"]}>
+                <FacultyHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/faculty/home"
+            element={
+              <ProtectedRoute allowedRoles={["faculty", "admin"]}>
+                <FacultyHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/faculty/dashboard"
             element={
               <ProtectedRoute allowedRoles={["faculty", "admin"]}>
@@ -187,6 +219,22 @@ function App() {
           />
 
           {/* Admin Protected Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/home"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminHomePage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin/dashboard"
             element={

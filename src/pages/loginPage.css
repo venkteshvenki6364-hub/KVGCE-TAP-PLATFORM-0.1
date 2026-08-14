@@ -1,6 +1,5 @@
 /* =========================================================
-   KVGCE LOGIN PAGE
-   Matches the supplied 1536 × 1024 reference design
+   KVGCE LOGIN PAGE - COMPACT FIT TO SCREEN
    ========================================================= */
 
 * {
@@ -11,12 +10,12 @@
   min-height: 100vh;
   width: 100%;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 
   background:
     linear-gradient(180deg,
       #ffffff 0%,
-      #ffffff 66%,
+      #ffffff 60%,
       #f7fbff 78%,
       #eaf5ff 100%);
 
@@ -40,7 +39,7 @@
   left: 0;
 
   width: 100%;
-  height: 156px;
+  height: 85px;
 
   background: #063d91;
 
@@ -49,7 +48,7 @@
 
 
 /* =========================================================
-   MAIN PAGE
+   MAIN PAGE CONTAINER
    ========================================================= */
 
 .login-page-container {
@@ -62,21 +61,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 
-  padding-top: 27px;
-  padding-bottom: 25px;
+  padding-top: 10px;
+  padding-bottom: 12px;
 }
 
 
 /* =========================================================
    BACK TO HOME
-   Hidden because it is not visible in reference image
    ========================================================= */
 
 .nav-back-row {
   position: absolute;
-  top: 20px;
-  left: 30px;
+  top: 12px;
+  left: 20px;
 
   display: none;
 }
@@ -84,7 +83,7 @@
 .back-link {
   color: #ffffff;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 
@@ -93,23 +92,23 @@
    ========================================================= */
 
 .college-logo-wrapper {
-  width: 235px;
-  height: 235px;
+  width: 95px;
+  height: 95px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 2px;
 
   position: relative;
   z-index: 3;
 }
 
 .emblem-img {
-  width: 220px;
-  height: 220px;
+  width: 88px;
+  height: 88px;
 
   object-fit: contain;
 
@@ -118,7 +117,7 @@
 
 
 /* =========================================================
-   COLLEGE TITLE
+   COLLEGE TITLE & SUBTITLE
    ========================================================= */
 
 .main-college-title {
@@ -126,21 +125,21 @@
 
   color: #10357d;
 
-  font-size: 35px;
+  font-size: 21px;
   line-height: 1.2;
   font-weight: 700;
 
   text-align: center;
 
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
 }
 
 .main-college-subtitle {
-  margin: 8px 0 0;
+  margin: 3px 0 0;
 
   color: #6d778a;
 
-  font-size: 21px;
+  font-size: 13px;
   line-height: 1.3;
 
   font-weight: 400;
@@ -150,19 +149,19 @@
 
 
 /* =========================================================
-   LOGIN / SIGNUP HEADING
+   LOGIN / SIGNUP HEADING DIVIDER
    ========================================================= */
 
 .divider-heading-row {
-  width: 445px;
+  width: min(440px, 90%);
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
 
-  margin-top: 24px;
-  margin-bottom: 31px;
+  margin-top: 10px;
+  margin-bottom: 12px;
 }
 
 .divider-heading-row .line {
@@ -179,8 +178,8 @@
 
   position: absolute;
 
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 
   background: #124a9e;
 
@@ -191,11 +190,11 @@
 }
 
 .divider-heading-row .line:first-child::after {
-  right: -4px;
+  right: -3px;
 }
 
 .divider-heading-row .line:last-child::after {
-  left: -4px;
+  left: -3px;
 }
 
 .divider-heading-row h2 {
@@ -203,7 +202,7 @@
 
   color: #10357d;
 
-  font-size: 43px;
+  font-size: 26px;
   line-height: 1;
 
   font-weight: 700;
@@ -213,25 +212,25 @@
 
 
 /* =========================================================
-   ROLE SWITCHER
+   ROLE SWITCHER TABS BAR
    ========================================================= */
 
 .role-switcher-bar {
-  width: 738px;
-  height: 56px;
+  width: min(520px, 92%);
+  height: 44px;
 
   display: flex;
 
   border: 1px solid #cfd5df;
-  border-radius: 7px;
+  border-radius: 8px;
 
   overflow: hidden;
 
   background: #f8fafc;
 
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .role-btn {
@@ -243,7 +242,7 @@
   align-items: center;
   justify-content: center;
 
-  gap: 12px;
+  gap: 8px;
 
   border: none;
   border-right: 1px solid #d2d7df;
@@ -254,7 +253,7 @@
 
   font-family: inherit;
 
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
 
   cursor: pointer;
@@ -282,29 +281,29 @@
 }
 
 .role-svg {
-  width: 25px;
-  height: 25px;
+  width: 18px;
+  height: 18px;
 
   flex-shrink: 0;
 }
 
 
 /* =========================================================
-   FORM CARD
+   COMPACT FORM CARD
    ========================================================= */
 
 .form-card-box {
-  width: 738px;
+  width: min(520px, 92%);
 
   background: #ffffff;
 
-  border-radius: 10px;
+  border-radius: 12px;
 
-  padding: 28px 31px 25px;
+  padding: 18px 24px 16px;
 
   box-shadow:
-    0 4px 18px rgba(0, 0, 0, 0.10),
-    0 1px 4px rgba(0, 0, 0, 0.04);
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
 
   position: relative;
   z-index: 5;
@@ -318,13 +317,13 @@
 .alert-message {
   width: 100%;
 
-  padding: 10px 13px;
+  padding: 8px 12px;
 
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 
   border-radius: 6px;
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -344,7 +343,7 @@
 
 
 /* =========================================================
-   FORM
+   FORM BODY & FIELDS
    ========================================================= */
 
 .auth-form-body {
@@ -354,17 +353,17 @@
 .field-group {
   width: 100%;
 
-  margin-bottom: 25px;
+  margin-bottom: 14px;
 }
 
 .field-group label {
   display: block;
 
-  margin-bottom: 9px;
+  margin-bottom: 5px;
 
-  color: #414957;
+  color: #374151;
 
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -375,14 +374,14 @@
 
 .input-rel-box {
   width: 100%;
-  height: 58px;
+  height: 44px;
 
   position: relative;
 
   display: flex;
   align-items: center;
 
-  border: 1px solid #d1d7e0;
+  border: 1px solid #d1d5db;
 
   border-radius: 7px;
 
@@ -397,71 +396,80 @@
   border-color: #0a50a8;
 
   box-shadow:
-    0 0 0 3px rgba(10, 80, 168, 0.09);
+    0 0 0 3px rgba(10, 80, 168, 0.10);
 }
 
 
 /* =========================================================
-   LEFT ICON
+   LEFT FIELD ICON
    ========================================================= */
 
 .icon-left {
-  width: 55px;
+  width: 40px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  color: #8a93a1;
-
-  font-size: 20px;
+  color: #6b7280;
 
   flex-shrink: 0;
 }
 
+.field-svg {
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.input-rel-box:focus-within .field-svg {
+  color: #0a50a8;
+}
+
 
 /* =========================================================
-   INPUT
+   INPUT FIELD
    ========================================================= */
 
 .input-rel-box input {
   width: 100%;
   height: 100%;
 
-  padding: 0 52px 0 0;
+  padding: 0 40px 0 0;
 
   border: none;
   outline: none;
 
   background: transparent;
 
-  color: #343b48;
+  color: #1f2937;
 
   font-family: inherit;
 
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .input-rel-box input::placeholder {
-  color: #858e9e;
+  color: #9ca3af;
   opacity: 1;
 }
 
 
 /* =========================================================
-   PASSWORD EYE
+   PASSWORD EYE TOGGLE
    ========================================================= */
 
 .eye-btn {
   position: absolute;
 
-  right: 15px;
+  right: 8px;
   top: 50%;
 
   transform: translateY(-50%);
 
-  width: 30px;
-  height: 35px;
+  width: 28px;
+  height: 28px;
 
   padding: 0;
 
@@ -469,9 +477,7 @@
 
   background: transparent;
 
-  color: #7d8795;
-
-  font-size: 19px;
+  color: #6b7280;
 
   display: flex;
   align-items: center;
@@ -480,13 +486,20 @@
   cursor: pointer;
 }
 
-.eye-btn:hover {
-  color: #164e9f;
+.eye-svg {
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.eye-btn:hover .eye-svg {
+  color: #0a50a8;
 }
 
 
 /* =========================================================
-   REMEMBER / FORGOT ROW
+   REMEMBER ME & FORGOT PASSWORD ROW
    ========================================================= */
 
 .options-flex-row {
@@ -496,26 +509,26 @@
   align-items: center;
   justify-content: space-between;
 
-  margin-top: -1px;
-  margin-bottom: 20px;
+  margin-top: -2px;
+  margin-bottom: 14px;
+
+  font-size: 13px;
 }
 
 .remember-lbl {
   display: flex;
   align-items: center;
 
-  gap: 11px;
+  gap: 8px;
 
-  color: #515966;
-
-  font-size: 16px;
+  color: #4b5563;
 
   cursor: pointer;
 }
 
 .remember-lbl input {
-  width: 19px;
-  height: 19px;
+  width: 16px;
+  height: 16px;
 
   margin: 0;
 
@@ -534,7 +547,8 @@
 
   font-family: inherit;
 
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 500;
 
   cursor: pointer;
 }
@@ -544,22 +558,20 @@
 }
 
 
-/* =========================================================
-   GREEN LOGIN BUTTON
-   ========================================================= */
-
 .green-submit-btn {
   width: 100%;
-  height: 55px;
+  height: 48px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  gap: 12px;
+  gap: 10px;
+
+  margin-top: 6px;
 
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
 
   background: #269d3d;
 
@@ -567,10 +579,14 @@
 
   font-family: inherit;
 
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
 
+  letter-spacing: 0.5px;
+
   cursor: pointer;
+
+  box-shadow: 0 4px 12px rgba(38, 157, 61, 0.22);
 
   transition:
     background 0.2s ease,
@@ -581,12 +597,12 @@
 .green-submit-btn:hover {
   background: #218c36;
 
-  box-shadow:
-    0 4px 10px rgba(38, 157, 61, 0.20);
+  box-shadow: 0 6px 14px rgba(38, 157, 61, 0.30);
 }
 
 .green-submit-btn:active {
   transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(38, 157, 61, 0.20);
 }
 
 .green-submit-btn:disabled {
@@ -594,26 +610,32 @@
   cursor: not-allowed;
 }
 
-.arrow-icon {
-  font-size: 27px;
+.btn-label-text {
   line-height: 1;
+}
 
-  transform: translateY(-1px);
+.btn-arrow-svg {
+  width: 20px;
+  height: 20px;
+
+  color: #ffffff;
+
+  flex-shrink: 0;
 }
 
 
 /* =========================================================
-   LOGIN / SIGNUP SWITCH
+   LOGIN / SIGNUP SWITCH TEXT
    ========================================================= */
 
 .auth-switch-text {
-  margin-top: 19px;
+  margin-top: 12px;
 
   text-align: center;
 
-  color: #697382;
+  color: #6b7280;
 
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .auth-switch-text button {
@@ -638,15 +660,15 @@
 
 
 /* =========================================================
-   FOOTER
+   COPYRIGHT FOOTER
    ========================================================= */
 
 .login-copyright-footer {
-  margin-top: 35px;
+  margin-top: 14px;
 
-  color: #687486;
+  color: #6b7280;
 
-  font-size: 16px;
+  font-size: 13px;
 
   text-align: center;
 
@@ -665,19 +687,19 @@
   position: absolute;
 
   left: -5%;
-  bottom: -55px;
+  bottom: -40px;
 
   width: 110%;
-  height: 280px;
+  height: 200px;
 
   background:
     linear-gradient(165deg,
       transparent 0%,
       transparent 20%,
-      rgba(220, 238, 252, 0.80) 20.5%,
-      rgba(237, 247, 255, 0.85) 42%,
-      rgba(220, 238, 252, 0.65) 65%,
-      rgba(247, 252, 255, 0.9) 100%);
+      rgba(220, 238, 252, 0.75) 20.5%,
+      rgba(237, 247, 255, 0.80) 42%,
+      rgba(220, 238, 252, 0.60) 65%,
+      rgba(247, 252, 255, 0.85) 100%);
 
   border-radius: 50% 50% 0 0 / 25% 25% 0 0;
 
@@ -694,18 +716,18 @@
   position: absolute;
 
   left: -8%;
-  bottom: -105px;
+  bottom: -70px;
 
   width: 116%;
-  height: 235px;
+  height: 170px;
 
   background:
     linear-gradient(165deg,
       transparent 0%,
       transparent 28%,
-      rgba(191, 222, 248, 0.70) 29%,
-      rgba(226, 241, 253, 0.80) 48%,
-      rgba(244, 250, 255, 0.95) 70%,
+      rgba(191, 222, 248, 0.65) 29%,
+      rgba(226, 241, 253, 0.75) 48%,
+      rgba(244, 250, 255, 0.90) 70%,
       #ffffff 100%);
 
   border-radius: 50% 50% 0 0 / 30% 30% 0 0;
@@ -719,231 +741,52 @@
 
 
 /* =========================================================
-   TABLET
-   ========================================================= */
-
-@media (max-width: 900px) {
-  .top-accent-bar {
-    height: 120px;
-  }
-
-  .login-page-container {
-    padding-top: 18px;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .college-logo-wrapper {
-    width: 190px;
-    height: 190px;
-  }
-
-  .emblem-img {
-    width: 175px;
-    height: 175px;
-  }
-
-  .main-college-title {
-    font-size: 29px;
-  }
-
-  .main-college-subtitle {
-    font-size: 17px;
-  }
-
-  .divider-heading-row {
-    width: min(445px, 90%);
-  }
-
-  .divider-heading-row h2 {
-    font-size: 36px;
-  }
-
-  .role-switcher-bar,
-  .form-card-box {
-    width: min(738px, 100%);
-  }
-}
-
-
-/* =========================================================
-   MOBILE
+   RESPONSIVE MEDIA QUERIES
    ========================================================= */
 
 @media (max-width: 600px) {
-  .login-root {
-    min-height: 100svh;
-  }
-
-  .top-accent-bar {
-    height: 95px;
-  }
-
   .login-page-container {
-    padding-top: 10px;
-    padding-bottom: 20px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .college-logo-wrapper {
-    width: 145px;
-    height: 145px;
+    width: 80px;
+    height: 80px;
   }
 
   .emblem-img {
-    width: 135px;
-    height: 135px;
+    width: 75px;
+    height: 75px;
   }
 
   .main-college-title {
-    width: 95%;
-
-    font-size: 23px;
-    line-height: 1.25;
+    font-size: 18px;
   }
 
   .main-college-subtitle {
-    width: 90%;
-
-    margin-top: 6px;
-
-    font-size: 14px;
-    line-height: 1.4;
-  }
-
-  .divider-heading-row {
-    width: 90%;
-
-    gap: 10px;
-
-    margin-top: 20px;
-    margin-bottom: 20px;
+    font-size: 12px;
   }
 
   .divider-heading-row h2 {
-    font-size: 31px;
-  }
-
-  .role-switcher-bar {
-    width: 92%;
-    height: 52px;
-
-    margin-bottom: 14px;
+    font-size: 22px;
   }
 
   .role-btn {
-    gap: 5px;
-
-    font-size: 14px;
-  }
-
-  .role-svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .form-card-box {
-    width: 92%;
-
-    padding: 21px 18px 20px;
-
-    border-radius: 9px;
-  }
-
-  .field-group {
-    margin-bottom: 19px;
-  }
-
-  .field-group label {
-    margin-bottom: 7px;
-
-    font-size: 15px;
-  }
-
-  .input-rel-box {
-    height: 52px;
-  }
-
-  .icon-left {
-    width: 47px;
-
-    font-size: 17px;
-  }
-
-  .input-rel-box input {
-    font-size: 15px;
-  }
-
-  .options-flex-row {
-    margin-bottom: 17px;
-  }
-
-  .remember-lbl,
-  .forgot-link {
     font-size: 13px;
   }
 
-  .remember-lbl {
-    gap: 7px;
-  }
-
-  .remember-lbl input {
+  .role-svg {
     width: 16px;
     height: 16px;
   }
 
-  .green-submit-btn {
-    height: 52px;
-
-    font-size: 17px;
-  }
-
-  .auth-switch-text {
-    font-size: 13px;
-  }
-
-  .login-copyright-footer {
-    margin-top: 25px;
-
-    padding: 0 15px;
-
-    font-size: 12px;
-  }
-}
-
-
-/* =========================================================
-   VERY SMALL MOBILE
-   ========================================================= */
-
-@media (max-width: 380px) {
-  .main-college-title {
-    font-size: 20px;
-  }
-
-  .main-college-subtitle {
-    font-size: 12px;
-  }
-
-  .role-btn {
-    font-size: 12px;
-  }
-
-  .role-svg {
-    width: 17px;
-    height: 17px;
-  }
-
   .form-card-box {
-    width: 94%;
-    padding: 18px 14px;
+    padding: 16px 16px 14px;
   }
 
-  .options-flex-row {
-    gap: 10px;
-  }
-
-  .remember-lbl,
-  .forgot-link {
-    font-size: 12px;
+  .green-submit-btn {
+    height: 44px;
+    font-size: 15px;
   }
 }
