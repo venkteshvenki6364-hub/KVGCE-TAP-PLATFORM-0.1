@@ -1,77 +1,360 @@
-.skills-page {
+.academics-page-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.15rem;
+  width: 100%;
+  max-width: 1350px;
+  margin: 0 auto;
 }
 
-.skills-header h2 {
-  margin: 0 0 0.2rem 0;
-  color: var(--primary-color);
-  font-size: 1.3rem;
+/* HEADER TITLE & SUBTITLE */
+.academics-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
-.skills-header p {
+.academics-heading {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
-  color: var(--text-muted);
-  font-size: 0.88rem;
 }
 
-.skills-grid {
+.academics-subheading {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* TOP SUMMARY CARDS - HORIZONTAL LAYOUT */
+.academic-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  width: 100%;
 }
 
-.skill-matrix-card {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
+@media (max-width: 1100px) {
+  .academic-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.academic-summary-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 1.25rem;
+  padding: 1rem 1.15rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.s-card-top h3 {
-  margin: 0 0 0.3rem 0;
-  font-size: 0.95rem;
-  color: var(--text-main);
-}
-
-.s-cat {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.s-card-mid {
-  display: flex;
   justify-content: space-between;
+}
+
+/* CARD 3 (COLLEGE SCORE B.E CARD) DISTINCT HIGHLIGHT BACKGROUND */
+.card-be {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 1px solid #e9d5ff;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.08);
+}
+
+.card-top-title-row {
+  display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 
-.s-score {
-  font-size: 1.4rem;
+.card-top-title-row h3 {
+  font-size: 0.92rem;
   font-weight: 800;
-  color: var(--primary-color);
+  margin: 0;
 }
 
-.s-level {
-  font-size: 0.78rem;
+.text-blue h3,
+.text-blue {
+  color: #2563eb;
+}
+
+.text-green h3,
+.text-green {
+  color: #16a34a;
+}
+
+.text-purple h3,
+.text-purple {
+  color: #7e22ce;
+}
+
+/* CARD INFO ROWS FOR SSLC & PUC */
+.card-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.info-label {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.info-value {
+  color: #1e293b;
+  font-size: 0.82rem;
+}
+
+.font-semibold {
   font-weight: 600;
-  background: #f1f5f9;
-  color: #475569;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
 }
 
-.s-progress-track {
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
+.font-bold {
+  font-weight: 700;
+}
+
+.pdf-row {
+  padding-top: 0.2rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+/* VIEW PDF BUTTON */
+.view-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-pdf-btn:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* B.E STAT BOXES GRID */
+.be-stat-boxes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.be-stat-box {
+  background-color: #ffffff;
+  border: 1px solid #ddd6fe;
+  border-radius: 8px;
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.05);
+}
+
+.be-stat-lbl {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b21a8;
+  margin-bottom: 0.15rem;
+  text-align: center;
+}
+
+.be-stat-val {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+/* B.E SUMMARY BOTTOM ROW */
+.be-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.45rem;
+  border-top: 1px dashed #d8b4fe;
+}
+
+.be-sum-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.be-sum-lbl {
+  font-size: 0.72rem;
+  color: #6b21a8;
+  font-weight: 500;
+}
+
+.be-sum-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* BOTTOM SECTION: SEMESTER WISE PERFORMANCE CARD */
+.semester-performance-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.section-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.table-responsive-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.semester-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.semester-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.58rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.semester-table th:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.semester-table th:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.semester-table td {
+  padding: 0.58rem 0.8rem;
+  font-size: 0.82rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.semester-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* PDF MODAL DIALOG */
+.pdf-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.pdf-modal-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
-.s-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary-color), #0284c7);
+.pdf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.pdf-modal-header h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.close-modal-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #64748b;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.pdf-modal-body {
+  padding: 1.25rem;
+}
+
+.pdf-dummy-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
+}
+
+.pdf-dummy-preview h4 {
+  font-size: 0.95rem;
+  margin: 0;
+  color: #1e293b;
+}
+
+.pdf-dummy-preview p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.download-pdf-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1.15rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.download-pdf-btn:hover {
+  background-color: #1d4ed8;
 }

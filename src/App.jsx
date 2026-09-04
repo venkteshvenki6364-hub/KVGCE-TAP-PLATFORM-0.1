@@ -14,6 +14,8 @@ import TechnicalQuizModule from "./pages/student/TechnicalQuizModule";
 import CodingPracticeModule from "./pages/student/CodingPracticeModule";
 import ActivitiesModule from "./pages/student/ActivitiesModule";
 import AICareerAssistant from "./pages/student/AICareerAssistant";
+import HRInterviewPage from "./pages/student/HRInterviewPage";
+import StudentRankingsPage from "./pages/student/StudentRankingsPage";
 
 // Faculty & Admin Pages
 import FacultyHomePage from "./pages/faculty/FacultyHomePage";
@@ -140,6 +142,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
                 <AICareerAssistant />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/rankings"
+            element={
+              <ProtectedRoute allowedRoles={["student", "faculty", "admin"]}>
+                <StudentRankingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/leaderboard"
+            element={
+              <ProtectedRoute allowedRoles={["student", "faculty", "admin"]}>
+                <StudentRankingsPage />
               </ProtectedRoute>
             }
           />
