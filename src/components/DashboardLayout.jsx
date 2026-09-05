@@ -86,8 +86,18 @@ const DashboardLayout = ({ children, title }) => {
           ),
         },
         {
-          path: "/student/ai",
+          path: "/student/hr-interview",
           label: "HR Interview",
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M23 7l-7 5 7 5V7z" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+          ),
+        },
+        {
+          path: "/student/ai",
+          label: "AI Career Coach",
           icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />

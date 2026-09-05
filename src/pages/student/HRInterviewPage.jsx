@@ -137,6 +137,50 @@ export default function HRInterviewPage() {
 
   const transcriptBottomRef = useRef(null);
   const speechRef = useRef(null);
+  const userVideoRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const [hasWebcam, setHasWebcam] = useState(false);
+
+  // Initialize live webcam video stream
+  useEffect(() => {
+    let stream = null;
+    async function enableWebcam() {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+            audio: false,
+          });
+          mediaStreamRef.current = stream;
+          if (userVideoRef.current) {
+            userVideoRef.current.srcObject = stream;
+          }
+          setHasWebcam(true);
+        }
+      } catch (err) {
+        console.warn("Webcam access warning:", err);
+        setHasWebcam(false);
+      }
+    }
+
+    enableWebcam();
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const toggleCamera = () => {
+    const nextState = !isCameraOff;
+    setIsCameraOff(nextState);
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getVideoTracks().forEach((track) => {
+        track.enabled = !nextState;
+      });
+    }
+  };
 
   // Timer Tick Effect
   useEffect(() => {
@@ -337,10 +381,12 @@ export default function HRInterviewPage() {
             {/* 1. MAIN INTERVIEWER VIDEO STREAM CONTAINER */}
             <div className="interviewer-video-card">
               <div className="video-viewport">
-                <img
-                  src="/hr_interviewer.png"
-                  alt="AI HR Interviewer"
-                  className={`interviewer-feed-img ${isCameraOff ? "camera-off-dim" : ""}`}
+                <video
+                  ref={userVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`interviewer-feed-img user-webcam-feed ${isCameraOff ? "camera-off-dim" : ""}`}
                 />
 
                 {isCameraOff && (
@@ -414,7 +460,7 @@ export default function HRInterviewPage() {
 
                   <button
                     className={`ctrl-btn ${isCameraOff ? "active-alert" : ""}`}
-                    onClick={() => setIsCameraOff(!isCameraOff)}
+                    onClick={toggleCamera}
                     title={isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

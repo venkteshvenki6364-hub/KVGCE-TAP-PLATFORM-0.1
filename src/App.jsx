@@ -146,6 +146,30 @@ function App() {
             }
           />
           <Route
+            path="/student/hr-interview"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <HRInterviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/interview"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <HRInterviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/hr"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <HRInterviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/rankings"
             element={
               <ProtectedRoute allowedRoles={["student", "faculty", "admin"]}>
