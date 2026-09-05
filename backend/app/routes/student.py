@@ -122,3 +122,23 @@ async def get_student_results(current_user: dict = Depends(get_current_user)):
         "success": True,
         "data": results
     }
+
+@router.get("/rankings")
+async def get_student_rankings(current_user: dict = Depends(get_current_user)):
+    sample_students = [
+        {"rank": 1, "name": "Karthik M", "usn": "4KV21CS018", "department": "CSE", "semester": 6, "section": "A", "cgpa": 9.42, "overall_score": 94.2},
+        {"rank": 2, "name": "Sahana P", "usn": "4KV21CS042", "department": "CSE", "semester": 6, "section": "A", "cgpa": 9.21, "overall_score": 92.1},
+        {"rank": 3, "name": "Likith R", "usn": "4KV21EC027", "department": "ECE", "semester": 6, "section": "A", "cgpa": 9.13, "overall_score": 91.3},
+        {"rank": 4, "name": "Ananya B", "usn": "4KV21IS033", "department": "ISE", "semester": 6, "section": "B", "cgpa": 9.07, "overall_score": 90.7},
+        {"rank": 5, "name": "Vivek S", "usn": "4KV21ME021", "department": "ME", "semester": 6, "section": "A", "cgpa": 8.96, "overall_score": 89.6},
+        {"rank": 6, "name": "Rohan K", "usn": "4KV21CS110", "department": "CSE", "semester": 6, "section": "B", "cgpa": 8.82, "overall_score": 88.2},
+        {"rank": 7, "name": "Prajwal B", "usn": "4KV21EC056", "department": "ECE", "semester": 6, "section": "A", "cgpa": 8.75, "overall_score": 87.5},
+        {"rank": 8, "name": "Nikhil M", "usn": "4KV21ME045", "department": "ME", "semester": 6, "section": "B", "cgpa": 8.68, "overall_score": 86.8},
+        {"rank": 9, "name": "Arjun U", "usn": "4KV21CS128", "department": "CSE", "semester": 6, "section": "A", "cgpa": 8.52, "overall_score": 85.2},
+        {"rank": 10, "name": "Deepika N", "usn": "4KV21IS059", "department": "ISE", "semester": 6, "section": "B", "cgpa": 8.47, "overall_score": 84.7},
+    ]
+    return {
+        "success": True,
+        "total": 1200,
+        "data": sample_students
+    }
