@@ -105,6 +105,17 @@ const DashboardLayout = ({ children, title }) => {
           ),
         },
         {
+          path: "/student/overview",
+          label: "Student Overview",
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="8.5" cy="7" r="4" />
+              <polyline points="17 11 19 13 23 9" />
+            </svg>
+          ),
+        },
+        {
           path: "/student/rankings",
           label: "Rankings",
           icon: (
@@ -118,6 +129,7 @@ const DashboardLayout = ({ children, title }) => {
       return [
         { path: "/faculty/dashboard", label: "Overview", icon: "📊" },
         { path: "/faculty/students", label: "Student List", icon: "👥" },
+        { path: "/student/overview", label: "Student Single Overview", icon: "👤" },
         { path: "/student/rankings", label: "Rankings", icon: "🏆" },
         { path: "/faculty/assessments", label: "Assessments", icon: "📝" },
         { path: "/faculty/questions", label: "Question Bank", icon: "❓" },
@@ -129,6 +141,7 @@ const DashboardLayout = ({ children, title }) => {
       return [
         { path: "/admin/dashboard", label: "Overview", icon: "📊" },
         { path: "/admin/students", label: "Students", icon: "🎓" },
+        { path: "/student/overview", label: "Student Single Overview", icon: "👤" },
         { path: "/student/rankings", label: "Rankings", icon: "🏆" },
         { path: "/admin/faculty", label: "Faculty", icon: "👨‍🏫" },
         { path: "/admin/users", label: "User Management", icon: "👤" },

@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
+import SingleStudentOverview from "../../components/SingleStudentOverview";
+import AdminFacultyView from "../../components/admin/AdminFacultyView";
+import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
 import api from "../../services/api";
 import "./AdminHomePage.css";
 
@@ -211,10 +215,17 @@ const ALL_STUDENTS_DATA = [
 ];
 
 function AdminHomePage() {
+  const location = useLocation();
   const [data, setData] = useState(null);
   const [users, setUsers] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("analysis"); // analysis | users | departments | analytics
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined" && window.location.pathname.includes("/faculty")) {
+      return "faculty";
+    }
+    return "pending";
+  }); // pending | analysis | faculty | users | departments | quizBuilder | analytics
 
   // Filter Modes: "all" | "class" | "single"
   const [filterMode, setFilterMode] = useState("all");
@@ -237,19 +248,24 @@ function AdminHomePage() {
     student_id: "",
     faculty_id: "",
     phone: "",
+    dob: "",
   });
 
   const fetchAdminData = async () => {
     try {
-      const [dashRes, usersRes] = await Promise.all([
+      const [dashRes, usersRes, pendingRes] = await Promise.all([
         api.get("/admin/dashboard"),
         api.get("/admin/users"),
+        api.get("/admin/pending-users").catch(() => ({ data: { data: [] } })),
       ]);
       if (dashRes.data && dashRes.data.data) {
         setData(dashRes.data.data);
       }
       if (usersRes.data && usersRes.data.data) {
         setUsers(usersRes.data.data);
+      }
+      if (pendingRes.data && pendingRes.data.data) {
+        setPendingUsers(pendingRes.data.data);
       }
     } catch (err) {
       console.error("Error loading admin dashboard:", err);
@@ -261,6 +277,33 @@ function AdminHomePage() {
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  const handleApproveUser = async (email, name, role) => {
+    try {
+      const res = await api.post(`/admin/users/${encodeURIComponent(email)}/approve`);
+      if (res.data && res.data.success) {
+        setMsg(`✅ Approved ${name} (${role?.toUpperCase()})! User is now active and added to database.`);
+        fetchAdminData();
+      }
+    } catch (err) {
+      console.error("Approval failed:", err);
+      alert(err.response?.data?.detail || "Could not approve user.");
+    }
+  };
+
+  const handleRejectUser = async (email, name) => {
+    if (!window.confirm(`Are you sure you want to reject the registration request for ${name} (${email})?`)) return;
+    try {
+      const res = await api.post(`/admin/users/${encodeURIComponent(email)}/reject`);
+      if (res.data && res.data.success) {
+        setMsg(`❌ Registration for ${name} rejected.`);
+        fetchAdminData();
+      }
+    } catch (err) {
+      console.error("Rejection failed:", err);
+      alert(err.response?.data?.detail || "Could not reject user.");
+    }
+  };
 
   const handleToggleStatus = async (email) => {
     try {
@@ -446,10 +489,22 @@ function AdminHomePage() {
         {/* 3. MAIN TAB NAVIGATION BAR */}
         <div className="admin-main-tabs-bar">
           <button
+            className={`admin-nav-tab ${activeTab === "pending" ? "active" : ""}`}
+            onClick={() => setActiveTab("pending")}
+          >
+            ⏳ Pending Verification ({pendingUsers.length})
+          </button>
+          <button
             className={`admin-nav-tab ${activeTab === "analysis" ? "active" : ""}`}
             onClick={() => setActiveTab("analysis")}
           >
             📊 Overall Analysis
+          </button>
+          <button
+            className={`admin-nav-tab ${activeTab === "faculty" ? "active" : ""}`}
+            onClick={() => setActiveTab("faculty")}
+          >
+            👨‍🏫 Faculties
           </button>
           <button
             className={`admin-nav-tab ${activeTab === "users" ? "active" : ""}`}
@@ -464,12 +519,28 @@ function AdminHomePage() {
             🏢 Departments
           </button>
           <button
+            className={`admin-nav-tab ${activeTab === "quizBuilder" ? "active" : ""}`}
+            onClick={() => setActiveTab("quizBuilder")}
+          >
+            📝 Quiz & Question Builder
+          </button>
+          <button
             className={`admin-nav-tab ${activeTab === "analytics" ? "active" : ""}`}
             onClick={() => setActiveTab("analytics")}
           >
             📈 System Health
           </button>
         </div>
+
+        {/* TAB: QUIZ BUILDER */}
+        {activeTab === "quizBuilder" && (
+          <div style={{ marginTop: "1rem" }}>
+            <QuizQuestionBuilder quizTitle="Aptitude & Technical Quiz Editor" onBack={() => setActiveTab("analysis")} />
+          </div>
+        )}
+
+        {/* TAB 0: FACULTIES VIEW */}
+        {activeTab === "faculty" && <AdminFacultyView />}
 
         {/* TAB 1: OVERALL DATA ANALYSIS & SKILL TRACKING */}
         {activeTab === "analysis" && (
@@ -579,6 +650,13 @@ function AdminHomePage() {
                 )}
               </div>
             </div>
+
+            {filterMode === "single" ? (
+              <div style={{ marginTop: "1rem" }}>
+                <SingleStudentOverview defaultUsn={selectedStudentUSN} userRole="admin" />
+              </div>
+            ) : (
+              <>
 
             {/* 4. 6 KPI MINI METRICS CARDS */}
             <div className="kpi-mini-grid">
@@ -1038,6 +1116,122 @@ function AdminHomePage() {
                 </div>
               </div>
             </div>
+            </>
+            )}
+          </div>
+        )}
+
+        {/* TAB: PENDING APPROVALS */}
+        {activeTab === "pending" && (
+          <div className="admin-sec-card">
+            <div className="sec-header">
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#1e293b" }}>
+                  ⏳ Registration Verification Requests ({pendingUsers.length})
+                </h3>
+                <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.875rem" }}>
+                  Review new Student and Faculty sign-up requests. Approving a user activates their account and adds them to the active database.
+                </p>
+              </div>
+              <button
+                className="add-user-btn"
+                style={{ background: "#2563eb" }}
+                onClick={() => setShowUserModal(true)}
+              >
+                + Add Direct User (Student/Faculty)
+              </button>
+            </div>
+
+            {pendingUsers.length === 0 ? (
+              <div style={{ padding: "3rem 1.5rem", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1", marginTop: "1rem" }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🎉</div>
+                <h4 style={{ margin: "0 0 6px 0", color: "#1e293b", fontSize: "1.1rem" }}>No Pending Verification Requests</h4>
+                <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>
+                  All user sign-ups have been verified and added to the database. New registrations will appear here for Admin approval.
+                </p>
+              </div>
+            ) : (
+              <table className="admin-table" style={{ marginTop: "1rem" }}>
+                <thead>
+                  <tr>
+                    <th>Registration Details</th>
+                    <th>Requested Role</th>
+                    <th>USN / Faculty ID</th>
+                    <th>Department & Course</th>
+                    <th>Contact & DOB</th>
+                    <th>Verification Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingUsers.map((u) => (
+                    <tr key={u._id || u.email}>
+                      <td>
+                        <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>{u.full_name}</strong>
+                        <br />
+                        <small style={{ color: "#64748b" }}>{u.email}</small>
+                      </td>
+                      <td>
+                        <span className={`role-pill ${u.role}`} style={{ fontWeight: 600, padding: "4px 10px", borderRadius: "6px" }}>
+                          {u.role?.toUpperCase() === "STUDENT" ? "🎓 STUDENT" : "👨‍🏫 FACULTY"}
+                        </span>
+                      </td>
+                      <td>
+                        <strong style={{ fontFamily: "monospace", fontSize: "0.9rem", color: "#1e293b" }}>
+                          {u.student_id || u.faculty_id || "Pending ID"}
+                        </strong>
+                      </td>
+                      <td>
+                        <span>{u.department || "Engineering"}</span>
+                        <br />
+                        <small style={{ color: "#64748b" }}>{u.course || (u.role === "student" ? "B.E. CSE" : "Faculty Staff")}</small>
+                      </td>
+                      <td>
+                        <small style={{ color: "#334155" }}>📞 {u.phone || "N/A"}</small>
+                        <br />
+                        <small style={{ color: "#64748b" }}>🎂 DOB: {u.dob || "N/A"}</small>
+                      </td>
+                      <td>
+                        <div className="action-row" style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            type="button"
+                            onClick={() => handleApproveUser(u.email, u.full_name, u.role)}
+                            style={{
+                              background: "#16a34a",
+                              color: "#fff",
+                              border: "none",
+                              padding: "6px 12px",
+                              borderRadius: "6px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              fontSize: "0.85rem",
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
+                            }}
+                          >
+                            ✓ Approve & Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRejectUser(u.email, u.full_name)}
+                            style={{
+                              background: "#ef4444",
+                              color: "#fff",
+                              border: "none",
+                              padding: "6px 12px",
+                              borderRadius: "6px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              fontSize: "0.85rem"
+                            }}
+                          >
+                            ✕ Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
@@ -1045,9 +1239,9 @@ function AdminHomePage() {
         {activeTab === "users" && (
           <div className="admin-sec-card">
             <div className="sec-header">
-              <h3>All Registered Users ({users.length})</h3>
+              <h3>All Database Accounts ({users.length})</h3>
               <button className="add-user-btn" onClick={() => setShowUserModal(true)}>
-                + Add New User
+                + Add Direct User (Student/Faculty)
               </button>
             </div>
 
@@ -1078,15 +1272,25 @@ function AdminHomePage() {
                       <small>{u.student_id || u.faculty_id || "N/A"}</small>
                     </td>
                     <td>
-                      <span className={`status-pill ${u.is_active !== false ? "active" : "inactive"}`}>
-                        {u.is_active !== false ? "Active" : "Deactivated"}
+                      <span className={`status-pill ${u.status === "pending" || u.is_verified === false ? "inactive" : u.is_active !== false ? "active" : "inactive"}`}>
+                        {u.status === "pending" || u.is_verified === false ? "⏳ Pending Admin Verification" : u.is_active !== false ? "🟢 Active & Verified" : "🔴 Deactivated"}
                       </span>
                     </td>
                     <td>
                       <div className="action-row">
-                        <button className="toggle-btn" onClick={() => handleToggleStatus(u.email)}>
-                          {u.is_active !== false ? "Deactivate" : "Activate"}
-                        </button>
+                        {u.status === "pending" || u.is_verified === false ? (
+                          <button
+                            className="toggle-btn"
+                            style={{ background: "#16a34a", color: "#fff" }}
+                            onClick={() => handleApproveUser(u.email, u.full_name, u.role)}
+                          >
+                            Approve
+                          </button>
+                        ) : (
+                          <button className="toggle-btn" onClick={() => handleToggleStatus(u.email)}>
+                            {u.is_active !== false ? "Deactivate" : "Activate"}
+                          </button>
+                        )}
                         <button className="del-btn" onClick={() => handleDeleteUser(u.email)}>
                           Delete
                         </button>

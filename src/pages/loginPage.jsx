@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import "./LoginPage.css";
 
 function LoginPage() {
@@ -13,6 +14,19 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Forgot Password Modal State
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: Verify, 2: New Password
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
+  const [resetData, setResetData] = useState({
+    identifier: "",
+    dobOrPhone: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
 
   const [formData, setFormData] = useState({
     usn: "4KV21CS042",
@@ -74,6 +88,70 @@ function LoginPage() {
     });
   };
 
+  const handleOpenResetModal = () => {
+    setShowResetModal(true);
+    setResetError("");
+    setResetSuccess("");
+    setResetData({
+      identifier: formData.usn || formData.userId || "4KV21CS042",
+      dobOrPhone: formData.dob || formData.phone || "28-02-2004",
+      newPassword: "",
+      confirmPassword: ""
+    });
+  };
+
+  const handleConfirmResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetData.identifier.trim()) {
+      setResetError("Please enter your USN, Email, or User ID.");
+      return;
+    }
+    if (!resetData.newPassword) {
+      setResetError("Please enter a new password.");
+      return;
+    }
+    if (resetData.newPassword !== resetData.confirmPassword) {
+      setResetError("New password and Confirm Password do not match.");
+      return;
+    }
+    if (resetData.newPassword.length < 6) {
+      setResetError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError("");
+    setResetSuccess("");
+
+    try {
+      const res = await api.post("/auth/reset-password", {
+        username_or_email: resetData.identifier,
+        dob_or_phone: resetData.dobOrPhone,
+        new_password: resetData.newPassword
+      });
+
+      if (res.data && res.data.success) {
+        setResetSuccess(res.data.message || "🎉 Password reset successfully and changes accepted!");
+        
+        // Auto update current form fields with new password
+        setFormData(prev => ({
+          ...prev,
+          password: resetData.newPassword
+        }));
+
+        setTimeout(() => {
+          setShowResetModal(false);
+          setSuccessMsg("Password updated automatically in database! You can now log in.");
+        }, 1500);
+      }
+    } catch (err) {
+      console.error(err);
+      setResetError(err.response?.data?.detail || "Failed to update password. Please check your USN / Email.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError("");
@@ -122,14 +200,19 @@ function LoginPage() {
       setLoading(false);
 
       if (res.success) {
-        setSuccessMsg(`Account created successfully! Redirecting to ${role} home page...`);
-        setTimeout(() => {
-          if (role === "admin") navigate("/admin/home");
-          else if (role === "faculty") navigate("/faculty/home");
-          else navigate("/student/home");
-        }, 1000);
+        if (res.requiresApproval) {
+          setSuccessMsg(res.message || "Registration request submitted! Your account is pending verification by Admin. You will be able to log in once an Administrator approves your account.");
+          setIsSignup(false);
+        } else {
+          setSuccessMsg(`Account created successfully! Redirecting to ${role} home page...`);
+          setTimeout(() => {
+            if (role === "admin") navigate("/admin/home");
+            else if (role === "faculty") navigate("/faculty/home");
+            else navigate("/student/home");
+          }, 1000);
+        }
       } else {
-        setLocalError(res.message);
+        setLocalError(res.message || "Registration failed. Please try again.");
       }
     } else {
       let identifier = "";
@@ -485,7 +568,7 @@ function LoginPage() {
                 <button
                   type="button"
                   className="forgot-link"
-                  onClick={() => alert("Password reset link sent to your registered email.")}
+                  onClick={handleOpenResetModal}
                 >
                   Forgot Password?
                 </button>
@@ -530,6 +613,99 @@ function LoginPage() {
             )}
           </div>
         </div>
+
+        {/* FORGOT & RESET PASSWORD MODAL */}
+        {showResetModal && (
+          <div className="modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+            <div style={{ background: "#ffffff", width: "90%", maxWidth: "460px", borderRadius: "16px", padding: "2rem", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)", border: "1px solid #e2e8f0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "#1e293b" }}>
+                  🔐 Reset Account Password
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(false)}
+                  style={{ background: "none", border: "none", fontSize: "1.5rem", color: "#64748b", cursor: "pointer" }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {resetError && (
+                <div style={{ padding: "0.75rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "0.875rem", marginBottom: "1rem" }}>
+                  ⚠️ {resetError}
+                </div>
+              )}
+
+              {resetSuccess && (
+                <div style={{ padding: "0.75rem", background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "0.875rem", marginBottom: "1rem" }}>
+                  {resetSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleConfirmResetPassword}>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, color: "#334155", marginBottom: "6px" }}>
+                    USN / Registered Email / Faculty ID
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 4KV21CS042 or student@kvgce.edu.in"
+                    value={resetData.identifier}
+                    onChange={(e) => setResetData({ ...resetData, identifier: e.target.value })}
+                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.95rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, color: "#334155", marginBottom: "6px" }}>
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter new password (min 6 chars)"
+                    value={resetData.newPassword}
+                    onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
+                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.95rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, color: "#334155", marginBottom: "6px" }}>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Re-enter new password"
+                    value={resetData.confirmPassword}
+                    onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
+                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.95rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowResetModal(false)}
+                    style={{ padding: "10px 16px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#475569", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    style={{ padding: "10px 20px", background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                  >
+                    {resetLoading ? "Updating Database..." : "RESET & ACCEPT CHANGES ✓"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* COPYRIGHT FOOTER */}
         <footer className="login-copyright-footer">

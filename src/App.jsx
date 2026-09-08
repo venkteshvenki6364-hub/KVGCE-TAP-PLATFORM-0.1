@@ -17,9 +17,12 @@ import AICareerAssistant from "./pages/student/AICareerAssistant";
 import HRInterviewPage from "./pages/student/HRInterviewPage";
 import StudentRankingsPage from "./pages/student/StudentRankingsPage";
 
+import SingleStudentOverviewPage from "./pages/student/SingleStudentOverviewPage";
+
 // Faculty & Admin Pages
 import FacultyHomePage from "./pages/faculty/FacultyHomePage";
 import AdminHomePage from "./pages/admin/AdminHomePage";
+import QuizBuilderPage from "./pages/faculty/QuizBuilderPage";
 
 import "./App.css";
 
@@ -178,10 +181,18 @@ function App() {
             }
           />
           <Route
-            path="/student/leaderboard"
+            path="/student/overview"
             element={
               <ProtectedRoute allowedRoles={["student", "faculty", "admin"]}>
-                <StudentRankingsPage />
+                <SingleStudentOverviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/overview/:usn"
+            element={
+              <ProtectedRoute allowedRoles={["student", "faculty", "admin"]}>
+                <SingleStudentOverviewPage />
               </ProtectedRoute>
             }
           />
@@ -252,10 +263,34 @@ function App() {
             }
           />
           <Route
-            path="/faculty/feedback"
+            path="/faculty/quiz/create"
             element={
               <ProtectedRoute allowedRoles={["faculty", "admin"]}>
-                <FacultyHomePage />
+                <QuizBuilderPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/faculty/quiz/edit"
+            element={
+              <ProtectedRoute allowedRoles={["faculty", "admin"]}>
+                <QuizBuilderPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/quiz/create"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <QuizBuilderPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/quiz/edit"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <QuizBuilderPage />
               </ProtectedRoute>
             }
           />

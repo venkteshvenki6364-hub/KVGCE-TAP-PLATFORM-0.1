@@ -62,8 +62,14 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, role: activeRole, user: userData };
     } catch (err) {
-      console.warn("Backend API login request failed/unreachable, falling back to mock authentication:", err);
+      console.warn("Backend API login request failed/unreachable:", err);
+      const apiMessage = err.response?.data?.detail;
+      if (apiMessage) {
+        setAuthError(apiMessage);
+        return { success: false, message: apiMessage };
+      }
 
+      // Fallback mock authentication if backend server unavailable
       const resolvedRole = roleHint || (
         usernameOrEmail.toLowerCase().includes("admin") ? "admin" :
         usernameOrEmail.toLowerCase().includes("faculty") ? "faculty" : "student"
@@ -95,7 +101,15 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
     try {
       const res = await api.post("/auth/register", userData);
-      const { access_token, role: userRole, user: registeredUser } = res.data;
+      const { access_token, role: userRole, user: registeredUser, requires_approval, message } = res.data;
+
+      if (requires_approval) {
+        return {
+          success: true,
+          requiresApproval: true,
+          message: message || "Registration submitted! Your account is pending verification by Admin. You will be able to log in once an Administrator approves your registration."
+        };
+      }
 
       const activeRole = userRole || userData.role || "student";
 
@@ -109,9 +123,23 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, role: activeRole, user: registeredUser };
     } catch (err) {
-      console.warn("Backend API register failed/unreachable, falling back to mock authentication:", err);
+      console.warn("Backend API register failed:", err);
+      const apiMessage = err.response?.data?.detail;
+      if (apiMessage) {
+        setAuthError(apiMessage);
+        return { success: false, message: apiMessage };
+      }
 
+      // Fallback response for unverified registration requirement
       const activeRole = userData.role || "student";
+      if (activeRole !== "admin") {
+        return {
+          success: true,
+          requiresApproval: true,
+          message: "Registration submitted successfully! Your account is pending Admin verification. You will be able to log in once an Administrator approves your registration."
+        };
+      }
+
       const mockUser = {
         id: "reg-user-demo",
         full_name: userData.full_name || "Registered User",

@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
+import SingleStudentOverview from "../../components/SingleStudentOverview";
+import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
 import api from "../../services/api";
 import "./FacultyHomePage.css";
 
 function FacultyHomePage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview"); // overview, students, verifications, feedback
+  const [activeTab, setActiveTab] = useState("overview"); // overview, students, verifications, feedback, singleOverview, quizBuilder
+  const [selectedStudentUsn, setSelectedStudentUsn] = useState("4KV21CS042");
   const [feedbackForm, setFeedbackForm] = useState({
     student_email: "student@kvgce.edu.in",
     category: "Technical Skills",
@@ -94,7 +97,25 @@ function FacultyHomePage() {
           <button className={activeTab === "feedback" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("feedback")}>
             💬 Submit Student Feedback
           </button>
+          <button className={activeTab === "singleOverview" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("singleOverview")}>
+            👤 Student Single Overview
+          </button>
+          <button className={activeTab === "quizBuilder" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("quizBuilder")}>
+            📝 Create/Edit Quiz & Questions
+          </button>
         </div>
+
+        {activeTab === "quizBuilder" && (
+          <div className="tab-content" style={{ marginTop: "1rem" }}>
+            <QuizQuestionBuilder quizTitle="Technical Quiz" onBack={() => setActiveTab("overview")} />
+          </div>
+        )}
+
+        {activeTab === "singleOverview" && (
+          <div className="tab-content" style={{ marginTop: "1rem" }}>
+            <SingleStudentOverview defaultUsn={selectedStudentUsn} userRole="faculty" />
+          </div>
+        )}
 
         {/* OVERVIEW TAB */}
         {activeTab === "overview" && (
@@ -175,9 +196,27 @@ function FacultyHomePage() {
                       <td>{s.phone || "+91 9741234567"}</td>
                       <td>Sem {s.semester || 6}</td>
                       <td>
-                        <button className="small-action-btn" onClick={() => { setFeedbackForm({...feedbackForm, student_email: s.email}); setActiveTab("feedback"); }}>
-                          Give Feedback
-                        </button>
+                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                          <button
+                            className="small-action-btn"
+                            style={{ background: "#2563eb", color: "#fff" }}
+                            onClick={() => {
+                              setSelectedStudentUsn(s.student_id || "4KV21CS042");
+                              setActiveTab("singleOverview");
+                            }}
+                          >
+                            View Overview 👁️
+                          </button>
+                          <button
+                            className="small-action-btn"
+                            onClick={() => {
+                              setFeedbackForm({ ...feedbackForm, student_email: s.email });
+                              setActiveTab("feedback");
+                            }}
+                          >
+                            Give Feedback
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

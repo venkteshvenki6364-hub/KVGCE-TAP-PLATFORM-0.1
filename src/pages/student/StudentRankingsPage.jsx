@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import DashboardLayout from "../../components/DashboardLayout";
 import api from "../../services/api";
@@ -23,6 +24,7 @@ const ALL_STUDENTS_MOCK = [
 ];
 
 function StudentRankingsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [students, setStudents] = useState(ALL_STUDENTS_MOCK);
   const [usnFilter, setUsnFilter] = useState("");
@@ -207,7 +209,15 @@ function StudentRankingsPage() {
                 {filteredStudents.slice(0, 10).map((student) => (
                   <tr key={student.rank} className={student.usn === "4KV21CS042" ? "highlight-user-row" : ""}>
                     <td>{renderRankBadge(student.rank)}</td>
-                    <td className="font-semibold text-slate-800">{student.name}</td>
+                    <td className="font-semibold text-slate-800">
+                      <button
+                        style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                        onClick={() => navigate(`/student/overview`)}
+                        title="Click to view full single student overview"
+                      >
+                        {student.name} 👁️
+                      </button>
+                    </td>
                     <td className="usn-cell">{student.usn}</td>
                     <td>{student.department}</td>
                     <td>{student.semester}</td>
