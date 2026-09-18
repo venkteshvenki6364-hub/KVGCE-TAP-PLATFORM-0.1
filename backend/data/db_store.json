@@ -5,10 +5,14 @@
       "email": "admin@kvgce.edu.in",
       "full_name": "Dr. K. V. Gowda",
       "role": "admin",
+      "user_id": "ADMIN-001",
       "hashed_password": "$2b$12$hMQmFfaIImdrHchEK5Zx2uP6uuHxjDIoQSbjtbcaldzbStwT6RKYm",
       "department": "Administration",
       "phone": "+91 9845012345",
+      "dob": "10-01-1980",
       "is_active": true,
+      "is_verified": true,
+      "status": "approved",
       "created_at": "2026-01-10T10:00:00"
     },
     {
@@ -17,10 +21,14 @@
       "full_name": "Prof. Suresh Kumar",
       "role": "faculty",
       "faculty_id": "KVG-FAC-102",
+      "user_id": "KVG-FAC-102",
       "hashed_password": "$2b$12$hMQmFfaIImdrHchEK5Zx2uP6uuHxjDIoQSbjtbcaldzbStwT6RKYm",
       "department": "Computer Science & Engineering",
       "phone": "+91 9448123456",
+      "dob": "15-08-1985",
       "is_active": true,
+      "is_verified": true,
+      "status": "approved",
       "created_at": "2026-01-11T10:00:00"
     },
     {
@@ -29,16 +37,20 @@
       "full_name": "Aditya Hegde",
       "role": "student",
       "student_id": "4KV21CS042",
+      "user_id": "4KV21CS042",
       "hashed_password": "$2b$12$hMQmFfaIImdrHchEK5Zx2uP6uuHxjDIoQSbjtbcaldzbStwT6RKYm",
       "department": "Computer Science & Engineering",
       "course": "B.E. Computer Science & Engineering",
       "semester": 6,
       "year": 3,
       "phone": "+91 9741234567",
+      "dob": "28-02-2004",
       "github": "https://github.com/aditya-kvgce",
       "linkedin": "https://linkedin.com/in/aditya-kvgce",
       "portfolio": "https://aditya.kvgce.dev",
       "is_active": true,
+      "is_verified": true,
+      "status": "approved",
       "created_at": "2026-01-12T10:00:00",
       "skills": [
         {
@@ -84,6 +96,291 @@
           "percentage": 88
         }
       ]
+    },
+    {
+      "_id": "user-pending-student-1",
+      "email": "pooja.rao@kvgce.edu.in",
+      "full_name": "Pooja Rao",
+      "role": "student",
+      "student_id": "4KV21CS099",
+      "hashed_password": "$2b$12$hMQmFfaIImdrHchEK5Zx2uP6uuHxjDIoQSbjtbcaldzbStwT6RKYm",
+      "department": "Computer Science & Engineering",
+      "course": "B.E. Computer Science & Engineering",
+      "semester": 6,
+      "year": 3,
+      "phone": "+91 9880123456",
+      "dob": "14-05-2004",
+      "is_active": true,
+      "is_verified": true,
+      "status": "approved",
+      "created_at": "2026-09-08T11:30:00",
+      "skills": [
+        {
+          "name": "Python",
+          "category": "Programming",
+          "score": 75,
+          "level": "Intermediate",
+          "percentage": 75
+        },
+        {
+          "name": "Web Development",
+          "category": "Web Development",
+          "score": 70,
+          "level": "Intermediate",
+          "percentage": 70
+        },
+        {
+          "name": "Quantitative Aptitude",
+          "category": "Aptitude",
+          "score": 80,
+          "level": "Advanced",
+          "percentage": 80
+        }
+      ]
+    },
+    {
+      "_id": "user-pending-faculty-1",
+      "email": "dr.ramesh@kvgce.edu.in",
+      "full_name": "Dr. Ramesh V",
+      "role": "faculty",
+      "faculty_id": "KVG-FAC-109",
+      "hashed_password": "$2b$12$hMQmFfaIImdrHchEK5Zx2uP6uuHxjDIoQSbjtbcaldzbStwT6RKYm",
+      "department": "Electronics & Communication",
+      "phone": "+91 9900987654",
+      "dob": "10-10-1982",
+      "is_active": true,
+      "is_verified": true,
+      "status": "approved",
+      "created_at": "2026-09-08T11:45:00"
+    },
+    {
+      "email": "preetham.k@kvgce.edu.in",
+      "full_name": "Preetham K",
+      "role": "student",
+      "phone": "",
+      "department": "Computer Science & Engineering",
+      "student_id": "4KV21CS088",
+      "faculty_id": "",
+      "course": "B.E. Computer Science & Engineering",
+      "semester": 6,
+      "year": 3,
+      "dob": "Password123!",
+      "hashed_password": "$2b$12$3XFKwi.Sesqc8XRtKFYdY./6PPYTgbxtUD6jZAyrTdYMz3Y97gHKy",
+      "is_verified": true,
+      "status": "approved",
+      "is_active": true,
+      "created_at": "Password123!",
+      "skills": [
+        {
+          "name": "Python",
+          "category": "Programming",
+          "score": 75,
+          "level": "Intermediate",
+          "percentage": 75
+        },
+        {
+          "name": "Web Development",
+          "category": "Web Development",
+          "score": 70,
+          "level": "Intermediate",
+          "percentage": 70
+        },
+        {
+          "name": "Quantitative Aptitude",
+          "category": "Aptitude",
+          "score": 80,
+          "level": "Advanced",
+          "percentage": 80
+        }
+      ],
+      "github": "",
+      "linkedin": "",
+      "portfolio": "",
+      "_id": "a03ffc8c-ffc7-438e-a232-6ac099a3f107"
+    },
+    {
+      "email": "verify.user1789704525@kvgce.edu.in",
+      "full_name": "Rahul V. Nair",
+      "role": "student",
+      "phone": "",
+      "department": "Computer Science & Engineering",
+      "student_id": "4KV21CS525",
+      "faculty_id": "",
+      "user_id": "4KV21CS525",
+      "course": "B.E. Computer Science & Engineering",
+      "semester": 6,
+      "year": 3,
+      "dob": "20-04-2003",
+      "hashed_password": "$2b$12$MwSDqq1RqYPI/ptu0rMzKuTIyjgmJyPRB7xYOh/op72rYjk9b/gou",
+      "is_verified": false,
+      "status": "pending",
+      "is_active": false,
+      "created_at": "20-04-2003",
+      "skills": [
+        {
+          "name": "Python",
+          "category": "Programming",
+          "score": 75,
+          "level": "Intermediate",
+          "percentage": 75
+        },
+        {
+          "name": "Web Development",
+          "category": "Web Development",
+          "score": 70,
+          "level": "Intermediate",
+          "percentage": 70
+        },
+        {
+          "name": "Quantitative Aptitude",
+          "category": "Aptitude",
+          "score": 80,
+          "level": "Advanced",
+          "percentage": 80
+        }
+      ],
+      "github": "",
+      "linkedin": "",
+      "portfolio": "",
+      "_id": "af9eca6a-34bb-4b2d-9b2b-88241e4bc05f"
+    },
+    {
+      "email": "verify.user1789704632@kvgce.edu.in",
+      "full_name": "Rahul V. Nair",
+      "role": "student",
+      "phone": "",
+      "department": "Computer Science & Engineering",
+      "student_id": "4KV21CS632",
+      "faculty_id": "",
+      "user_id": "4KV21CS632",
+      "course": "B.E. Computer Science & Engineering",
+      "semester": 6,
+      "year": 3,
+      "dob": "",
+      "hashed_password": "$2b$12$MOeK3Hp3.VmO9TDrN7WLQOAvEeFivazaGIO6dRv5CCokx1hW2/39q",
+      "is_verified": true,
+      "status": "approved",
+      "is_active": true,
+      "created_at": "2026-09-18T10:00:00",
+      "skills": [
+        {
+          "name": "Python",
+          "category": "Programming",
+          "score": 75,
+          "level": "Intermediate",
+          "percentage": 75
+        },
+        {
+          "name": "Web Development",
+          "category": "Web Development",
+          "score": 70,
+          "level": "Intermediate",
+          "percentage": 70
+        },
+        {
+          "name": "Quantitative Aptitude",
+          "category": "Aptitude",
+          "score": 80,
+          "level": "Advanced",
+          "percentage": 80
+        }
+      ],
+      "github": "",
+      "linkedin": "",
+      "portfolio": "",
+      "_id": "cdd0604b-c351-4c2f-ba78-517668191286"
+    },
+    {
+      "email": "verify_test_student@kvgce.edu.in",
+      "full_name": "Test Verification Student",
+      "role": "student",
+      "phone": "9876543210",
+      "department": "Computer Science & Engineering",
+      "student_id": "4KV21CS999",
+      "faculty_id": "KVG-FAC-3210",
+      "user_id": "4KV21CS999",
+      "course": "B.E. Computer Science & Engineering",
+      "semester": 6,
+      "year": 3,
+      "dob": "",
+      "hashed_password": "$2b$12$nAiLtCL2eTdN7tCAsHX83OuJ5jhit4rqqlQYhjznQ3tB06v0aW8wa",
+      "is_verified": false,
+      "status": "pending",
+      "is_active": false,
+      "created_at": "2026-09-18T10:00:00",
+      "skills": [
+        {
+          "name": "Python",
+          "category": "Programming",
+          "score": 75,
+          "level": "Intermediate",
+          "percentage": 75
+        },
+        {
+          "name": "Web Development",
+          "category": "Web Development",
+          "score": 70,
+          "level": "Intermediate",
+          "percentage": 70
+        },
+        {
+          "name": "Quantitative Aptitude",
+          "category": "Aptitude",
+          "score": 80,
+          "level": "Advanced",
+          "percentage": 80
+        }
+      ],
+      "github": "",
+      "linkedin": "",
+      "portfolio": "",
+      "_id": "5bbe4f8e-0e84-42f7-8367-0abc4f5a227d"
+    },
+    {
+      "email": "venkatesh@kvgce.ac.in",
+      "full_name": "venkateshR",
+      "role": "student",
+      "phone": "9876543210",
+      "department": "Computer Science & Engineering",
+      "student_id": "4KV23CE033",
+      "faculty_id": "KVG-FAC-3210",
+      "user_id": "4KV23CE033",
+      "course": "B.E. Computer Science & Engineering",
+      "semester": 6,
+      "year": 3,
+      "dob": "28-02-2004",
+      "hashed_password": "$2b$12$izgSox/yujhZGFHprbDLm.oE4JLz1o4o/E5UUHz3kEPHrIlUyek8a",
+      "is_verified": true,
+      "status": "approved",
+      "is_active": true,
+      "created_at": "28-02-2004",
+      "skills": [
+        {
+          "name": "Python",
+          "category": "Programming",
+          "score": 75,
+          "level": "Intermediate",
+          "percentage": 75
+        },
+        {
+          "name": "Web Development",
+          "category": "Web Development",
+          "score": 70,
+          "level": "Intermediate",
+          "percentage": 70
+        },
+        {
+          "name": "Quantitative Aptitude",
+          "category": "Aptitude",
+          "score": 80,
+          "level": "Advanced",
+          "percentage": 80
+        }
+      ],
+      "github": "",
+      "linkedin": "",
+      "portfolio": "",
+      "_id": "38d48a39-a8f8-404e-a999-2384cc81aa38"
     }
   ],
   "departments": [

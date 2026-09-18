@@ -9,6 +9,8 @@ class UserBase(BaseModel):
     phone: Optional[str] = None
     department: Optional[str] = None
     is_active: bool = True
+    is_verified: bool = False
+    status: Optional[str] = "pending"
 
 class UserCreate(UserBase):
     password: str
@@ -17,6 +19,7 @@ class UserCreate(UserBase):
     course: Optional[str] = "B.E. Computer Science & Engineering"
     semester: Optional[int] = 6
     year: Optional[int] = 3
+    dob: Optional[str] = None
 
 class UserLogin(BaseModel):
     username_or_email: str
@@ -27,6 +30,8 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     user: dict
+    requires_approval: Optional[bool] = False
+    message: Optional[str] = None
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -39,3 +44,12 @@ class UserProfileUpdate(BaseModel):
     linkedin: Optional[str] = None
     portfolio: Optional[str] = None
     skills: Optional[List[dict]] = None
+
+class PasswordResetRequest(BaseModel):
+    username_or_email: str
+    dob_or_phone: Optional[str] = None
+
+class PasswordResetConfirm(BaseModel):
+    username_or_email: str
+    dob_or_phone: str
+    new_password: str

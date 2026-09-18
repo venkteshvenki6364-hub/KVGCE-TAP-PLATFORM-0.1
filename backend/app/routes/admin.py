@@ -40,6 +40,70 @@ async def get_admin_dashboard(current_user: dict = Depends(require_role(["admin"
         }
     }
 
+@router.get("/pending-users")
+async def list_pending_users(current_user: dict = Depends(require_role(["admin"]))):
+    users_col = get_db_collection("users")
+    pending_users = await users_col.find({
+        "$or": [
+            {"status": "pending"},
+            {"is_verified": False}
+        ]
+    })
+    for u in pending_users:
+        u.pop("hashed_password", None)
+    return {
+        "success": True,
+        "data": pending_users
+    }
+
+@router.post("/users/{email}/approve")
+async def approve_user_registration(
+    email: str,
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    users_col = get_db_collection("users")
+    user = await users_col.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    update_fields = {
+        "is_verified": True,
+        "is_active": True,
+        "status": "approved"
+    }
+
+    # Ensure default fields based on role
+    if user.get("role") == "student" and not user.get("skills"):
+        update_fields["skills"] = [
+            {"name": "Python", "category": "Programming", "score": 75, "level": "Intermediate", "percentage": 75},
+            {"name": "Web Development", "category": "Web Development", "score": 70, "level": "Intermediate", "percentage": 70},
+            {"name": "Quantitative Aptitude", "category": "Aptitude", "score": 80, "level": "Advanced", "percentage": 80}
+        ]
+
+    await users_col.update_one({"email": email}, {"$set": update_fields})
+
+    return {
+        "success": True,
+        "message": f"User '{user.get('full_name')}' ({user.get('role').capitalize()}) approved and added to active database."
+    }
+
+@router.post("/users/{email}/reject")
+async def reject_user_registration(
+    email: str,
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    users_col = get_db_collection("users")
+    user = await users_col.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    await users_col.update_one({"email": email}, {"$set": {"status": "rejected", "is_active": False, "is_verified": False}})
+
+    return {
+        "success": True,
+        "message": f"Registration request for '{user.get('full_name')}' rejected."
+    }
+
 @router.get("/users")
 async def list_all_users(current_user: dict = Depends(require_role(["admin"]))):
     users_col = get_db_collection("users")
@@ -69,12 +133,20 @@ async def create_user_by_admin(
         "phone": user_in.phone or "",
         "department": user_in.department or "Computer Science & Engineering",
         "student_id": user_in.student_id or "",
-        "faculty_id": user_in.faculty_id or "",
-        "course": user_in.course or "",
+        "faculty_id": user_in.faculty_id or (f"KVG-FAC-{user_in.phone[-4:]}" if user_in.phone else ""),
+        "course": user_in.course or "B.E. Computer Science & Engineering",
         "semester": user_in.semester or 1,
         "year": user_in.year or 1,
+        "dob": user_in.dob or "",
         "hashed_password": hashed_pwd,
-        "is_active": True
+        "is_active": True,
+        "is_verified": True,
+        "status": "approved",
+        "skills": [
+            {"name": "Python", "category": "Programming", "score": 75, "level": "Intermediate", "percentage": 75},
+            {"name": "Web Development", "category": "Web Development", "score": 70, "level": "Intermediate", "percentage": 70},
+            {"name": "Quantitative Aptitude", "category": "Aptitude", "score": 80, "level": "Advanced", "percentage": 80}
+        ] if user_in.role == "student" else []
     }
     
     res = await users_col.insert_one(user_doc)
@@ -83,7 +155,7 @@ async def create_user_by_admin(
 
     return {
         "success": True,
-        "message": f"User ({user_in.role}) created successfully",
+        "message": f"User '{user_in.full_name}' ({user_in.role.capitalize()}) added directly to database and verified.",
         "data": user_doc
     }
 

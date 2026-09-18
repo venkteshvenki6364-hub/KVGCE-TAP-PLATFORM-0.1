@@ -36,6 +36,19 @@ class InMemoryDatabase:
             self.collections[name] = []
         return InMemoryCollection(self.collections[name], self._save_to_file)
 
+def _matches_val(item_val, query_val):
+    if isinstance(query_val, dict) and "$regex" in query_val:
+        import re
+        pattern = query_val["$regex"]
+        flags = re.IGNORECASE if query_val.get("$options") == "i" else 0
+        try:
+            return bool(re.search(pattern, str(item_val or ""), flags))
+        except Exception:
+            return str(item_val or "").lower() == str(pattern or "").lower()
+    if isinstance(item_val, str) and isinstance(query_val, str):
+        return item_val.strip().lower() == query_val.strip().lower()
+    return item_val == query_val
+
 class InMemoryCollection:
     def __init__(self, data_list: List[Dict[str, Any]], save_callback):
         self.data = data_list
@@ -47,13 +60,13 @@ class InMemoryCollection:
             for k, v in query.items():
                 if k == "$or":
                     or_match = any(
-                        all(item.get(sub_k) == sub_v for sub_k, sub_v in cond.items())
+                        all(_matches_val(item.get(sub_k), sub_v) for sub_k, sub_v in cond.items())
                         for cond in v
                     )
                     if not or_match:
                         match = False
                         break
-                elif item.get(k) != v:
+                elif not _matches_val(item.get(k), v):
                     match = False
                     break
             if match:
@@ -68,13 +81,13 @@ class InMemoryCollection:
             for k, v in query.items():
                 if k == "$or":
                     or_match = any(
-                        all(item.get(sub_k) == sub_v for sub_k, sub_v in cond.items())
+                        all(_matches_val(item.get(sub_k), sub_v) for sub_k, sub_v in cond.items())
                         for cond in v
                     )
                     if not or_match:
                         match = False
                         break
-                elif item.get(k) != v:
+                elif not _matches_val(item.get(k), v):
                     match = False
                     break
             if match:
