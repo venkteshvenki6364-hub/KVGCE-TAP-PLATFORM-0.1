@@ -10,6 +10,7 @@ function LoginPage() {
 
   const [role, setRole] = useState("student");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -30,8 +31,8 @@ function LoginPage() {
 
   const [formData, setFormData] = useState({
     usn: "4KV21CS042",
-    phone: "",
-    userId: "",
+    phone: "9876543210",
+    userId: "4KV21CS042",
     dob: "28-02-2004",
     password: "Password123!",
     confirmPassword: "",
@@ -48,35 +49,35 @@ function LoginPage() {
     if (selectedRole === "student") {
       setFormData({
         usn: "4KV21CS042",
-        phone: "",
-        userId: "",
+        phone: "9741234567",
+        userId: "4KV21CS042",
         dob: "28-02-2004",
         password: "Password123!",
         confirmPassword: "",
         name: "",
-        email: "",
+        email: "student@kvgce.edu.in",
       });
     } else if (selectedRole === "faculty") {
       setFormData({
-        usn: "",
-        phone: "9876543210",
-        userId: "",
+        usn: "KVG-FAC-102",
+        phone: "9448123456",
+        userId: "KVG-FAC-102",
         dob: "15-08-1985",
         password: "Password123!",
         confirmPassword: "",
         name: "",
-        email: "",
+        email: "faculty@kvgce.edu.in",
       });
     } else if (selectedRole === "admin") {
       setFormData({
-        usn: "",
-        phone: "",
+        usn: "ADMIN-001",
+        phone: "9845012345",
         userId: "admin@kvgce.edu.in",
-        dob: "",
+        dob: "10-01-1980",
         password: "Password123!",
         confirmPassword: "",
         name: "",
-        email: "",
+        email: "admin@kvgce.edu.in",
       });
     }
   };
@@ -93,7 +94,7 @@ function LoginPage() {
     setResetError("");
     setResetSuccess("");
     setResetData({
-      identifier: formData.usn || formData.userId || "4KV21CS042",
+      identifier: formData.userId || formData.usn || "4KV21CS042",
       dobOrPhone: formData.dob || formData.phone || "28-02-2004",
       newPassword: "",
       confirmPassword: ""
@@ -159,6 +160,12 @@ function LoginPage() {
     setLoading(true);
 
     if (isSignup) {
+      if (!formData.name || !formData.email || (!formData.userId && !formData.usn)) {
+        setLocalError("Please fill in all required fields (Name, Email, User ID / USN).");
+        setLoading(false);
+        return;
+      }
+
       if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
         setLocalError("Passwords do not match. Please re-enter.");
         setLoading(false);
@@ -170,38 +177,18 @@ function LoginPage() {
         full_name: formData.name,
         email: formData.email,
         password: formData.password || formData.dob,
+        student_id: formData.usn || formData.userId,
+        faculty_id: role === "faculty" ? (formData.userId || formData.usn) : "",
+        phone: formData.phone || "",
+        dob: formData.dob || "",
       };
-
-      if (role === "student") {
-        if (!formData.name || !formData.email || !formData.usn) {
-          setLocalError("Please fill in all required student registration fields.");
-          setLoading(false);
-          return;
-        }
-        regData.student_id = formData.usn;
-        regData.dob = formData.dob;
-      } else if (role === "faculty") {
-        if (!formData.name || !formData.email || !formData.phone) {
-          setLocalError("Please fill in all required faculty registration fields.");
-          setLoading(false);
-          return;
-        }
-        regData.phone = formData.phone;
-        regData.dob = formData.dob;
-      } else if (role === "admin") {
-        if (!formData.name || !formData.email) {
-          setLocalError("Please fill in all required admin registration fields.");
-          setLoading(false);
-          return;
-        }
-      }
 
       const res = await register(regData);
       setLoading(false);
 
       if (res.success) {
         if (res.requiresApproval) {
-          setSuccessMsg(res.message || "Registration request submitted! Your account is pending verification by Admin. You will be able to log in once an Administrator approves your account.");
+          setSuccessMsg(res.message || "🎉 Registration request submitted! Your account has been sent for verification to Admin. You will be able to log in once an Administrator approves your registration.");
           setIsSignup(false);
         } else {
           setSuccessMsg(`Account created successfully! Redirecting to ${role} home page...`);
@@ -215,37 +202,17 @@ function LoginPage() {
         setLocalError(res.message || "Registration failed. Please try again.");
       }
     } else {
-      let identifier = "";
-      let secret = "";
+      let identifier = formData.userId || formData.usn || formData.email;
+      let secret = formData.password || formData.dob;
 
-      if (role === "student") {
-        identifier = formData.usn;
-        secret = formData.dob || formData.password;
-        if (!identifier) {
-          setLocalError("Please enter your USN.");
-          setLoading(false);
-          return;
-        }
-      } else if (role === "faculty") {
-        identifier = formData.phone;
-        secret = formData.dob || formData.password;
-        if (!identifier) {
-          setLocalError("Please enter your Phone No.");
-          setLoading(false);
-          return;
-        }
-      } else if (role === "admin") {
-        identifier = formData.userId;
-        secret = formData.password;
-        if (!identifier) {
-          setLocalError("Please enter your User ID or Email.");
-          setLoading(false);
-          return;
-        }
+      if (!identifier) {
+        setLocalError(`Please enter your User ID / USN for ${role.toUpperCase()}.`);
+        setLoading(false);
+        return;
       }
 
       if (!secret) {
-        setLocalError("Please enter your password / DOB.");
+        setLocalError("Please enter your password.");
         setLoading(false);
         return;
       }
@@ -354,7 +321,7 @@ function LoginPage() {
 
           {successMsg && (
             <div className="alert-message success">
-              ✅ {successMsg}
+              {successMsg}
             </div>
           )}
 
@@ -404,156 +371,129 @@ function LoginPage() {
               </>
             )}
 
-            {/* ROLE SPECIFIC PRIMARY IDENTIFIER FIELDS */}
-            {role === "student" && (
-              <div className="field-group">
-                <label>USN</label>
-                <div className="input-rel-box">
-                  <span className="icon-left">
-                    <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    name="usn"
-                    placeholder="Enter your USN (e.g. 4KV21CS042)"
-                    value={formData.usn}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+            {/* PRIMARY USER ID / USN FIELD (FOR ALL 3 ROLES: STUDENT, FACULTY, ADMIN) */}
+            <div className="field-group">
+              <label>
+                {role === "student"
+                  ? "User ID / USN"
+                  : role === "faculty"
+                  ? "User ID / Faculty ID / Phone"
+                  : "User ID / Admin ID / Email"}
+              </label>
+              <div className="input-rel-box">
+                <span className="icon-left">
+                  <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  name={role === "student" ? "usn" : "userId"}
+                  placeholder={
+                    role === "student"
+                      ? "Enter User ID or USN (e.g. 4KV21CS042)"
+                      : role === "faculty"
+                      ? "Enter User ID, Faculty ID or Phone (e.g. KVG-FAC-102)"
+                      : "Enter User ID, Admin ID or Email (e.g. admin@kvgce.edu.in)"
+                  }
+                  value={role === "student" ? formData.usn : formData.userId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      usn: val,
+                      userId: val
+                    }));
+                  }}
+                  required
+                />
               </div>
-            )}
+            </div>
 
-            {role === "faculty" && (
-              <div className="field-group">
-                <label>Phone No</label>
-                <div className="input-rel-box">
-                  <span className="icon-left">
-                    <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Enter your Phone No (e.g. 9876543210)"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+            {/* PASSWORD FIELD FOR ALL THREE ROLES */}
+            <div className="field-group">
+              <label>Password</label>
+              <div className="input-rel-box">
+                <span className="icon-left">
+                  {/* Lock SVG Icon */}
+                  <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Toggle password"
+                >
+                  <svg className="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {showPassword ? (
+                      <>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </>
+                    )}
+                  </svg>
+                </button>
               </div>
-            )}
+            </div>
 
-            {role === "admin" && (
-              <div className="field-group">
-                <label>User ID / Email</label>
-                <div className="input-rel-box">
-                  <span className="icon-left">
-                    <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    name="userId"
-                    placeholder="Enter User ID or Email (e.g. admin@kvgce.edu.in)"
-                    value={formData.userId}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* PASSWORD / DOB FIELD */}
-            {(role === "student" || role === "faculty") ? (
-              <div className="field-group">
-                <label>DOB (Date of Birth)</label>
-                <div className="input-rel-box">
-                  <span className="icon-left">
-                    <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </span>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="dob"
-                    placeholder="Enter your DOB (DD-MM-YYYY)"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="eye-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label="Toggle password"
-                  >
-                    <svg className="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="field-group">
-                <label>Password</label>
-                <div className="input-rel-box">
-                  <span className="icon-left">
-                    <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </span>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Enter your Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="eye-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label="Toggle password"
-                  >
-                    <svg className="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* CONFIRM PASSWORD FOR SIGNUP */}
+            {/* CONFIRM PASSWORD FOR SIGNUP WITH IDENTICAL LOCK & EYE ICONS */}
             {isSignup && (
               <div className="field-group">
                 <label>Confirm Password</label>
                 <div className="input-rel-box">
                   <span className="icon-left">
+                    {/* SAME Lock SVG Icon as Password field */}
                     <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                   </span>
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
-                    placeholder="Confirm your Password"
+                    placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
                   />
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label="Toggle confirm password"
+                  >
+                    {/* SAME Eye SVG Icon as Password field */}
+                    <svg className="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      {showConfirmPassword ? (
+                        <>
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </>
+                      ) : (
+                        <>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </>
+                      )}
+                    </svg>
+                  </button>
                 </div>
               </div>
             )}

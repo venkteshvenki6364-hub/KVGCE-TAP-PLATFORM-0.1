@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./Navbar.css";
 
@@ -15,18 +15,41 @@ const navLinks = [
   },
   {
     id: "how-it-works",
-    label: "How It Works",
+    label: "How it Works",
     href: "#how-it-works",
   },
   {
     id: "contact",
-    label: "Contact Us",
+    label: "Contact us",
     href: "#contact",
   },
 ];
 
-function Navbar({ activeSection = "home" }) {
+function Navbar({ activeSection: initialActiveSection }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState(initialActiveSection || "home");
+
+  useEffect(() => {
+    const sectionIds = ["home", "about", "how-it-works", "contact"];
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 120; // navbar offset
+
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sectionIds[i]);
+        if (section && section.offsetTop <= scrollPosition) {
+          setActiveSection(sectionIds[i]);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Call once on mount
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const closeMenu = () => {
     setMenuOpen(false);
@@ -132,7 +155,7 @@ function Navbar({ activeSection = "home" }) {
               <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-4.42 0-8 2.69-8 6v1h16v-1c0-3.31-3.58-6-8-6Z" />
             </svg>
 
-            <span>login</span>
+            <span>Login</span>
           </Link>
         </nav>
       </div>

@@ -358,6 +358,61 @@
 }
 
 /* =========================================
+   INSTITUTION HIGHLIGHT CARD
+========================================= */
+.institution-highlight-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #cbd5e1;
+  border-left: 6px solid #1f2e6d;
+  border-radius: 20px;
+  padding: 2.2rem 2.5rem;
+  margin-bottom: 3.5rem;
+  box-shadow: 0 10px 30px rgba(31, 46, 109, 0.06);
+}
+
+.inst-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.inst-badge-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(31, 46, 109, 0.15));
+}
+
+.inst-sub-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #d4a017;
+  letter-spacing: 1px;
+}
+
+.inst-title {
+  margin: 0.2rem 0 0.2rem;
+  font-size: 1.6rem;
+  font-weight: 850;
+  color: #1f2e6d;
+}
+
+.inst-affiliation {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.inst-description {
+  margin: 0;
+  font-size: 1rem;
+  color: #334155;
+  line-height: 1.7;
+}
+
+/* =========================================
    RESPONSIVE ABOUT
 ========================================= */
 @media (max-width: 1024px) {
@@ -380,7 +435,12 @@
   }
 
   .pillar-card {
-    padding: 2rem 1.5rem;
+    padding: 1.75rem 1.25rem;
+  }
+
+  .inst-header-row {
+    flex-direction: column;
+    text-align: center;
   }
 
   .about-stats-bar {
