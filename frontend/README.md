@@ -1,2 +1,0 @@
-# KVGCE-TAP-PLATFORM-0.1
-KVGCE-TAP PLATFORM 0.1  Major project 
