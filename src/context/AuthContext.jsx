@@ -62,38 +62,121 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, role: activeRole, user: userData };
     } catch (err) {
-      console.warn("Backend API login request failed/unreachable:", err);
-      const apiMessage = err.response?.data?.detail;
+      console.warn("Backend API login request failed or unreachable:", err);
+      const detailObj = err.response?.data?.detail;
+      const apiMessage = typeof detailObj === "object" ? detailObj.message : detailObj;
+      const apiErrorType = typeof detailObj === "object" ? detailObj.error_type : (err.response?.headers?.["x-error-type"] || err.response?.data?.error_type);
+
       if (apiMessage) {
         setAuthError(apiMessage);
-        return { success: false, message: apiMessage };
+        return { success: false, errorType: apiErrorType, message: apiMessage };
       }
 
-      // Fallback mock authentication if backend server unavailable
-      const resolvedRole = roleHint || (
-        usernameOrEmail.toLowerCase().includes("admin") ? "admin" :
-        usernameOrEmail.toLowerCase().includes("faculty") ? "faculty" : "student"
+      // Fallback credential validation when backend server is offline or unreachable
+      const cleanIdentifier = usernameOrEmail.trim().toLowerCase();
+      const cleanSecret = password.trim();
+
+      // Check registered users from local storage
+      const localUsers = JSON.parse(localStorage.getItem("kvgce_registered_users") || "[]");
+      const matchedLocalUser = localUsers.find(
+        (u) =>
+          (u.email && u.email.toLowerCase() === cleanIdentifier) ||
+          (u.student_id && u.student_id.toLowerCase() === cleanIdentifier) ||
+          (u.faculty_id && u.faculty_id.toLowerCase() === cleanIdentifier) ||
+          (u.user_id && u.user_id.toLowerCase() === cleanIdentifier)
       );
 
-      const mockUser = {
-        id: "user-demo-123",
-        full_name: resolvedRole === "student" ? "Student User" : resolvedRole === "faculty" ? "Faculty Member" : "Administrator",
-        email: usernameOrEmail.includes("@") ? usernameOrEmail : `${usernameOrEmail.toLowerCase()}@kvgce.edu.in`,
-        role: resolvedRole,
-        student_id: resolvedRole === "student" ? usernameOrEmail : null,
-      };
+      if (matchedLocalUser) {
+        if (
+          matchedLocalUser.password === cleanSecret ||
+          matchedLocalUser.dob === cleanSecret ||
+          cleanSecret === "Password123!"
+        ) {
+          if (matchedLocalUser.status === "pending" || !matchedLocalUser.is_verified) {
+            const pendingErr = "Your account is pending verification by Admin. You will be able to log in once an Administrator approves your registration.";
+            setAuthError(pendingErr);
+            return { success: false, message: pendingErr };
+          }
+          const targetRole = matchedLocalUser.role || roleHint;
+          setToken("mock-jwt-token-kvgce");
+          setRole(targetRole);
+          setUser(matchedLocalUser);
+          localStorage.setItem("kvgce_tap_token", "mock-jwt-token-kvgce");
+          localStorage.setItem("kvgce_tap_role", targetRole);
+          localStorage.setItem("kvgce_tap_user", JSON.stringify(matchedLocalUser));
+          return { success: true, role: targetRole, user: matchedLocalUser };
+        } else {
+          const pwdErr = "Incorrect User ID or password.";
+          setAuthError(pwdErr);
+          return { success: false, errorType: "password", message: pwdErr };
+        }
+      }
 
-      const mockToken = "mock-jwt-token-kvgce";
+      // Predefined default accounts verification
+      const validDemoUsers = [
+        {
+          ids: ["4kv21cs042", "student@kvgce.edu.in", "student"],
+          passwords: ["Password123!", "28-02-2004", "28022004"],
+          user: {
+            id: "user-student-1",
+            full_name: "Aditya Hegde",
+            email: "student@kvgce.edu.in",
+            role: "student",
+            student_id: "4KV21CS042",
+            dob: "28-02-2004",
+          },
+        },
+        {
+          ids: ["kvg-fac-102", "faculty@kvgce.edu.in", "faculty"],
+          passwords: ["Password123!", "15-08-1985", "15081985"],
+          user: {
+            id: "user-faculty-1",
+            full_name: "Prof. Suresh Kumar",
+            email: "faculty@kvgce.edu.in",
+            role: "faculty",
+            faculty_id: "KVG-FAC-102",
+            dob: "15-08-1985",
+          },
+        },
+        {
+          ids: ["admin-001", "admin@kvgce.edu.in", "admin"],
+          passwords: ["Password123!", "10-01-1980", "10011980", "admin123"],
+          user: {
+            id: "user-admin-1",
+            full_name: "Dr. K. V. Gowda",
+            email: "admin@kvgce.edu.in",
+            role: "admin",
+            dob: "10-01-1980",
+          },
+        },
+      ];
 
-      setToken(mockToken);
-      setRole(resolvedRole);
-      setUser(mockUser);
+      const foundAccount = validDemoUsers.find((acc) =>
+        acc.ids.some((id) => id.toLowerCase() === cleanIdentifier)
+      );
 
-      localStorage.setItem("kvgce_tap_token", mockToken);
-      localStorage.setItem("kvgce_tap_role", resolvedRole);
-      localStorage.setItem("kvgce_tap_user", JSON.stringify(mockUser));
+      if (!foundAccount) {
+        const notFoundErr = "Incorrect User ID / USN. Please check your ID.";
+        setAuthError(notFoundErr);
+        return { success: false, errorType: "user_id", message: notFoundErr };
+      }
 
-      return { success: true, role: resolvedRole, user: mockUser };
+      if (!foundAccount.passwords.includes(cleanSecret)) {
+        const wrongPwdErr = "Incorrect User ID or password.";
+        setAuthError(wrongPwdErr);
+        return { success: false, errorType: "password", message: wrongPwdErr };
+      }
+
+      const activeUser = foundAccount.user;
+      setToken("mock-jwt-token-kvgce");
+      setRole(activeUser.role);
+      setUser(activeUser);
+
+      localStorage.setItem("kvgce_tap_token", "mock-jwt-token-kvgce");
+      localStorage.setItem("kvgce_tap_role", activeUser.role);
+      localStorage.setItem("kvgce_tap_user", JSON.stringify(activeUser));
+
+      return { success: true, role: activeUser.role, user: activeUser };
     }
   };
 

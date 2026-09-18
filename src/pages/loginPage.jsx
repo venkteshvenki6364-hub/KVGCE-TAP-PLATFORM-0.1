@@ -16,6 +16,13 @@ function LoginPage() {
   const [localError, setLocalError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  // Field-level error messages
+  const [fieldErrors, setFieldErrors] = useState({
+    userId: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   // Forgot Password Modal State
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetStep, setResetStep] = useState(1); // 1: Verify, 2: New Password
@@ -45,6 +52,7 @@ function LoginPage() {
     setIsSignup(false);
     setLocalError("");
     setSuccessMsg("");
+    setFieldErrors({ userId: "", password: "", confirmPassword: "" });
 
     if (selectedRole === "student") {
       setFormData({
@@ -82,11 +90,37 @@ function LoginPage() {
     }
   };
 
+  const handleToggleSignup = (signupMode) => {
+    setIsSignup(signupMode);
+    setLocalError("");
+    setSuccessMsg("");
+    setFieldErrors({ userId: "", password: "", confirmPassword: "" });
+    if (signupMode) {
+      setFormData((prev) => ({
+        ...prev,
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        usn: "",
+        userId: "",
+      }));
+    }
+  };
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "usn" || name === "userId" ? { usn: value, userId: value } : {})
+    }));
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: "",
+      userId: name === "usn" || name === "userId" ? "" : prev.userId,
+    }));
   };
 
   const handleOpenResetModal = () => {
@@ -134,7 +168,6 @@ function LoginPage() {
       if (res.data && res.data.success) {
         setResetSuccess(res.data.message || "🎉 Password reset successfully and changes accepted!");
         
-        // Auto update current form fields with new password
         setFormData(prev => ({
           ...prev,
           password: resetData.newPassword
@@ -157,9 +190,11 @@ function LoginPage() {
     e.preventDefault();
     setLocalError("");
     setSuccessMsg("");
+    setFieldErrors({ userId: "", password: "", confirmPassword: "" });
     setLoading(true);
 
     if (isSignup) {
+      // SIGN UP - NEW USER REGISTRATION
       if (!formData.name || !formData.email || (!formData.userId && !formData.usn)) {
         setLocalError("Please fill in all required fields (Name, Email, User ID / USN).");
         setLoading(false);
@@ -167,7 +202,10 @@ function LoginPage() {
       }
 
       if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
-        setLocalError("Passwords do not match. Please re-enter.");
+        setFieldErrors((prev) => ({
+          ...prev,
+          confirmPassword: "Passwords do not match. Please re-enter.",
+        }));
         setLoading(false);
         return;
       }
@@ -202,17 +240,24 @@ function LoginPage() {
         setLocalError(res.message || "Registration failed. Please try again.");
       }
     } else {
+      // LOGIN - EXISTING USER AUTHENTICATION
       let identifier = formData.userId || formData.usn || formData.email;
       let secret = formData.password || formData.dob;
 
       if (!identifier) {
-        setLocalError(`Please enter your User ID / USN for ${role.toUpperCase()}.`);
+        setFieldErrors((prev) => ({
+          ...prev,
+          userId: `Please enter your User ID / USN.`,
+        }));
         setLoading(false);
         return;
       }
 
       if (!secret) {
-        setLocalError("Please enter your password.");
+        setFieldErrors((prev) => ({
+          ...prev,
+          password: "Please enter your password.",
+        }));
         setLoading(false);
         return;
       }
@@ -229,7 +274,34 @@ function LoginPage() {
           else navigate("/student/home");
         }, 800);
       } else {
-        setLocalError(res.message);
+        if (res.errorType === "user_id") {
+          setFieldErrors({
+            userId: "Incorrect User ID or password",
+            password: "",
+            confirmPassword: ""
+          });
+        } else if (res.errorType === "password") {
+          setFieldErrors({
+            userId: "",
+            password: "Incorrect User ID or password",
+            confirmPassword: ""
+          });
+        } else {
+          const msg = (res.message || "").toLowerCase();
+          if (msg.includes("user") || msg.includes("usn") || msg.includes("not found")) {
+            setFieldErrors({
+              userId: "Incorrect User ID or password",
+              password: "",
+              confirmPassword: ""
+            });
+          } else {
+            setFieldErrors({
+              userId: "",
+              password: "Incorrect User ID or password",
+              confirmPassword: ""
+            });
+          }
+        }
       }
     }
   };
@@ -313,12 +385,6 @@ function LoginPage() {
 
         {/* COMPACT FORM CARD */}
         <div className="form-card-box">
-          {(localError || authError) && (
-            <div className="alert-message error">
-              ⚠️ {localError || authError}
-            </div>
-          )}
-
           {successMsg && (
             <div className="alert-message success">
               {successMsg}
@@ -380,7 +446,7 @@ function LoginPage() {
                   ? "User ID / Faculty ID / Phone"
                   : "User ID / Admin ID / Email"}
               </label>
-              <div className="input-rel-box">
+              <div className={`input-rel-box ${fieldErrors.userId ? "has-error" : ""}`}>
                 <span className="icon-left">
                   <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -405,16 +471,22 @@ function LoginPage() {
                       usn: val,
                       userId: val
                     }));
+                    setFieldErrors(prev => ({ ...prev, userId: "" }));
                   }}
                   required
                 />
               </div>
+              {fieldErrors.userId && (
+                <div className="field-error-small" style={{ color: "#dc2626", fontSize: "11px", fontWeight: "600", marginTop: "4px", display: "block" }}>
+                  {fieldErrors.userId}
+                </div>
+              )}
             </div>
 
             {/* PASSWORD FIELD FOR ALL THREE ROLES */}
             <div className="field-group">
               <label>Password</label>
-              <div className="input-rel-box">
+              <div className={`input-rel-box ${fieldErrors.password ? "has-error" : ""}`}>
                 <span className="icon-left">
                   {/* Lock SVG Icon */}
                   <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -451,13 +523,18 @@ function LoginPage() {
                   </svg>
                 </button>
               </div>
+              {fieldErrors.password && (
+                <div className="field-error-small" style={{ color: "#dc2626", fontSize: "11px", fontWeight: "600", marginTop: "4px", display: "block" }}>
+                  {fieldErrors.password}
+                </div>
+              )}
             </div>
 
             {/* CONFIRM PASSWORD FOR SIGNUP WITH IDENTICAL LOCK & EYE ICONS */}
             {isSignup && (
               <div className="field-group">
                 <label>Confirm Password</label>
-                <div className="input-rel-box">
+                <div className={`input-rel-box ${fieldErrors.confirmPassword ? "has-error" : ""}`}>
                   <span className="icon-left">
                     {/* SAME Lock SVG Icon as Password field */}
                     <svg className="field-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -495,6 +572,11 @@ function LoginPage() {
                     </svg>
                   </button>
                 </div>
+                {fieldErrors.confirmPassword && (
+                  <div className="field-error-small" style={{ color: "#dc2626", fontSize: "11px", fontWeight: "600", marginTop: "4px", display: "block" }}>
+                    {fieldErrors.confirmPassword}
+                  </div>
+                )}
               </div>
             )}
 
@@ -536,7 +618,7 @@ function LoginPage() {
             {isSignup ? (
               <>
                 Already have an account?{" "}
-                <button type="button" onClick={() => setIsSignup(false)}>
+                <button type="button" onClick={() => handleToggleSignup(false)}>
                   Login
                 </button>
               </>
@@ -545,7 +627,7 @@ function LoginPage() {
                 {role === "student" ? "Student" : role === "faculty" ? "Faculty" : "User"} doesn't have an account?{" "}
                 <button
                   type="button"
-                  onClick={() => setIsSignup(true)}
+                  onClick={() => handleToggleSignup(true)}
                 >
                   Sign Up
                 </button>
@@ -560,7 +642,7 @@ function LoginPage() {
             <div style={{ background: "#ffffff", width: "90%", maxWidth: "460px", borderRadius: "16px", padding: "2rem", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)", border: "1px solid #e2e8f0" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "#1e293b" }}>
-                  🔐 Reset Account Password
+                  Reset Account Password
                 </h3>
                 <button
                   type="button"
@@ -573,7 +655,7 @@ function LoginPage() {
 
               {resetError && (
                 <div style={{ padding: "0.75rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "0.875rem", marginBottom: "1rem" }}>
-                  ⚠️ {resetError}
+                  {resetError}
                 </div>
               )}
 
