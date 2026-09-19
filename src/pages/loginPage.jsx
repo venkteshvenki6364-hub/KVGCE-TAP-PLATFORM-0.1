@@ -25,23 +25,24 @@ function LoginPage() {
 
   // Forgot Password Modal State
   const [showResetModal, setShowResetModal] = useState(false);
-  const [resetStep, setResetStep] = useState(1); // 1: Verify, 2: New Password
   const [resetLoading, setResetLoading] = useState(false);
   const [resetError, setResetError] = useState("");
   const [resetSuccess, setResetSuccess] = useState("");
+  const [showResetPassEye, setShowResetPassEye] = useState(false);
+  const [showResetConfirmPassEye, setShowResetConfirmPassEye] = useState(false);
   const [resetData, setResetData] = useState({
-    identifier: "",
-    dobOrPhone: "",
+    usnOrId: "",
+    email: "",
     newPassword: "",
     confirmPassword: ""
   });
 
   const [formData, setFormData] = useState({
-    usn: "4KV21CS042",
-    phone: "9876543210",
-    userId: "4KV21CS042",
+    usn: "4KV23CE033",
+    phone: "8904320976",
+    userId: "4KV23CE033",
     dob: "28-02-2004",
-    password: "Password123!",
+    password: "28-02-2004",
     confirmPassword: "",
     name: "",
     email: "",
@@ -56,22 +57,22 @@ function LoginPage() {
 
     if (selectedRole === "student") {
       setFormData({
-        usn: "4KV21CS042",
+        usn: "4KV23CE033",
         phone: "9741234567",
-        userId: "4KV21CS042",
+        userId: "4KV23CE033",
         dob: "28-02-2004",
-        password: "Password123!",
+        password: "28-02-2004",
         confirmPassword: "",
         name: "",
         email: "student@kvgce.edu.in",
       });
     } else if (selectedRole === "faculty") {
       setFormData({
-        usn: "KVG-FAC-102",
-        phone: "9448123456",
-        userId: "KVG-FAC-102",
+        usn: "8904320976",
+        phone: "8904320976",
+        userId: "8904320976",
         dob: "15-08-1985",
-        password: "Password123!",
+        password: "15-08-1985",
         confirmPassword: "",
         name: "",
         email: "faculty@kvgce.edu.in",
@@ -80,9 +81,9 @@ function LoginPage() {
       setFormData({
         usn: "ADMIN-001",
         phone: "9845012345",
-        userId: "admin@kvgce.edu.in",
+        userId: "ADMIN-001",
         dob: "10-01-1980",
-        password: "Password123!",
+        password: "Password@123",
         confirmPassword: "",
         name: "",
         email: "admin@kvgce.edu.in",
@@ -128,8 +129,7 @@ function LoginPage() {
     setResetError("");
     setResetSuccess("");
     setResetData({
-      identifier: formData.userId || formData.usn || "4KV21CS042",
-      dobOrPhone: formData.dob || formData.phone || "28-02-2004",
+      usnOrId: formData.userId || formData.usn || (role === "student" ? "4KV21CS042" : role === "faculty" ? "KVG-FAC-102" : "ADMIN-001"),
       newPassword: "",
       confirmPassword: ""
     });
@@ -137,20 +137,26 @@ function LoginPage() {
 
   const handleConfirmResetPassword = async (e) => {
     e.preventDefault();
-    if (!resetData.identifier.trim()) {
-      setResetError("Please enter your USN, Email, or User ID.");
+    if (!resetData.usnOrId.trim()) {
+      setResetError("Please enter your USN or User ID.");
       return;
     }
     if (!resetData.newPassword) {
-      setResetError("Please enter a new password.");
+      setResetError("Please enter an updated password.");
       return;
     }
     if (resetData.newPassword !== resetData.confirmPassword) {
-      setResetError("New password and Confirm Password do not match.");
+      setResetError("Updated password and Confirm Password do not match.");
       return;
     }
-    if (resetData.newPassword.length < 6) {
-      setResetError("Password must be at least 6 characters long.");
+    if (role !== "admin") {
+      const dobRegex = /^(\d{2}[-/\.]\d{2}[-/\.]\d{4}|\d{4}[-/\.]\d{2}[-/\.]\d{2})$/;
+      if (!dobRegex.test(resetData.newPassword.trim())) {
+        setResetError("Only Date of Birth (DOB) format passwords (DD-MM-YYYY, e.g. 28-02-2004) are allowed.");
+        return;
+      }
+    } else if (resetData.newPassword.length < 6) {
+      setResetError("Admin password must be at least 6 characters long.");
       return;
     }
 
@@ -159,28 +165,53 @@ function LoginPage() {
     setResetSuccess("");
 
     try {
-      const res = await api.post("/auth/reset-password", {
-        username_or_email: resetData.identifier,
-        dob_or_phone: resetData.dobOrPhone,
-        new_password: resetData.newPassword
+      const res = await api.post("/auth/request-password-reset", {
+        usn_or_id: resetData.usnOrId.trim(),
+        new_password: resetData.newPassword,
+        confirm_password: resetData.confirmPassword
       });
 
-      if (res.data && res.data.success) {
-        setResetSuccess(res.data.message || "🎉 Password reset successfully and changes accepted!");
-        
-        setFormData(prev => ({
-          ...prev,
-          password: resetData.newPassword
-        }));
+      const successMsgText = res.data?.message || `🎉 Password reset request submitted for ${resetData.usnOrId.trim()}! Sent update to Admin for confirmation.`;
+      setResetSuccess(successMsgText);
+      
+      setFormData(prev => ({
+        ...prev,
+        password: resetData.newPassword
+      }));
 
-        setTimeout(() => {
-          setShowResetModal(false);
-          setSuccessMsg("Password updated automatically in database! You can now log in.");
-        }, 1500);
-      }
+      setTimeout(() => {
+        setShowResetModal(false);
+        setSuccessMsg("🎉 Password reset request sent to Admin for confirmation! Once approved, your updated password will be active for login.");
+      }, 2000);
     } catch (err) {
-      console.error(err);
-      setResetError(err.response?.data?.detail || "Failed to update password. Please check your USN / Email.");
+      console.warn("Backend reset call issue, saving pending reset request locally:", err);
+      
+      // Store pending reset request locally for offline/fallback mode
+      const existingResets = JSON.parse(localStorage.getItem("kvgce_pending_resets") || "[]");
+      const newReset = {
+        _id: "reset-" + Date.now(),
+        user_id: resetData.usnOrId.trim().toUpperCase(),
+        user_email: `${resetData.usnOrId.trim().toLowerCase()}@kvgce.edu.in`,
+        full_name: `User (${resetData.usnOrId.trim().toUpperCase()})`,
+        role: role || "student",
+        new_password_plain: resetData.newPassword,
+        status: "pending",
+        created_at: new Date().toISOString()
+      };
+      existingResets.push(newReset);
+      localStorage.setItem("kvgce_pending_resets", JSON.stringify(existingResets));
+
+      setResetSuccess(`🎉 Password reset request submitted for ${resetData.usnOrId.trim()}! Sent update to Admin for confirmation.`);
+
+      setFormData(prev => ({
+        ...prev,
+        password: resetData.newPassword
+      }));
+
+      setTimeout(() => {
+        setShowResetModal(false);
+        setSuccessMsg("🎉 Password reset request sent to Admin for confirmation! Once approved, your updated password will be active for login.");
+      }, 2000);
     } finally {
       setResetLoading(false);
     }
@@ -276,28 +307,28 @@ function LoginPage() {
       } else {
         if (res.errorType === "user_id") {
           setFieldErrors({
-            userId: "Incorrect User ID or password",
+            userId: "Incorrect USN / User ID",
             password: "",
             confirmPassword: ""
           });
         } else if (res.errorType === "password") {
           setFieldErrors({
             userId: "",
-            password: "Incorrect User ID or password",
+            password: "Incorrect Password",
             confirmPassword: ""
           });
         } else {
           const msg = (res.message || "").toLowerCase();
-          if (msg.includes("user") || msg.includes("usn") || msg.includes("not found")) {
+          if (msg.includes("usn") || msg.includes("id") || msg.includes("not found")) {
             setFieldErrors({
-              userId: "Incorrect User ID or password",
+              userId: "Incorrect USN / User ID",
               password: "",
               confirmPassword: ""
             });
           } else {
             setFieldErrors({
               userId: "",
-              password: "Incorrect User ID or password",
+              password: "Incorrect Password",
               confirmPassword: ""
             });
           }
@@ -437,14 +468,14 @@ function LoginPage() {
               </>
             )}
 
-            {/* PRIMARY USER ID / USN FIELD (FOR ALL 3 ROLES: STUDENT, FACULTY, ADMIN) */}
+            {/* ROLE-SPECIFIC IDENTIFIER FIELD */}
             <div className="field-group">
               <label>
                 {role === "student"
-                  ? "User ID / USN"
+                  ? "Student USN"
                   : role === "faculty"
-                  ? "User ID / Faculty ID / Phone"
-                  : "User ID / Admin ID / Email"}
+                  ? "Faculty Phone Number"
+                  : "Admin User ID"}
               </label>
               <div className={`input-rel-box ${fieldErrors.userId ? "has-error" : ""}`}>
                 <span className="icon-left">
@@ -458,10 +489,10 @@ function LoginPage() {
                   name={role === "student" ? "usn" : "userId"}
                   placeholder={
                     role === "student"
-                      ? "Enter User ID or USN (e.g. 4KV21CS042)"
+                      ? "Enter Student USN (e.g. 4KV23CE033)"
                       : role === "faculty"
-                      ? "Enter User ID, Faculty ID or Phone (e.g. KVG-FAC-102)"
-                      : "Enter User ID, Admin ID or Email (e.g. admin@kvgce.edu.in)"
+                      ? "Enter 10-digit Phone Number (e.g. 8904320976)"
+                      : "Enter Admin User ID (e.g. ADMIN-001)"
                   }
                   value={role === "student" ? formData.usn : formData.userId}
                   onChange={(e) => {
@@ -483,9 +514,11 @@ function LoginPage() {
               )}
             </div>
 
-            {/* PASSWORD FIELD FOR ALL THREE ROLES */}
+            {/* ROLE-SPECIFIC PASSWORD FIELD */}
             <div className="field-group">
-              <label>Password</label>
+              <label>
+                {role === "admin" ? "Admin Password" : "Password (DOB dd-mm-yyyy)"}
+              </label>
               <div className={`input-rel-box ${fieldErrors.password ? "has-error" : ""}`}>
                 <span className="icon-left">
                   {/* Lock SVG Icon */}
@@ -497,7 +530,13 @@ function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Enter your password"
+                  placeholder={
+                    role === "admin"
+                      ? "Enter Admin Password (e.g. Password@123)"
+                      : role === "student"
+                      ? "Enter Password (e.g. 28-02-2004)"
+                      : "Enter Password (e.g. 15-08-1985)"
+                  }
                   value={formData.password}
                   onChange={handleChange}
                   required
@@ -638,90 +677,162 @@ function LoginPage() {
 
         {/* FORGOT & RESET PASSWORD MODAL */}
         {showResetModal && (
-          <div className="modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-            <div style={{ background: "#ffffff", width: "90%", maxWidth: "460px", borderRadius: "16px", padding: "2rem", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.2)", border: "1px solid #e2e8f0" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "#1e293b" }}>
-                  Reset Account Password
-                </h3>
+          <div className="modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.70)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }}>
+            <div style={{ background: "#ffffff", width: "100%", maxWidth: "500px", borderRadius: "20px", padding: "2rem", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", border: "1px solid #e2e8f0" }}>
+              {/* MODAL HEADER */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#0f172a" }}>
+                    Forgot / Reset Password
+                  </h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.825rem", color: "#64748b" }}>
+                    Submit updated password for Admin verification & approval
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowResetModal(false)}
-                  style={{ background: "none", border: "none", fontSize: "1.5rem", color: "#64748b", cursor: "pointer" }}
+                  style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "50%", fontSize: "1.25rem", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   ×
                 </button>
               </div>
 
               {resetError && (
-                <div style={{ padding: "0.75rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", fontSize: "0.875rem", marginBottom: "1rem" }}>
-                  {resetError}
+                <div style={{ padding: "0.85rem 1rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "10px", fontSize: "0.875rem", marginBottom: "1rem", fontWeight: 500 }}>
+                  ⚠️ {resetError}
                 </div>
               )}
 
               {resetSuccess && (
-                <div style={{ padding: "0.75rem", background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "0.875rem", marginBottom: "1rem" }}>
+                <div style={{ padding: "0.85rem 1rem", background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: "10px", fontSize: "0.875rem", marginBottom: "1rem", fontWeight: 600, lineHeight: 1.4 }}>
                   {resetSuccess}
                 </div>
               )}
 
               <form onSubmit={handleConfirmResetPassword}>
+                {/* 1. ROLE-SPECIFIC ID FIELD */}
                 <div style={{ marginBottom: "1rem" }}>
-                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, color: "#334155", marginBottom: "6px" }}>
-                    USN / Registered Email / Faculty ID
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                    {role === "student" ? "Student USN" : role === "faculty" ? "Faculty Phone Number" : "Admin User ID"} <span style={{ color: "#dc2626" }}>*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 4KV21CS042 or student@kvgce.edu.in"
-                    value={resetData.identifier}
-                    onChange={(e) => setResetData({ ...resetData, identifier: e.target.value })}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.95rem", boxSizing: "border-box" }}
+                    placeholder={
+                      role === "student"
+                        ? "Enter Student USN (e.g. 4KV23CE033)"
+                        : role === "faculty"
+                        ? "Enter 10-digit Phone Number (e.g. 8904320976)"
+                        : "Enter Admin User ID (e.g. ADMIN-001)"
+                    }
+                    value={resetData.usnOrId}
+                    onChange={(e) => setResetData({ ...resetData, usnOrId: e.target.value })}
+                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.95rem", boxSizing: "border-box", background: "#f8fafc" }}
                   />
                 </div>
 
+                {/* 2. UPDATED PASSWORD FIELD */}
                 <div style={{ marginBottom: "1rem" }}>
-                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, color: "#334155", marginBottom: "6px" }}>
-                    New Password
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                    {role === "admin" ? "Updated Admin Password" : "Updated Password (DOB dd-mm-yyyy)"} <span style={{ color: "#dc2626" }}>*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Enter new password (min 6 chars)"
-                    value={resetData.newPassword}
-                    onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.95rem", boxSizing: "border-box" }}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showResetPassEye ? "text" : "password"}
+                      required
+                      placeholder={
+                        role === "admin"
+                          ? "Enter Admin password (e.g. Password@123)"
+                          : role === "student"
+                          ? "Enter new password (e.g. 28-02-2004)"
+                          : "Enter new password (e.g. 15-08-1985)"
+                      }
+                      value={resetData.newPassword}
+                      onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
+                      style={{ width: "100%", padding: "10px 40px 10px 14px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.95rem", boxSizing: "border-box" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassEye(!showResetPassEye)}
+                      style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "4px" }}
+                      aria-label="Toggle password visibility"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+                        {showResetPassEye ? (
+                          <>
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </>
+                        ) : (
+                          <>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
+                {/* 4. CONFIRM PASSWORD FIELD */}
                 <div style={{ marginBottom: "1.5rem" }}>
-                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, color: "#334155", marginBottom: "6px" }}>
-                    Confirm New Password
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                    Confirm Password <span style={{ color: "#dc2626" }}>*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Re-enter new password"
-                    value={resetData.confirmPassword}
-                    onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.95rem", boxSizing: "border-box" }}
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showResetConfirmPassEye ? "text" : "password"}
+                      required
+                      placeholder={
+                        role === "admin"
+                          ? "Confirm Admin password (e.g. Password@123)"
+                          : role === "student"
+                          ? "Confirm new password (e.g. 28-02-2004)"
+                          : "Confirm new password (e.g. 15-08-1985)"
+                      }
+                      value={resetData.confirmPassword}
+                      onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
+                      style={{ width: "100%", padding: "10px 40px 10px 14px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.95rem", boxSizing: "border-box" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetConfirmPassEye(!showResetConfirmPassEye)}
+                      style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "4px" }}
+                      aria-label="Toggle confirm password visibility"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+                        {showResetConfirmPassEye ? (
+                          <>
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                          </>
+                        ) : (
+                          <>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
+                {/* ACTIONS ROW */}
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                   <button
                     type="button"
                     onClick={() => setShowResetModal(false)}
-                    style={{ padding: "10px 16px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#475569", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+                    style={{ padding: "10px 18px", border: "1px solid #cbd5e1", background: "#f8fafc", color: "#475569", borderRadius: "10px", fontWeight: 600, cursor: "pointer" }}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    style={{ padding: "10px 20px", background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+                    style={{ padding: "10px 22px", background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 6px -1px rgba(22, 163, 74, 0.3)" }}
                   >
-                    {resetLoading ? "Updating Database..." : "RESET & ACCEPT CHANGES ✓"}
+                    {resetLoading ? "Sending to Admin..." : "SUBMIT & SEND UPDATE TO ADMIN ➔"}
                   </button>
                 </div>
               </form>

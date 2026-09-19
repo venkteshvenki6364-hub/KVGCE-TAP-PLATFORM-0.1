@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem("kvgce_tap_user", JSON.stringify(matchedLocalUser));
           return { success: true, role: targetRole, user: matchedLocalUser };
         } else {
-          const pwdErr = "Incorrect User ID or password.";
+          const pwdErr = "Incorrect Password";
           setAuthError(pwdErr);
           return { success: false, errorType: "password", message: pwdErr };
         }
@@ -115,37 +115,39 @@ export const AuthProvider = ({ children }) => {
       // Predefined default accounts verification
       const validDemoUsers = [
         {
-          ids: ["4kv21cs042", "student@kvgce.edu.in", "student"],
-          passwords: ["Password123!", "28-02-2004", "28022004"],
+          ids: ["4kv23ce033", "student@kvgce.edu.in", "student"],
+          passwords: ["28-02-2004", "28/02/2004", "28.02.2004", "28022004"],
           user: {
             id: "user-student-1",
-            full_name: "Aditya Hegde",
+            full_name: "Student User",
             email: "student@kvgce.edu.in",
             role: "student",
-            student_id: "4KV21CS042",
+            student_id: "4KV23CE033",
+            usn: "4KV23CE033",
             dob: "28-02-2004",
           },
         },
         {
-          ids: ["kvg-fac-102", "faculty@kvgce.edu.in", "faculty"],
-          passwords: ["Password123!", "15-08-1985", "15081985"],
+          ids: ["8904320976", "faculty@kvgce.edu.in", "faculty"],
+          passwords: ["15-08-1985", "15/08/1985", "15.08.1985", "15081985"],
           user: {
             id: "user-faculty-1",
-            full_name: "Prof. Suresh Kumar",
+            full_name: "Faculty User",
             email: "faculty@kvgce.edu.in",
             role: "faculty",
-            faculty_id: "KVG-FAC-102",
+            faculty_id: "8904320976",
             dob: "15-08-1985",
           },
         },
         {
           ids: ["admin-001", "admin@kvgce.edu.in", "admin"],
-          passwords: ["Password123!", "10-01-1980", "10011980", "admin123"],
+          passwords: ["Password@123", "Password123!", "10-01-1980"],
           user: {
             id: "user-admin-1",
-            full_name: "Dr. K. V. Gowda",
+            full_name: "Administrator",
             email: "admin@kvgce.edu.in",
             role: "admin",
+            user_id: "ADMIN-001",
             dob: "10-01-1980",
           },
         },
@@ -156,13 +158,13 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (!foundAccount) {
-        const notFoundErr = "Incorrect User ID / USN. Please check your ID.";
+        const notFoundErr = "Incorrect USN / User ID";
         setAuthError(notFoundErr);
         return { success: false, errorType: "user_id", message: notFoundErr };
       }
 
       if (!foundAccount.passwords.includes(cleanSecret)) {
-        const wrongPwdErr = "Incorrect User ID or password.";
+        const wrongPwdErr = "Incorrect Password";
         setAuthError(wrongPwdErr);
         return { success: false, errorType: "password", message: wrongPwdErr };
       }
@@ -185,6 +187,29 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post("/auth/register", userData);
       const { access_token, role: userRole, user: registeredUser, requires_approval, message } = res.data;
+
+      // Save pending signup user to local storage for Admin Dashboard synchronization
+      const newPendingSignup = {
+        _id: registeredUser?._id || "signup-" + Date.now(),
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role || "student",
+        student_id: userData.student_id || "",
+        faculty_id: userData.faculty_id || "",
+        user_id: userData.student_id || userData.faculty_id || userData.email,
+        usn: userData.student_id || "",
+        phone: userData.phone || "",
+        dob: userData.dob || "",
+        department: userData.department || "Computer Science & Engineering",
+        status: "pending",
+        is_verified: false,
+        created_at: new Date().toISOString()
+      };
+      const existingSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
+      if (!existingSignups.some(s => s.email === newPendingSignup.email || (s.user_id && s.user_id === newPendingSignup.user_id))) {
+        existingSignups.push(newPendingSignup);
+        localStorage.setItem("kvgce_pending_signups", JSON.stringify(existingSignups));
+      }
 
       if (requires_approval) {
         return {
