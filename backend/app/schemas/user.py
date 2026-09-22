@@ -40,6 +40,7 @@ class UserProfileUpdate(BaseModel):
     department: Optional[str] = None
     course: Optional[str] = None
     semester: Optional[Any] = None
+    section: Optional[str] = None
     year: Optional[int] = None
     dob: Optional[str] = None
     gender: Optional[str] = None
