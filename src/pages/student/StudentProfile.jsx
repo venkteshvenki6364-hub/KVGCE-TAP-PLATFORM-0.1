@@ -30,12 +30,13 @@ function StudentProfile() {
       student_id: parsedStored?.student_id || user?.student_id || user?.usn || "4KV23CS042",
       department: parsedStored?.department || user?.department || "Computer Science & Engineering",
       semester: parsedStored?.semester || user?.semester || "6th Semester (III Year)",
+      section: parsedStored?.section || user?.section || "Section A",
       email: parsedStored?.email || user?.email || "venkatesh.r@kvgce.ac.in",
       phone: parsedStored?.phone || user?.phone || "+91 91086 12345",
       dob: parsedStored?.dob || user?.dob || "28 Feb 2004",
       gender: parsedStored?.gender || user?.gender || "Male",
       nationality: parsedStored?.nationality || user?.nationality || "Indian",
-      avatarUrl: parsedStored?.avatarUrl || user?.avatarUrl || "/student_avatar.png",
+      avatarUrl: parsedStored?.avatarUrl !== undefined ? parsedStored.avatarUrl : (user?.avatarUrl !== undefined ? user.avatarUrl : ""),
       objective:
         parsedStored?.objective ||
         user?.objective ||
@@ -107,6 +108,80 @@ function StudentProfile() {
   // Modal / Edit state toggles
   const [activeModal, setActiveModal] = useState(null); // 'hero', 'objective', 'tech', 'soft', 'marks'
   const [tempData, setTempData] = useState({});
+
+  // Dynamic Profile Completion Percentage Calculation
+  const calculateProfileCompletion = (p) => {
+    let score = 0;
+    if (p?.full_name?.trim()) score += 10;
+    if (p?.student_id?.trim()) score += 10;
+    if (p?.department?.trim()) score += 10;
+    if (p?.semester?.trim()) score += 10;
+    if (p?.section?.trim()) score += 5;
+    if (p?.email?.trim()) score += 10;
+    if (p?.phone?.trim()) score += 5;
+    if (p?.dob?.trim()) score += 5;
+    if (p?.gender?.trim()) score += 5;
+    if (p?.nationality?.trim()) score += 5;
+    if (p?.avatarUrl?.trim()) score += 10;
+    if (p?.objective?.trim() && p.objective.length > 10) score += 5;
+    if (p?.technicalSkills && p.technicalSkills.length > 0) score += 5;
+    if (p?.softSkills && p.softSkills.length > 0) score += 5;
+    return Math.min(100, score);
+  };
+
+  const profileCompletion = calculateProfileCompletion(profile);
+
+  // Dynamic Color Spectrum: 0-35% Red, 36-69% Orange, 70-99% Blue, 100% Green
+  const getCompletionTheme = (percentage) => {
+    if (percentage <= 35) {
+      return {
+        textColor: "#ef4444", // Red
+        borderColor: "#ef4444",
+        boxShadow: "0 0 24px rgba(239, 68, 68, 0.65)"
+      };
+    } else if (percentage <= 69) {
+      return {
+        textColor: "#f97316", // Orange
+        borderColor: "#f97316",
+        boxShadow: "0 0 24px rgba(249, 115, 22, 0.65)"
+      };
+    } else if (percentage <= 99) {
+      return {
+        textColor: "#3b82f6", // Blue
+        borderColor: "#3b82f6",
+        boxShadow: "0 0 24px rgba(59, 130, 246, 0.65)"
+      };
+    } else {
+      return {
+        textColor: "#22c55e", // Green 100%
+        borderColor: "#22c55e",
+        boxShadow: "0 0 24px rgba(34, 197, 94, 0.65)"
+      };
+    }
+  };
+
+  const completionTheme = getCompletionTheme(profileCompletion);
+
+  // Remove Profile Picture (reverts to default avatar icon fallback)
+  const handleRemoveImage = () => {
+    setProfile((prev) => ({ ...prev, avatarUrl: "" }));
+    if (tempData && activeModal) {
+      setTempData((prev) => ({ ...prev, avatarUrl: "" }));
+    }
+    if (updateUser) {
+      updateUser({ avatarUrl: "" });
+    }
+    const studentId = profile.student_id || user?.student_id || user?.usn || "4KV23CS042";
+    const customKey = `kvgce_student_profile_${studentId}`;
+    try {
+      const storedProfile = JSON.parse(localStorage.getItem(customKey) || "{}");
+      localStorage.setItem(customKey, JSON.stringify({ ...storedProfile, avatarUrl: "" }));
+    } catch (err) {
+      console.error(err);
+    }
+    setMsg({ type: "success", text: "Profile image removed. Default avatar icon active." });
+    setTimeout(() => setMsg({ type: "", text: "" }), 3500);
+  };
 
   // Image Upload File Size Limit in MB
   const MAX_IMAGE_SIZE_MB = 5;
@@ -246,10 +321,46 @@ function StudentProfile() {
     setTempData({});
   };
 
-  const saveModalChanges = () => {
+  const saveModalChanges = async () => {
     if (!canEditProfile) return;
+
+    if (activeModal === "hero") {
+      // 1. Phone number validation (must be exactly 10 digits)
+      const rawPhone = tempData.phone ? String(tempData.phone).trim() : "";
+      const cleanedPhone = rawPhone.replace(/\D/g, "");
+      if (cleanedPhone.length !== 10) {
+        setMsg({
+          type: "error",
+          text: "⚠️ Mobile phone number must contain exactly 10 digits (e.g. 9108612345)."
+        });
+        setTimeout(() => setMsg({ type: "", text: "" }), 5000);
+        return;
+      }
+
+      // 2. DOB Validation (Calendar check)
+      if (tempData.dob) {
+        const dobDate = new Date(tempData.dob);
+        const today = new Date();
+        if (isNaN(dobDate.getTime()) || dobDate >= today || dobDate.getFullYear() < 1950) {
+          setMsg({
+            type: "error",
+            text: "⚠️ Invalid Date of Birth. Please select a valid calendar date."
+          });
+          setTimeout(() => setMsg({ type: "", text: "" }), 5000);
+          return;
+        }
+      }
+    }
+
     setProfile(tempData);
     closeModal();
+
+    // Sync to backend database
+    try {
+      await api.put("/students/profile", tempData);
+    } catch (apiErr) {
+      console.warn("Backend API sync update fallback:", apiErr);
+    }
 
     const studentId = tempData.student_id || profile.student_id || user?.student_id || user?.usn || "4KV23CS042";
     const customKey = `kvgce_student_profile_${studentId}`;
@@ -262,6 +373,7 @@ function StudentProfile() {
         usn: tempData.student_id,
         department: tempData.department,
         semester: tempData.semester,
+        section: tempData.section,
         email: tempData.email,
         phone: tempData.phone,
         dob: tempData.dob,
@@ -275,8 +387,8 @@ function StudentProfile() {
       });
     }
 
-    setMsg({ type: "success", text: "Section updated! Click 'Save Profile' to make it permanent." });
-    setTimeout(() => setMsg({ type: "", text: "" }), 3000);
+    setMsg({ type: "success", text: "✅ Profile details updated and saved successfully!" });
+    setTimeout(() => setMsg({ type: "", text: "" }), 4000);
   };
 
   // Helper for matrix heatmap rendering
@@ -332,38 +444,67 @@ function StudentProfile() {
         {/* 1. HERO PROFILE BANNER CARD */}
         <div className="hero-banner-card profile-hero-banner">
           <div className="hero-banner-content">
-            {/* AVATAR WITH CAMERA OVERLAY */}
-            <div
-              className="profile-avatar-container"
-              style={{ cursor: canEditProfile ? "pointer" : "default" }}
-              onClick={() => canEditProfile && fileInputRef.current?.click()}
-              title={canEditProfile ? "Click to change profile picture (Max 5MB)" : "Profile Picture"}
-            >
-              <img
-                src={profile.avatarUrl}
-                alt={profile.full_name}
-                className="profile-photo-img"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://via.placeholder.com/110?text=Venkatesh";
-                }}
-              />
-              {canEditProfile && (
-                <button
-                  type="button"
-                  className="camera-overlay-btn"
-                  title="Upload profile picture from device file (Max 5MB)"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRef.current?.click();
+            {/* AVATAR WRAPPER WITH DYNAMIC COLOR SPECTRUM RING & COMPLETION TEXT */}
+            <div className="avatar-wrapper-column">
+              <div
+                className="profile-avatar-container"
+                style={{ cursor: canEditProfile ? "pointer" : "default" }}
+                onClick={() => canEditProfile && fileInputRef.current?.click()}
+                title={canEditProfile ? "Click to change profile picture (Max 5MB)" : "Profile Picture"}
+              >
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.full_name}
+                    className="profile-photo-img"
+                    style={{
+                      border: `4.5px solid ${completionTheme.borderColor}`,
+                      boxShadow: completionTheme.boxShadow
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      if (e.target.nextElementSibling) {
+                        e.target.nextElementSibling.style.display = "flex";
+                      }
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="profile-avatar-icon-fallback"
+                  style={{
+                    display: profile.avatarUrl ? "none" : "flex",
+                    border: `4.5px solid ${completionTheme.borderColor}`,
+                    boxShadow: completionTheme.boxShadow
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                    <circle cx="12" cy="13" r="4" />
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
                   </svg>
-                </button>
-              )}
+                </div>
+
+                {canEditProfile && (
+                  <button
+                    type="button"
+                    className="camera-overlay-btn"
+                    title="Upload profile picture from device file (Max 5MB)"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* DYNAMIC COLOR TEXT UNDER PROFILE IMAGE */}
+              <div className="avatar-under-completion-text" style={{ color: completionTheme.textColor }}>
+                {profileCompletion}% Complete
+              </div>
             </div>
 
             {/* DETAILS GRID: LEFT & RIGHT COLUMNS */}
@@ -402,7 +543,7 @@ function StudentProfile() {
                     <line x1="8" y1="2" x2="8" y2="6" />
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
-                  <span className="meta-val">{profile.semester}</span>
+                  <span className="meta-val">{profile.semester} • {profile.section || "Section A"}</span>
                 </div>
               </div>
 
@@ -452,7 +593,7 @@ function StudentProfile() {
             </div>
           </div>
 
-          {/* EDIT PROFILE BUTTON / READ-ONLY BADGE */}
+          {/* EDIT BUTTON / READ-ONLY BADGE */}
           {canEditProfile ? (
             <button className="glass-edit-btn" onClick={() => openModal("hero")}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -729,70 +870,183 @@ function StudentProfile() {
 
             <div className="modal-body">
               {activeModal === "hero" && (
-                <div className="modal-form-grid">
-                  <div className="modal-form-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      value={tempData.full_name || ""}
-                      onChange={(e) => setTempData({ ...tempData, full_name: e.target.value })}
-                    />
+                <div className="modal-form-vertical">
+                  {/* PROFILE IMAGE OPTION SECTION */}
+                  <div className="modal-image-option-card">
+                    <div className="modal-avatar-preview">
+                      {tempData.avatarUrl ? (
+                        <img
+                          src={tempData.avatarUrl}
+                          alt="Profile Preview"
+                          className="modal-preview-img"
+                        />
+                      ) : (
+                        <div className="modal-preview-fallback">
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#003896" strokeWidth="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="modal-image-actions">
+                      <h4 className="modal-image-title">Profile Picture Options</h4>
+                      <p className="modal-image-desc">Upload a photo from device file (Max 5MB) or remove custom picture to use default avatar icon.</p>
+                      <div className="modal-image-btn-row">
+                        <button
+                          type="button"
+                          className="img-btn upload-btn"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          📷 Add / Change Image
+                        </button>
+                        {tempData.avatarUrl ? (
+                          <button
+                            type="button"
+                            className="img-btn remove-btn"
+                            onClick={() => setTempData({ ...tempData, avatarUrl: "" })}
+                          >
+                            🗑️ Remove Image (No Image)
+                          </button>
+                        ) : (
+                          <span className="no-img-tag">✓ Default Avatar Active</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="modal-form-group">
-                    <label>USN / Student ID</label>
-                    <input
-                      type="text"
-                      value={tempData.student_id || ""}
-                      onChange={(e) => setTempData({ ...tempData, student_id: e.target.value })}
-                    />
-                  </div>
-                  <div className="modal-form-group">
-                    <label>Department</label>
-                    <input
-                      type="text"
-                      value={tempData.department || ""}
-                      onChange={(e) => setTempData({ ...tempData, department: e.target.value })}
-                    />
-                  </div>
-                  <div className="modal-form-group">
-                    <label>Semester</label>
-                    <input
-                      type="text"
-                      value={tempData.semester || ""}
-                      onChange={(e) => setTempData({ ...tempData, semester: e.target.value })}
-                    />
-                  </div>
-                  <div className="modal-form-group">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      value={tempData.email || ""}
-                      onChange={(e) => setTempData({ ...tempData, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="modal-form-group">
-                    <label>Phone Number</label>
-                    <input
-                      type="text"
-                      value={tempData.phone || ""}
-                      onChange={(e) => setTempData({ ...tempData, phone: e.target.value })}
-                    />
-                  </div>
-                  <div className="modal-form-group">
-                    <label>Date of Birth</label>
-                    <input
-                      type="text"
-                      value={tempData.dob || ""}
-                      onChange={(e) => setTempData({ ...tempData, dob: e.target.value })}
-                    />
-                  </div>
-                  <div className="modal-form-group">
-                    <label>Gender</label>
-                    <input
-                      type="text"
-                      value={tempData.gender || ""}
-                      onChange={(e) => setTempData({ ...tempData, gender: e.target.value })}
-                    />
+
+                  {/* FORM FIELDS GRID WITH CHOICE DROPDOWNS */}
+                  <div className="modal-form-grid">
+                    <div className="modal-form-group">
+                      <label>Full Name</label>
+                      <input
+                        type="text"
+                        value={tempData.full_name || ""}
+                        onChange={(e) => setTempData({ ...tempData, full_name: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="modal-form-group">
+                      <label>USN / Student ID</label>
+                      <input
+                        type="text"
+                        value={tempData.student_id || ""}
+                        onChange={(e) => setTempData({ ...tempData, student_id: e.target.value })}
+                      />
+                    </div>
+
+                    {/* BRANCH / DEPARTMENT CHOICE */}
+                    <div className="modal-form-group">
+                      <label>Branch / Department</label>
+                      <select
+                        className="modal-select"
+                        value={tempData.department || "Computer Science & Engineering"}
+                        onChange={(e) => setTempData({ ...tempData, department: e.target.value })}
+                      >
+                        <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                        <option value="Information Science & Engineering">Information Science & Engineering</option>
+                        <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</option>
+                      </select>
+                    </div>
+
+                    {/* SECTION CHOICE */}
+                    <div className="modal-form-group">
+                      <label>Section</label>
+                      <select
+                        className="modal-select"
+                        value={tempData.section || "Section A"}
+                        onChange={(e) => setTempData({ ...tempData, section: e.target.value })}
+                      >
+                        <option value="Section A">Section A</option>
+                        <option value="Section B">Section B</option>
+                        <option value="Section C">Section C</option>
+                        <option value="Section D">Section D</option>
+                      </select>
+                    </div>
+
+                    {/* YEAR & SEMESTER CHOICE */}
+                    <div className="modal-form-group">
+                      <label>Year & Semester</label>
+                      <select
+                        className="modal-select"
+                        value={tempData.semester || "6th Semester (III Year)"}
+                        onChange={(e) => setTempData({ ...tempData, semester: e.target.value })}
+                      >
+                        <option value="1st Semester (I Year)">1st Semester (I Year)</option>
+                        <option value="2nd Semester (I Year)">2nd Semester (I Year)</option>
+                        <option value="3rd Semester (II Year)">3rd Semester (II Year)</option>
+                        <option value="4th Semester (II Year)">4th Semester (II Year)</option>
+                        <option value="5th Semester (III Year)">5th Semester (III Year)</option>
+                        <option value="6th Semester (III Year)">6th Semester (III Year)</option>
+                        <option value="7th Semester (IV Year)">7th Semester (IV Year)</option>
+                        <option value="8th Semester (IV Year)">8th Semester (IV Year)</option>
+                      </select>
+                    </div>
+
+                    {/* GENDER CHOICE */}
+                    <div className="modal-form-group">
+                      <label>Gender</label>
+                      <select
+                        className="modal-select"
+                        value={tempData.gender || "Male"}
+                        onChange={(e) => setTempData({ ...tempData, gender: e.target.value })}
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="modal-form-group">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        value={tempData.email || ""}
+                        onChange={(e) => setTempData({ ...tempData, email: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="modal-form-group">
+                      <label>Phone Number (10 Digits)</label>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        placeholder="e.g. 9108612345"
+                        value={tempData.phone || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          setTempData({ ...tempData, phone: val });
+                        }}
+                      />
+                    </div>
+
+                    <div className="modal-form-group">
+                      <label>Date of Birth (Calendar Select)</label>
+                      <input
+                        type="date"
+                        className="modal-select"
+                        value={
+                          tempData.dob && tempData.dob.includes("-") && tempData.dob.split("-")[0].length === 4
+                            ? tempData.dob
+                            : "2004-02-28"
+                        }
+                        max={new Date(new Date().setFullYear(new Date().getFullYear() - 14)).toISOString().split("T")[0]}
+                        min="1970-01-01"
+                        onChange={(e) => setTempData({ ...tempData, dob: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="modal-form-group">
+                      <label>Nationality</label>
+                      <input
+                        type="text"
+                        value={tempData.nationality || "Indian"}
+                        onChange={(e) => setTempData({ ...tempData, nationality: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
