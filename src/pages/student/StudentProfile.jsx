@@ -1,78 +1,104 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import "./StudentProfile.css";
 
 function StudentProfile() {
-  const { user } = useAuth();
+  const { user, role, updateUser } = useAuth();
+  const fileInputRef = useRef(null);
   
-  // Main Profile State matching reference screenshot
-  const [profile, setProfile] = useState({
-    full_name: "Venkatesh R",
-    student_id: "4KV23CS042",
-    department: "Computer Science & Engineering",
-    semester: "6th Semester (III Year)",
-    email: "venkatesh.r@kvgce.ac.in",
-    phone: "+91 91086 12345",
-    dob: "28 Feb 2004",
-    gender: "Male",
-    nationality: "Indian",
-    avatarUrl: "/student_avatar.png",
-    objective:
-      "To work in a challenging environment where I can utilize my skills and knowledge to contribute to the growth of the organization while enhancing my professional abilities and learning new technologies.",
-    technicalSkills: [
-      "C",
-      "C++",
-      "Java",
-      "Python",
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "SQL",
-      "MySQL",
-      "Data Structures",
-      "OOPs",
-      "Git & GitHub",
-      "Linux Basics",
-      "Problem Solving",
-    ],
-    softSkills: [
-      "Communication",
-      "Teamwork",
-      "Problem Solving",
-      "Time Management",
-      "Adaptability",
-      "Leadership",
-      "Critical Thinking",
-      "Quick Learner",
-    ],
-    academics: [
-      {
-        education: "SSLC (10th)",
-        institute: "Sunandha Academy, Mysuru",
-        board: "Karnataka SSLC",
-        year: "2020",
-        score: "70.00 %",
-        badge: null,
-      },
-      {
-        education: "PUC (12th)",
-        institute: "Maharaja PU College, Mysore",
-        board: "Karnataka PUE",
-        year: "2022",
-        score: "63.00 %",
-        badge: null,
-      },
-      {
-        education: "B.E (CSE)",
-        institute: "KVG College of Engineering, Sullia",
-        board: "VTU, Belagavi",
-        year: "2023 - 2027",
-        score: "7.85 CGPA",
-        badge: "Till 5th Sem",
-      },
-    ],
+  // Only a student logged into their own account can edit profile details
+  const canEditProfile = role === "student";
+
+  // Main Profile State dynamically initialized from AuthContext user and local storage
+  const [profile, setProfile] = useState(() => {
+    const studentId = user?.student_id || user?.usn || "4KV23CS042";
+    const customKey = `kvgce_student_profile_${studentId}`;
+    const stored = localStorage.getItem(customKey);
+    let parsedStored = null;
+    if (stored) {
+      try {
+        parsedStored = JSON.parse(stored);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    return {
+      full_name: parsedStored?.full_name || user?.full_name || "Venkatesh R",
+      student_id: parsedStored?.student_id || user?.student_id || user?.usn || "4KV23CS042",
+      department: parsedStored?.department || user?.department || "Computer Science & Engineering",
+      semester: parsedStored?.semester || user?.semester || "6th Semester (III Year)",
+      email: parsedStored?.email || user?.email || "venkatesh.r@kvgce.ac.in",
+      phone: parsedStored?.phone || user?.phone || "+91 91086 12345",
+      dob: parsedStored?.dob || user?.dob || "28 Feb 2004",
+      gender: parsedStored?.gender || user?.gender || "Male",
+      nationality: parsedStored?.nationality || user?.nationality || "Indian",
+      avatarUrl: parsedStored?.avatarUrl || user?.avatarUrl || "/student_avatar.png",
+      objective:
+        parsedStored?.objective ||
+        user?.objective ||
+        "To work in a challenging environment where I can utilize my skills and knowledge to contribute to the growth of the organization while enhancing my professional abilities and learning new technologies.",
+      technicalSkills:
+        parsedStored?.technicalSkills ||
+        user?.technicalSkills || [
+          "C",
+          "C++",
+          "Java",
+          "Python",
+          "HTML",
+          "CSS",
+          "JavaScript",
+          "SQL",
+          "MySQL",
+          "Data Structures",
+          "OOPs",
+          "Git & GitHub",
+          "Linux Basics",
+          "Problem Solving",
+        ],
+      softSkills:
+        parsedStored?.softSkills ||
+        user?.softSkills || [
+          "Communication",
+          "Teamwork",
+          "Problem Solving",
+          "Time Management",
+          "Adaptability",
+          "Leadership",
+          "Critical Thinking",
+          "Quick Learner",
+        ],
+      academics:
+        parsedStored?.academics ||
+        user?.academics || [
+          {
+            education: "SSLC (10th)",
+            institute: "Sunandha Academy, Mysuru",
+            board: "Karnataka SSLC",
+            year: "2020",
+            score: "70.00 %",
+            badge: null,
+          },
+          {
+            education: "PUC (12th)",
+            institute: "Maharaja PU College, Mysore",
+            board: "Karnataka PUE",
+            year: "2022",
+            score: "63.00 %",
+            badge: null,
+          },
+          {
+            education: "B.E (CSE)",
+            institute: "KVG College of Engineering, Sullia",
+            board: "VTU, Belagavi",
+            year: "2023 - 2027",
+            score: "7.85 CGPA",
+            badge: "Till 5th Sem",
+          },
+        ],
+    };
   });
 
   const [saving, setSaving] = useState(false);
@@ -82,37 +108,135 @@ function StudentProfile() {
   const [activeModal, setActiveModal] = useState(null); // 'hero', 'objective', 'tech', 'soft', 'marks'
   const [tempData, setTempData] = useState({});
 
+  // Image Upload File Size Limit in MB
+  const MAX_IMAGE_SIZE_MB = 5;
+  const MAX_IMAGE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
+  const handleImageFileSelect = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    // Validate image file size
+    if (file.size > MAX_IMAGE_BYTES) {
+      const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+      setMsg({
+        type: "error",
+        text: `⚠️ Image file size (${sizeInMB} MB) exceeds maximum allowed limit of ${MAX_IMAGE_SIZE_MB} MB. Please choose a smaller image.`
+      });
+      setTimeout(() => setMsg({ type: "", text: "" }), 6000);
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64Data = reader.result;
+
+      // Update local profile state
+      setProfile((prev) => ({ ...prev, avatarUrl: base64Data }));
+
+      // Update AuthContext user state & localStorage
+      if (updateUser) {
+        updateUser({ avatarUrl: base64Data });
+      }
+
+      const studentId = profile.student_id || user?.student_id || user?.usn || "4KV23CS042";
+      const customKey = `kvgce_student_profile_${studentId}`;
+      try {
+        const storedProfile = JSON.parse(localStorage.getItem(customKey) || "{}");
+        localStorage.setItem(customKey, JSON.stringify({ ...storedProfile, avatarUrl: base64Data }));
+      } catch (err) {
+        console.error("Local storage photo save error:", err);
+      }
+
+      // Backend API & Database storage upload
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await api.post("/students/upload-avatar", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        if (res.data && res.data.avatarUrl) {
+          setProfile((prev) => ({ ...prev, avatarUrl: res.data.avatarUrl }));
+        }
+      } catch (apiErr) {
+        console.warn("Backend API avatar upload fallback:", apiErr);
+      }
+
+      setMsg({
+        type: "success",
+        text: `✅ Profile image updated successfully! (File size: ${(file.size / 1024).toFixed(1)} KB)`
+      });
+      setTimeout(() => setMsg({ type: "", text: "" }), 4000);
+    };
+
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await api.get("/students/profile");
         if (res.data && res.data.data) {
-          setProfile((prev) => ({ ...prev, ...res.data.data }));
+          const apiData = res.data.data;
+          setProfile((prev) => ({
+            ...prev,
+            ...apiData,
+            full_name: user?.full_name || apiData.full_name || prev.full_name,
+            student_id: user?.student_id || user?.usn || apiData.student_id || prev.student_id,
+            avatarUrl: user?.avatarUrl || apiData.avatarUrl || prev.avatarUrl,
+          }));
         }
       } catch (err) {
         console.error("Using local profile data fallback:", err);
       }
     };
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const handleSaveProfile = async () => {
+    if (!canEditProfile) return;
     setSaving(true);
     setMsg({ type: "", text: "" });
 
     try {
       await api.put("/students/profile", profile);
-      setMsg({ type: "success", text: "Profile details updated successfully!" });
     } catch (err) {
       console.log("Mock saved to local state:", err);
-      setMsg({ type: "success", text: "Profile details saved successfully!" });
-    } finally {
-      setSaving(false);
-      setTimeout(() => setMsg({ type: "", text: "" }), 4000);
     }
+
+    const studentId = profile.student_id || user?.student_id || user?.usn || "4KV23CS042";
+    const customKey = `kvgce_student_profile_${studentId}`;
+    localStorage.setItem(customKey, JSON.stringify(profile));
+
+    if (updateUser) {
+      updateUser({
+        full_name: profile.full_name,
+        student_id: profile.student_id,
+        usn: profile.student_id,
+        department: profile.department,
+        semester: profile.semester,
+        email: profile.email,
+        phone: profile.phone,
+        dob: profile.dob,
+        gender: profile.gender,
+        nationality: profile.nationality,
+        avatarUrl: profile.avatarUrl,
+        objective: profile.objective,
+        technicalSkills: profile.technicalSkills,
+        softSkills: profile.softSkills,
+        academics: profile.academics,
+      });
+    }
+
+    setSaving(false);
+    setMsg({ type: "success", text: "Profile details updated successfully!" });
+    setTimeout(() => setMsg({ type: "", text: "" }), 4000);
   };
 
   const openModal = (type) => {
+    if (!canEditProfile) return;
     setActiveModal(type);
     setTempData(JSON.parse(JSON.stringify(profile)));
   };
@@ -123,8 +247,34 @@ function StudentProfile() {
   };
 
   const saveModalChanges = () => {
+    if (!canEditProfile) return;
     setProfile(tempData);
     closeModal();
+
+    const studentId = tempData.student_id || profile.student_id || user?.student_id || user?.usn || "4KV23CS042";
+    const customKey = `kvgce_student_profile_${studentId}`;
+    localStorage.setItem(customKey, JSON.stringify(tempData));
+
+    if (updateUser) {
+      updateUser({
+        full_name: tempData.full_name,
+        student_id: tempData.student_id,
+        usn: tempData.student_id,
+        department: tempData.department,
+        semester: tempData.semester,
+        email: tempData.email,
+        phone: tempData.phone,
+        dob: tempData.dob,
+        gender: tempData.gender,
+        nationality: tempData.nationality,
+        avatarUrl: tempData.avatarUrl,
+        objective: tempData.objective,
+        technicalSkills: tempData.technicalSkills,
+        softSkills: tempData.softSkills,
+        academics: tempData.academics,
+      });
+    }
+
     setMsg({ type: "success", text: "Section updated! Click 'Save Profile' to make it permanent." });
     setTimeout(() => setMsg({ type: "", text: "" }), 3000);
   };
@@ -163,6 +313,15 @@ function StudentProfile() {
   return (
     <DashboardLayout title="Student Profile">
       <div className="student-profile-page">
+        {/* Hidden File Input for Image Selection */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          onChange={handleImageFileSelect}
+          style={{ display: "none" }}
+        />
+
         {/* Toast Alert Notification */}
         {msg.text && (
           <div className={`msg-alert ${msg.type}`}>
@@ -174,7 +333,12 @@ function StudentProfile() {
         <div className="hero-banner-card profile-hero-banner">
           <div className="hero-banner-content">
             {/* AVATAR WITH CAMERA OVERLAY */}
-            <div className="profile-avatar-container">
+            <div
+              className="profile-avatar-container"
+              style={{ cursor: canEditProfile ? "pointer" : "default" }}
+              onClick={() => canEditProfile && fileInputRef.current?.click()}
+              title={canEditProfile ? "Click to change profile picture (Max 5MB)" : "Profile Picture"}
+            >
               <img
                 src={profile.avatarUrl}
                 alt={profile.full_name}
@@ -184,12 +348,22 @@ function StudentProfile() {
                   e.target.src = "https://via.placeholder.com/110?text=Venkatesh";
                 }}
               />
-              <button className="camera-overlay-btn" title="Change Photo">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
-              </button>
+              {canEditProfile && (
+                <button
+                  type="button"
+                  className="camera-overlay-btn"
+                  title="Upload profile picture from device file (Max 5MB)"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </button>
+              )}
             </div>
 
             {/* DETAILS GRID: LEFT & RIGHT COLUMNS */}
@@ -278,14 +452,20 @@ function StudentProfile() {
             </div>
           </div>
 
-          {/* EDIT PROFILE BUTTON */}
-          <button className="glass-edit-btn" onClick={() => openModal("hero")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Edit Profile
-          </button>
+          {/* EDIT PROFILE BUTTON / READ-ONLY BADGE */}
+          {canEditProfile ? (
+            <button className="glass-edit-btn" onClick={() => openModal("hero")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit Profile
+            </button>
+          ) : (
+            <div style={{ background: "rgba(255,255,255,0.18)", padding: "0.45rem 0.95rem", borderRadius: "8px", fontSize: "0.82rem", fontWeight: 700, color: "#ffffff", border: "1px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span>🔒</span> Read-Only View
+            </div>
+          )}
         </div>
 
         {/* 2. MIDDLE ROW: ACTIVITY HEATMAP & SKILL READINESS RADAR */}
@@ -376,13 +556,15 @@ function StudentProfile() {
               </div>
               <h3 className="section-title">Objective</h3>
             </div>
-            <button className="section-edit-btn" onClick={() => openModal("objective")}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-              Edit
-            </button>
+            {canEditProfile && (
+              <button className="section-edit-btn" onClick={() => openModal("objective")}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit
+              </button>
+            )}
           </div>
           <p className="objective-text-content">{profile.objective}</p>
         </div>
@@ -401,13 +583,15 @@ function StudentProfile() {
                 </div>
                 <h3 className="section-title">Technical Skills</h3>
               </div>
-              <button className="section-edit-btn" onClick={() => openModal("tech")}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit
-              </button>
+              {canEditProfile && (
+                <button className="section-edit-btn" onClick={() => openModal("tech")}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit
+                </button>
+              )}
             </div>
             <div className="skills-pill-wrap">
               {profile.technicalSkills.map((skill, i) => (
@@ -432,13 +616,15 @@ function StudentProfile() {
                 </div>
                 <h3 className="section-title">Soft Skills</h3>
               </div>
-              <button className="section-edit-btn" onClick={() => openModal("soft")}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit
-              </button>
+              {canEditProfile && (
+                <button className="section-edit-btn" onClick={() => openModal("soft")}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit
+                </button>
+              )}
             </div>
             <div className="skills-pill-wrap">
               {profile.softSkills.map((skill, i) => (
@@ -462,13 +648,15 @@ function StudentProfile() {
               </div>
               <h3 className="section-title">Marks and CGPA</h3>
             </div>
-            <button className="section-edit-btn" onClick={() => openModal("marks")}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-              Edit
-            </button>
+            {canEditProfile && (
+              <button className="section-edit-btn" onClick={() => openModal("marks")}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit
+              </button>
+            )}
           </div>
 
           <div className="table-responsive-container">
@@ -508,17 +696,19 @@ function StudentProfile() {
               <line x1="12" y1="16" x2="12" y2="12" />
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
-            <span>Keep your profile updated to unlock better opportunities.</span>
+            <span>{canEditProfile ? "Keep your profile updated to unlock better opportunities." : "Viewing student profile in Read-Only mode."}</span>
           </div>
 
-          <button className="save-profile-action-btn" onClick={handleSaveProfile} disabled={saving}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-              <polyline points="17 21 17 13 7 13 7 21" />
-              <polyline points="7 3 7 8 15 8" />
-            </svg>
-            {saving ? "Saving Profile..." : "Save Profile"}
-          </button>
+          {canEditProfile && (
+            <button className="save-profile-action-btn" onClick={handleSaveProfile} disabled={saving}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              {saving ? "Saving Profile..." : "Save Profile"}
+            </button>
+          )}
         </div>
       </div>
 

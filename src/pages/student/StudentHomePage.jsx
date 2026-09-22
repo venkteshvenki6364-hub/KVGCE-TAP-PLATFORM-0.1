@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 import "./StudentHomePage.css";
 
 function StudentHomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,12 +27,23 @@ function StudentHomePage() {
     fetchDashboard();
   }, []);
 
-  const profile = data?.profile || {
-    full_name: "Student",
-    student_id: "4KV21CS042",
-    department: "CSE",
-    semester: 6,
-    year: 3,
+  // Retrieve custom saved profile for active student if present
+  const customProfileKey = `kvgce_student_profile_${user?.student_id || user?.usn || "default"}`;
+  const storedProfile = (() => {
+    try {
+      const raw = localStorage.getItem(customProfileKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  const profile = {
+    full_name: storedProfile?.full_name || user?.full_name || data?.profile?.full_name || "Venkatesh R",
+    student_id: storedProfile?.student_id || user?.student_id || user?.usn || data?.profile?.student_id || "4KV23CS042",
+    department: storedProfile?.department || user?.department || data?.profile?.department || "Computer Science & Engineering",
+    semester: storedProfile?.semester || user?.semester || data?.profile?.semester || "6th Semester (III Year)",
+    year: user?.year || 3,
   };
 
   // Activity Heatmap Grid Generator
@@ -68,13 +81,13 @@ function StudentHomePage() {
     <DashboardLayout title="Student Dashboard">
       <div className="student-dashboard-page">
         {/* 1. TOP HERO PROFILE CARD */}
-        <div className="hero-banner-card">
-          <div
-            className="hero-left-meta"
-            onClick={() => navigate("/student/profile")}
-            style={{ cursor: "pointer" }}
-            title="Click to view & edit Profile"
-          >
+        <div
+          className="hero-banner-card"
+          onClick={() => navigate("/student/profile")}
+          style={{ cursor: "pointer" }}
+          title="Click to view & edit Profile"
+        >
+          <div className="hero-left-meta">
             <div className="hero-avatar-outline">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.8">
                 <circle cx="12" cy="12" r="10" />
@@ -89,7 +102,7 @@ function StudentHomePage() {
                 <span className="dot-sep">•</span>
                 <span>Department: {profile.department || "CSE"}</span>
                 <span className="dot-sep">•</span>
-                <span>Semester: {profile.semester || 6} (Year {profile.year || 3})</span>
+                <span>Semester: {typeof profile.semester === "string" ? profile.semester : `${profile.semester} (Year ${profile.year || 3})`}</span>
               </p>
             </div>
           </div>

@@ -115,15 +115,17 @@ export const AuthProvider = ({ children }) => {
       // Predefined default accounts verification
       const validDemoUsers = [
         {
-          ids: ["4kv23ce033", "student@kvgce.edu.in", "student"],
+          ids: ["4kv23cs042", "4kv21cs042", "4kv23ce033", "student@kvgce.edu.in", "student"],
           passwords: ["28-02-2004", "28/02/2004", "28.02.2004", "28022004"],
           user: {
             id: "user-student-1",
-            full_name: "Student User",
+            full_name: "Venkatesh R",
             email: "student@kvgce.edu.in",
             role: "student",
-            student_id: "4KV23CE033",
-            usn: "4KV23CE033",
+            student_id: "4KV23CS042",
+            usn: "4KV23CS042",
+            department: "Computer Science & Engineering",
+            semester: "6th Semester (III Year)",
             dob: "28-02-2004",
           },
         },
@@ -182,34 +184,58 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const savePendingSignupUser = (userData, registeredUser = null) => {
+    const newPendingSignup = {
+      _id: registeredUser?._id || "signup-" + Date.now(),
+      email: userData.email,
+      full_name: userData.full_name,
+      role: userData.role || "student",
+      student_id: userData.student_id || userData.usn || "",
+      faculty_id: userData.faculty_id || "",
+      user_id: userData.student_id || userData.faculty_id || userData.email,
+      usn: userData.student_id || userData.usn || "",
+      phone: userData.phone || "",
+      dob: userData.dob || "",
+      password: userData.password || userData.dob || "",
+      password_plain: userData.password || userData.dob || "",
+      department: userData.department || "Computer Science & Engineering",
+      status: "pending",
+      is_verified: false,
+      is_active: false,
+      created_at: new Date().toISOString()
+    };
+
+    // Save to pending signups list for Admin User Management
+    const existingSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
+    const foundIdx = existingSignups.findIndex(s => s.email === newPendingSignup.email || (s.user_id && s.user_id === newPendingSignup.user_id));
+    if (foundIdx >= 0) {
+      existingSignups[foundIdx] = { ...existingSignups[foundIdx], ...newPendingSignup };
+    } else {
+      existingSignups.push(newPendingSignup);
+    }
+    localStorage.setItem("kvgce_pending_signups", JSON.stringify(existingSignups));
+
+    // Save to registered users list with pending status
+    const registeredUsers = JSON.parse(localStorage.getItem("kvgce_registered_users") || "[]");
+    const regIdx = registeredUsers.findIndex(u => u.email === newPendingSignup.email || (u.user_id && u.user_id === newPendingSignup.user_id));
+    if (regIdx >= 0) {
+      registeredUsers[regIdx] = { ...registeredUsers[regIdx], ...newPendingSignup };
+    } else {
+      registeredUsers.push(newPendingSignup);
+    }
+    localStorage.setItem("kvgce_registered_users", JSON.stringify(registeredUsers));
+
+    return newPendingSignup;
+  };
+
   const register = async (userData) => {
     setAuthError(null);
     try {
       const res = await api.post("/auth/register", userData);
       const { access_token, role: userRole, user: registeredUser, requires_approval, message } = res.data;
 
-      // Save pending signup user to local storage for Admin Dashboard synchronization
-      const newPendingSignup = {
-        _id: registeredUser?._id || "signup-" + Date.now(),
-        email: userData.email,
-        full_name: userData.full_name,
-        role: userData.role || "student",
-        student_id: userData.student_id || "",
-        faculty_id: userData.faculty_id || "",
-        user_id: userData.student_id || userData.faculty_id || userData.email,
-        usn: userData.student_id || "",
-        phone: userData.phone || "",
-        dob: userData.dob || "",
-        department: userData.department || "Computer Science & Engineering",
-        status: "pending",
-        is_verified: false,
-        created_at: new Date().toISOString()
-      };
-      const existingSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
-      if (!existingSignups.some(s => s.email === newPendingSignup.email || (s.user_id && s.user_id === newPendingSignup.user_id))) {
-        existingSignups.push(newPendingSignup);
-        localStorage.setItem("kvgce_pending_signups", JSON.stringify(existingSignups));
-      }
+      // Save pending signup user for Admin Dashboard synchronization
+      savePendingSignupUser(userData, registeredUser);
 
       if (requires_approval) {
         return {
@@ -231,12 +257,15 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, role: activeRole, user: registeredUser };
     } catch (err) {
-      console.warn("Backend API register failed:", err);
+      console.warn("Backend API register failed or offline fallback:", err);
       const apiMessage = err.response?.data?.detail;
       if (apiMessage) {
         setAuthError(apiMessage);
         return { success: false, message: apiMessage };
       }
+
+      // Save pending signup user to local storage for Admin Dashboard approval
+      savePendingSignupUser(userData);
 
       // Fallback response for unverified registration requirement
       const activeRole = userData.role || "student";
@@ -270,6 +299,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      const mergedUser = { ...prev, ...updatedFields };
+      localStorage.setItem("kvgce_tap_user", JSON.stringify(mergedUser));
+
+      try {
+        const localUsers = JSON.parse(localStorage.getItem("kvgce_registered_users") || "[]");
+        const updatedLocalUsers = localUsers.map((u) => {
+          if (
+            (u.email && u.email.toLowerCase() === mergedUser.email?.toLowerCase()) ||
+            (u.student_id && u.student_id.toLowerCase() === mergedUser.student_id?.toLowerCase())
+          ) {
+            return { ...u, ...mergedUser };
+          }
+          return u;
+        });
+        localStorage.setItem("kvgce_registered_users", JSON.stringify(updatedLocalUsers));
+      } catch (e) {
+        console.error("Error updating local registered users:", e);
+      }
+
+      return mergedUser;
+    });
+  };
+
   const logout = () => {
     setToken(null);
     setRole(null);
@@ -289,6 +343,7 @@ export const AuthProvider = ({ children }) => {
         authError,
         login,
         register,
+        updateUser,
         logout,
         isAuthenticated: !!token,
       }}

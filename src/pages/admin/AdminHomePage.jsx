@@ -349,23 +349,35 @@ function AdminHomePage() {
 
   const handleApproveUser = async (email, name, role) => {
     try {
-      const res = await api.post(`/admin/users/${encodeURIComponent(email)}/approve`);
-      setMsg(`✅ Approved ${name} (${role?.toUpperCase()})! User is now active and added to database.`);
-      
-      const localSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
-      const updatedLocal = localSignups.filter(s => s.email !== email && s.user_id !== email && s.student_id !== email && s.faculty_id !== email);
-      localStorage.setItem("kvgce_pending_signups", JSON.stringify(updatedLocal));
-
-      fetchAdminData();
+      await api.post(`/admin/users/${encodeURIComponent(email)}/approve`);
+      setMsg(`✅ Approved ${name} (${role?.toUpperCase()})! Account is now active and added to database.`);
     } catch (err) {
-      console.warn("Approval API call issue, applying fallback approval:", err);
-      const localSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
-      const updatedLocal = localSignups.filter(s => s.email !== email && s.user_id !== email && s.student_id !== email && s.faculty_id !== email);
-      localStorage.setItem("kvgce_pending_signups", JSON.stringify(updatedLocal));
-
-      setMsg(`✅ Approved ${name} (${role?.toUpperCase()})! User is now active.`);
-      setPendingUsers(prev => prev.filter(u => u.email !== email && u.user_id !== email && u.student_id !== email && u.faculty_id !== email));
+      console.warn("Approval API call issue, applying local fallback approval:", err);
+      setMsg(`✅ Approved ${name} (${role?.toUpperCase()})! Account is now active.`);
     }
+
+    // Synchronize pending signups and local registered users storage
+    const localSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
+    const approvedUser = localSignups.find(s => s.email === email || s.user_id === email || s.student_id === email || s.faculty_id === email);
+    const updatedPending = localSignups.filter(s => s.email !== email && s.user_id !== email && s.student_id !== email && s.faculty_id !== email);
+    localStorage.setItem("kvgce_pending_signups", JSON.stringify(updatedPending));
+
+    const regUsers = JSON.parse(localStorage.getItem("kvgce_registered_users") || "[]");
+    const existingRegIdx = regUsers.findIndex(u => u.email === email || u.user_id === email || u.student_id === email);
+    if (existingRegIdx >= 0) {
+      regUsers[existingRegIdx].status = "approved";
+      regUsers[existingRegIdx].is_verified = true;
+      regUsers[existingRegIdx].is_active = true;
+    } else if (approvedUser) {
+      approvedUser.status = "approved";
+      approvedUser.is_verified = true;
+      approvedUser.is_active = true;
+      regUsers.push(approvedUser);
+    }
+    localStorage.setItem("kvgce_registered_users", JSON.stringify(regUsers));
+
+    setPendingUsers(prev => prev.filter(u => u.email !== email && u.user_id !== email && u.student_id !== email && u.faculty_id !== email));
+    fetchAdminData();
   };
 
   const handleRejectUser = async (email, name) => {
@@ -373,21 +385,21 @@ function AdminHomePage() {
     try {
       await api.post(`/admin/users/${encodeURIComponent(email)}/reject`);
       setMsg(`❌ Registration for ${name} rejected.`);
-
-      const localSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
-      const updatedLocal = localSignups.filter(s => s.email !== email && s.user_id !== email && s.student_id !== email && s.faculty_id !== email);
-      localStorage.setItem("kvgce_pending_signups", JSON.stringify(updatedLocal));
-
-      fetchAdminData();
     } catch (err) {
       console.warn("Rejection API call issue, applying fallback rejection:", err);
-      const localSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
-      const updatedLocal = localSignups.filter(s => s.email !== email && s.user_id !== email && s.student_id !== email && s.faculty_id !== email);
-      localStorage.setItem("kvgce_pending_signups", JSON.stringify(updatedLocal));
-
       setMsg(`❌ Registration for ${name} rejected.`);
-      setPendingUsers(prev => prev.filter(u => u.email !== email && u.user_id !== email && u.student_id !== email && u.faculty_id !== email));
     }
+
+    const localSignups = JSON.parse(localStorage.getItem("kvgce_pending_signups") || "[]");
+    const updatedLocal = localSignups.filter(s => s.email !== email && s.user_id !== email && s.student_id !== email && s.faculty_id !== email);
+    localStorage.setItem("kvgce_pending_signups", JSON.stringify(updatedLocal));
+
+    const regUsers = JSON.parse(localStorage.getItem("kvgce_registered_users") || "[]");
+    const updatedRegs = regUsers.filter(u => u.email !== email && u.user_id !== email && u.student_id !== email);
+    localStorage.setItem("kvgce_registered_users", JSON.stringify(updatedRegs));
+
+    setPendingUsers(prev => prev.filter(u => u.email !== email && u.user_id !== email && u.student_id !== email && u.faculty_id !== email));
+    fetchAdminData();
   };
 
   const handleToggleStatus = async (email) => {
