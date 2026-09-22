@@ -281,14 +281,6 @@ async def forgot_password_verify(req: dict):
         "message": f"Account verified for {user.get('full_name')}. You may now reset your password."
     }
 
-    return {
-        "success": True,
-        "verified": True,
-        "email": user.get("email"),
-        "full_name": user.get("full_name"),
-        "message": f"Account verified for {user.get('full_name')}. You may now reset your password."
-    }
-
 @router.post("/request-password-reset")
 @router.post("/reset-password")
 async def request_password_reset(req: dict):

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import base64
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from app.routes.auth import get_current_user, require_role
 from app.database import get_db_collection
 from app.schemas.user import UserProfileUpdate
@@ -89,11 +91,57 @@ async def update_student_profile(
         await users_col.update_one({"email": current_user["email"]}, {"$set": update_dict})
     
     updated_user = await users_col.find_one({"email": current_user["email"]})
-    updated_user.pop("hashed_password", None)
+    if updated_user:
+        updated_user.pop("hashed_password", None)
 
     return {
         "success": True,
         "message": "Profile updated successfully",
+        "data": updated_user
+    }
+
+MAX_AVATAR_SIZE_MB = 5
+MAX_AVATAR_SIZE_BYTES = MAX_AVATAR_SIZE_MB * 1024 * 1024
+
+@router.post("/upload-avatar")
+async def upload_student_avatar(
+    file: Optional[UploadFile] = File(None),
+    avatar_url: Optional[str] = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    users_col = get_db_collection("users")
+    user_email = current_user["email"]
+
+    final_avatar = None
+
+    if file:
+        content = await file.read()
+        if len(content) > MAX_AVATAR_SIZE_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File size exceeds maximum allowed limit of {MAX_AVATAR_SIZE_MB}MB."
+            )
+        
+        content_type = file.content_type or "image/png"
+        b64_str = base64.b64encode(content).decode("utf-8")
+        final_avatar = f"data:{content_type};base64,{b64_str}"
+    elif avatar_url:
+        final_avatar = avatar_url
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No avatar file or URL provided."
+        )
+
+    await users_col.update_one({"email": user_email}, {"$set": {"avatarUrl": final_avatar}})
+    updated_user = await users_col.find_one({"email": user_email})
+    if updated_user:
+        updated_user.pop("hashed_password", None)
+
+    return {
+        "success": True,
+        "message": f"Profile image uploaded and saved successfully (Max limit: {MAX_AVATAR_SIZE_MB}MB)",
+        "avatarUrl": final_avatar,
         "data": updated_user
     }
 

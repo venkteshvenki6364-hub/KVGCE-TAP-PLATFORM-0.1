@@ -35,15 +35,24 @@ class TokenResponse(BaseModel):
 
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
+    student_id: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
     course: Optional[str] = None
-    semester: Optional[int] = None
+    semester: Optional[Any] = None
     year: Optional[int] = None
+    dob: Optional[str] = None
+    gender: Optional[str] = None
+    nationality: Optional[str] = None
+    avatarUrl: Optional[str] = None
+    objective: Optional[str] = None
     github: Optional[str] = None
     linkedin: Optional[str] = None
     portfolio: Optional[str] = None
+    technicalSkills: Optional[List[str]] = None
+    softSkills: Optional[List[str]] = None
     skills: Optional[List[dict]] = None
+    academics: Optional[List[dict]] = None
 
 class PasswordResetRequest(BaseModel):
     username_or_email: str
