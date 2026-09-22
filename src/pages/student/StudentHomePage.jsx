@@ -44,6 +44,7 @@ function StudentHomePage() {
     department: storedProfile?.department || user?.department || data?.profile?.department || "Computer Science & Engineering",
     semester: storedProfile?.semester || user?.semester || data?.profile?.semester || "6th Semester (III Year)",
     year: user?.year || 3,
+    avatarUrl: storedProfile?.avatarUrl || user?.avatarUrl || data?.profile?.avatarUrl || null,
   };
 
   // Activity Heatmap Grid Generator
@@ -89,11 +90,28 @@ function StudentHomePage() {
         >
           <div className="hero-left-meta">
             <div className="hero-avatar-outline">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1.8">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.full_name}
+                  className="hero-avatar-img"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    if (e.target.nextElementSibling) {
+                      e.target.nextElementSibling.style.display = "flex";
+                    }
+                  }}
+                />
+              ) : null}
+              <div
+                className="hero-avatar-icon-fallback"
+                style={{ display: profile.avatarUrl ? "none" : "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
             </div>
             <div className="hero-text-block">
               <h2 className="welcome-heading">Welcome back, {profile.full_name || "Student"}! 🎓</h2>
