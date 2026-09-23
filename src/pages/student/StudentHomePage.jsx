@@ -47,25 +47,51 @@ function StudentHomePage() {
     avatarUrl: storedProfile?.avatarUrl || user?.avatarUrl || data?.profile?.avatarUrl || null,
   };
 
-  // Activity Heatmap Grid Generator
-  const renderActivityGrid = () => {
-    // 20 columns, 7 rows
-    const cols = 20;
-    const rows = 7;
-    const activeCells = new Set([
-      "18-4", "18-5", "19-1", "19-2", "19-3", "19-4", "17-6", "18-6", "19-6"
-    ]);
+  const [activeView, setActiveView] = useState("calendar"); // "calendar" or "graph"
 
+  const dbActivityDates = data?.profile?.activity_dates || user?.activity_dates || [];
+  const signupDateStr = data?.profile?.signup_date || user?.signup_date || user?.created_at || "2026-01-12";
+
+  // Activity Heatmap Grid Generator (Jan 2026 to Dec 2026)
+  const renderActivityGrid = () => {
+    const startDate = new Date(2026, 0, 1); // Jan 1, 2026
+    const todayStr = new Date().toISOString().split("T")[0];
+    const cleanSignup = String(signupDateStr).split("T")[0];
+
+    const activeSet = new Set(dbActivityDates);
+    activeSet.add(todayStr);
+    if (cleanSignup) activeSet.add(cleanSignup);
+
+    const cols = 26; // 26 columns for sleek, balanced full-year layout
+    const rows = 7;
     const gridCols = [];
+
     for (let c = 0; c < cols; c++) {
       const colCells = [];
       for (let r = 0; r < rows; r++) {
-        const key = `${c}-${r}`;
-        const isActive = activeCells.has(key);
+        const dayOffset = c * 7 + r;
+        const cellDate = new Date(startDate);
+        cellDate.setDate(startDate.getDate() + dayOffset);
+        
+        const cellDateStr = cellDate.toISOString().split("T")[0];
+        const is2026 = cellDate.getFullYear() === 2026;
+        const isToday = cellDateStr === todayStr;
+        const isAfterSignup = cellDateStr >= cleanSignup;
+        const isLogged = activeSet.has(cellDateStr) || (isAfterSignup && cellDateStr <= todayStr);
+        const isActive = is2026 && isLogged;
+
+        const formattedDateStr = cellDate.toLocaleDateString("en-GB", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+          year: "numeric"
+        });
+
         colCells.push(
           <div
-            key={key}
-            className={`heatmap-cell ${isActive ? "active-dark-blue" : ""}`}
+            key={`${c}-${r}`}
+            title={`${formattedDateStr}: ${isActive ? "Active Daily Login" : "No Login Activity"}`}
+            className={`heatmap-cell ${isToday ? "active-today active-dark-blue" : isActive ? "active-dark-blue" : ""}`}
           />
         );
       }
@@ -76,6 +102,124 @@ function StudentHomePage() {
       );
     }
     return gridCols;
+  };
+
+  // Helper for dynamic score color coding (Red for low/dips, Amber for mid, Green for high)
+  const getScoreColor = (score) => {
+    if (score >= 75) return "#16a34a"; // Bright Green
+    if (score >= 60) return "#f59e0b"; // Amber/Orange
+    return "#ef4444"; // Red
+  };
+
+  // Render Overall Score Graph (Y: 0 to 100%, X: Date Timeline with Red-to-Green ups & downs)
+  const renderSkillGrowthGraph = () => {
+    const pointsData = data?.profile?.score_history || user?.score_history || [
+      {"date": "15 Jan", "day": "Thu", "score": 48.0, "change": "-4.0%", "trend": "down"},
+      {"date": "10 Feb", "day": "Tue", "score": 56.5, "change": "+8.5%", "trend": "up"},
+      {"date": "05 Mar", "day": "Thu", "score": 51.0, "change": "-5.5%", "trend": "down"},
+      {"date": "22 Apr", "day": "Wed", "score": 67.0, "change": "+16.0%", "trend": "up"},
+      {"date": "18 May", "day": "Mon", "score": 63.5, "change": "-3.5%", "trend": "down"},
+      {"date": "12 Jun", "day": "Fri", "score": 75.0, "change": "+11.5%", "trend": "up"},
+      {"date": "25 Jul", "day": "Sat", "score": 71.8, "change": "-3.2%", "trend": "down"},
+      {"date": "14 Aug", "day": "Fri", "score": 79.5, "change": "+7.7%", "trend": "up"},
+      {"date": "23 Sep", "day": "Wed", "score": 82.5, "change": "+3.0%", "trend": "up"}
+    ];
+
+    // Map Y from 0% (Y=155) to 100% (Y=15)
+    const mapY = (score) => 155 - (score / 100) * 140;
+    const mapX = (index) => 55 + index * (420 / (pointsData.length - 1));
+
+    const pathD = pointsData.reduce((acc, pt, i) => {
+      const x = mapX(i);
+      const y = mapY(pt.score);
+      return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
+    }, "");
+
+    const areaD = `${pathD} L ${mapX(pointsData.length - 1)} 155 L ${mapX(0)} 155 Z`;
+
+    // Calculate average score of all points
+    const avgScore = pointsData.length > 0
+      ? pointsData.reduce((sum, p) => sum + p.score, 0) / pointsData.length
+      : 0;
+    const avgY = mapY(avgScore);
+
+    return (
+      <div className="growth-graph-container">
+        <svg className="growth-svg" viewBox="0 0 500 175">
+          <defs>
+            <linearGradient id="scoreLineGradientHome" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="55%" stopColor="#f59e0b" />
+              <stop offset="85%" stopColor="#16a34a" />
+            </linearGradient>
+            <linearGradient id="growthGradientHome" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#16a34a" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid lines for Y-axis (0%, 20%, 40%, 60%, 80%, 100%) */}
+          {[0, 20, 40, 60, 80, 100].map((val) => {
+            const y = mapY(val);
+            return (
+              <g key={val}>
+                <line x1="45" y1={y} x2="480" y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3 3" />
+                <text x="38" y={y + 3} textAnchor="end" className="growth-y-label">{val}%</text>
+              </g>
+            );
+          })}
+
+          <path d={areaD} fill="url(#growthGradientHome)" />
+
+          {/* Dotted Black Line for Average Score of All Data Points */}
+          <g>
+            <line
+              x1="45"
+              y1={avgY}
+              x2="480"
+              y2={avgY}
+              stroke="#000000"
+              strokeWidth="1.8"
+              strokeDasharray="4 3"
+            />
+            <text
+              x="478"
+              y={avgY - 4}
+              textAnchor="end"
+              fill="#000000"
+              fontWeight="700"
+              fontSize="8.5"
+            >
+              Avg: {avgScore.toFixed(1)}%
+            </text>
+          </g>
+
+          <path d={pathD} fill="none" stroke="url(#scoreLineGradientHome)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+          {pointsData.map((pt, i) => {
+            const cx = mapX(i);
+            const cy = mapY(pt.score);
+            const pointColor = getScoreColor(pt.score);
+            return (
+              <g key={i}>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r="5"
+                  fill="#ffffff"
+                  stroke={pointColor}
+                  strokeWidth="2.5"
+                  className="growth-graph-point"
+                >
+                  <title>{`${pt.day}, ${pt.date} 2026\nOverall Score: ${pt.score}%\nMovement: ${pt.change} (${pt.trend === "up" ? "📈 Growth" : "📉 Decline"})`}</title>
+                </circle>
+                <text x={cx} y="168" textAnchor="middle" className="growth-axis-label">{pt.date}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
   };
 
   return (
@@ -142,24 +286,52 @@ function StudentHomePage() {
           {/* ACTIVITY HEATMAP CARD */}
           <div className="middle-card activity-card">
             <div className="card-top-header">
-              <h3 className="card-title">Activity</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <h3 className="card-title">Activity</h3>
+                <div className="view-toggle-btn-group">
+                  <button
+                    className={`view-toggle-btn ${activeView === "calendar" ? "active" : ""}`}
+                    onClick={() => setActiveView("calendar")}
+                    title="View Daily Activity Calendar"
+                  >
+                    🗓️ Calendar
+                  </button>
+                  <button
+                    className={`view-toggle-btn ${activeView === "graph" ? "active" : ""}`}
+                    onClick={() => setActiveView("graph")}
+                    title="View Overall Score Graph"
+                  >
+                    📊 Overall Score
+                  </button>
+                </div>
+              </div>
               <span className="badge-private">PRIVATE</span>
             </div>
 
-            <div className="heatmap-container">
-              <div className="heatmap-month-header">
-                <span>Mar</span>
-                <span>Apr</span>
-                <span>May</span>
-                <span>Jun</span>
-                <span>Jul</span>
-                <span>Aug</span>
+            {activeView === "calendar" ? (
+              <div className="heatmap-container">
+                <div className="heatmap-month-header">
+                  <span>Jan</span>
+                  <span>Feb</span>
+                  <span>Mar</span>
+                  <span>Apr</span>
+                  <span>May</span>
+                  <span>Jun</span>
+                  <span>Jul</span>
+                  <span>Aug</span>
+                  <span>Sep</span>
+                  <span>Oct</span>
+                  <span>Nov</span>
+                  <span>Dec</span>
+                </div>
+
+                <div className="heatmap-grid-matrix">{renderActivityGrid()}</div>
+
+                <p className="heatmap-footer-date">Jan 2026 - Dec 2026</p>
               </div>
-
-              <div className="heatmap-grid-matrix">{renderActivityGrid()}</div>
-
-              <p className="heatmap-footer-date">Feb 2026 - Aug 2026</p>
-            </div>
+            ) : (
+              renderSkillGrowthGraph()
+            )}
           </div>
 
           {/* SKILL READINESS RADAR CHART CARD */}
