@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Any
 from datetime import datetime
 
@@ -54,6 +54,36 @@ class UserProfileUpdate(BaseModel):
     softSkills: Optional[List[str]] = None
     skills: Optional[List[dict]] = None
     academics: Optional[List[dict]] = None
+
+    @field_validator("objective", mode="before")
+    @classmethod
+    def validate_objective_length(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return v
+        text = str(v).strip()
+        if not text:
+            return text
+        words = [w for w in text.split() if w]
+        if len(words) > 50:
+            raise ValueError("Resume Objective must be concise (maximum 50 words).")
+        return text
+
+    @field_validator("phone", mode="before")
+    @classmethod
+    def validate_and_format_phone(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return v
+        v_str = str(v).strip()
+        if not v_str:
+            return ""
+        digits = "".join([c for c in v_str if c.isdigit()])
+        if digits.startswith("91") and len(digits) > 10:
+            digits = digits[2:]
+        if len(digits) > 10:
+            digits = digits[-10:]
+        if len(digits) != 10:
+            raise ValueError("Phone number must contain exactly 10 digits (e.g. 9108612345 or +91 9108612345).")
+        return f"+91 {digits}"
 
 class PasswordResetRequest(BaseModel):
     username_or_email: str
