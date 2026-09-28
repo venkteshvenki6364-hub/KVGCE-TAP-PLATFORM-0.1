@@ -50,6 +50,9 @@ class UserProfileUpdate(BaseModel):
     github: Optional[str] = None
     linkedin: Optional[str] = None
     portfolio: Optional[str] = None
+    githubUrl: Optional[str] = None
+    linkedinUrl: Optional[str] = None
+    portfolioUrl: Optional[str] = None
     technicalSkills: Optional[List[str]] = None
     softSkills: Optional[List[str]] = None
     skills: Optional[List[dict]] = None

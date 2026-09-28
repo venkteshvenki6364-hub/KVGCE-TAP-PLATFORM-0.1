@@ -41,11 +41,27 @@ async def record_user_daily_activity(email: str) -> dict:
 
     await users_col.update_one(
         {"email": email},
-        {"$set": {"activity_dates": activity_dates, "signup_date": signup_date, "score_history": score_history}}
+        {"$set": {
+            "activity_dates": activity_dates, 
+            "signup_date": signup_date, 
+            "score_history": score_history,
+            "githubUrl": user_doc.get("githubUrl") or user_doc.get("github") or "https://github.com/venkatesh-r",
+            "linkedinUrl": user_doc.get("linkedinUrl") or user_doc.get("linkedin") or "https://linkedin.com/in/venkatesh-r",
+            "portfolioUrl": user_doc.get("portfolioUrl") or user_doc.get("portfolio") or "https://venkatesh-r.dev",
+            "github": user_doc.get("githubUrl") or user_doc.get("github") or "https://github.com/venkatesh-r",
+            "linkedin": user_doc.get("linkedinUrl") or user_doc.get("linkedin") or "https://linkedin.com/in/venkatesh-r",
+            "portfolio": user_doc.get("portfolioUrl") or user_doc.get("portfolio") or "https://venkatesh-r.dev"
+        }}
     )
     user_doc["activity_dates"] = activity_dates
     user_doc["signup_date"] = signup_date
     user_doc["score_history"] = score_history
+    user_doc["githubUrl"] = user_doc.get("githubUrl") or user_doc.get("github") or "https://github.com/venkatesh-r"
+    user_doc["linkedinUrl"] = user_doc.get("linkedinUrl") or user_doc.get("linkedin") or "https://linkedin.com/in/venkatesh-r"
+    user_doc["portfolioUrl"] = user_doc.get("portfolioUrl") or user_doc.get("portfolio") or "https://venkatesh-r.dev"
+    user_doc["github"] = user_doc["githubUrl"]
+    user_doc["linkedin"] = user_doc["linkedinUrl"]
+    user_doc["portfolio"] = user_doc["portfolioUrl"]
     user_doc.pop("hashed_password", None)
     return user_doc
 
@@ -140,11 +156,32 @@ async def update_student_profile(
     users_col = get_db_collection("users")
     update_dict = {k: v for k, v in profile_data.model_dump().items() if v is not None}
     
+    if "githubUrl" in update_dict and "github" not in update_dict:
+        update_dict["github"] = update_dict["githubUrl"]
+    elif "github" in update_dict and "githubUrl" not in update_dict:
+        update_dict["githubUrl"] = update_dict["github"]
+
+    if "linkedinUrl" in update_dict and "linkedin" not in update_dict:
+        update_dict["linkedin"] = update_dict["linkedinUrl"]
+    elif "linkedin" in update_dict and "linkedinUrl" not in update_dict:
+        update_dict["linkedinUrl"] = update_dict["linkedin"]
+
+    if "portfolioUrl" in update_dict and "portfolio" not in update_dict:
+        update_dict["portfolio"] = update_dict["portfolioUrl"]
+    elif "portfolio" in update_dict and "portfolioUrl" not in update_dict:
+        update_dict["portfolioUrl"] = update_dict["portfolio"]
+
     if update_dict:
         await users_col.update_one({"email": current_user["email"]}, {"$set": update_dict})
     
     updated_user = await users_col.find_one({"email": current_user["email"]})
     if updated_user:
+        updated_user["githubUrl"] = updated_user.get("githubUrl") or updated_user.get("github") or "https://github.com/venkatesh-r"
+        updated_user["linkedinUrl"] = updated_user.get("linkedinUrl") or updated_user.get("linkedin") or "https://linkedin.com/in/venkatesh-r"
+        updated_user["portfolioUrl"] = updated_user.get("portfolioUrl") or updated_user.get("portfolio") or "https://venkatesh-r.dev"
+        updated_user["github"] = updated_user["githubUrl"]
+        updated_user["linkedin"] = updated_user["linkedinUrl"]
+        updated_user["portfolio"] = updated_user["portfolioUrl"]
         updated_user.pop("hashed_password", None)
 
     return {
