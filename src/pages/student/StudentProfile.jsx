@@ -11,6 +11,36 @@ function StudentProfile() {
   // Only a student logged into their own account can edit profile details
   const canEditProfile = role === "student";
 
+  // Helper for formatting external social/portfolio links with https://
+  const formatExternalUrl = (urlStr) => {
+    if (!urlStr) return "";
+    let clean = String(urlStr).trim();
+    if (!clean) return "";
+    if (!/^https?:\/\//i.test(clean)) {
+      return `https://${clean}`;
+    }
+    return clean;
+  };
+
+  // Helper for extracting clean social handle/domain for display
+  const getSocialHandle = (urlStr, platform) => {
+    if (!urlStr) return "";
+    let clean = String(urlStr).trim().replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
+    if (platform === "github") {
+      clean = clean.replace(/^github\.com\//i, "@");
+      return clean.startsWith("@") ? clean : `@${clean}`;
+    }
+    if (platform === "linkedin") {
+      clean = clean.replace(/^linkedin\.com\/in\//i, "in/");
+      clean = clean.replace(/^linkedin\.com\//i, "in/");
+      return clean;
+    }
+    if (platform === "portfolio") {
+      return clean.replace(/^https?:\/\//i, "");
+    }
+    return clean;
+  };
+
   // Helper for phone: extracts core 10 digits cleanly
   const getRaw10Digits = (phoneStr) => {
     if (!phoneStr) return "";
@@ -195,6 +225,9 @@ function StudentProfile() {
       dob: parsedStored?.dob || user?.dob || "28 Feb 2004",
       gender: parsedStored?.gender || user?.gender || "Male",
       avatarUrl: parsedStored?.avatarUrl !== undefined ? parsedStored.avatarUrl : (user?.avatarUrl !== undefined ? user.avatarUrl : ""),
+      githubUrl: parsedStored?.githubUrl || user?.githubUrl || "https://github.com/venkatesh-r",
+      linkedinUrl: parsedStored?.linkedinUrl || user?.linkedinUrl || "https://linkedin.com/in/venkatesh-r",
+      portfolioUrl: parsedStored?.portfolioUrl || user?.portfolioUrl || "https://venkatesh-r.dev",
       objective:
         parsedStored?.objective ||
         user?.objective ||
@@ -237,7 +270,7 @@ function StudentProfile() {
   const [msg, setMsg] = useState({ type: "", text: "" });
 
   // Modal / Edit state toggles
-  const [activeModal, setActiveModal] = useState(null); // 'hero', 'objective', 'tech', 'soft', 'marks'
+  const [activeModal, setActiveModal] = useState(null); // 'hero', 'social', 'objective', 'tech', 'soft', 'marks'
   const [tempData, setTempData] = useState({});
 
   // Dynamic Profile Completion Percentage Calculation
@@ -253,10 +286,13 @@ function StudentProfile() {
     if (p?.dob?.trim()) score += 5;
     if (p?.gender?.trim()) score += 5;
     if (p?.objective?.trim() && p.objective.length > 10) score += 5;
-    if (p?.technicalSkills && p.technicalSkills.length > 0) score += 10;
+    if (p?.technicalSkills && p.technicalSkills.length > 0) score += 5;
     if (p?.softSkills && p.softSkills.length > 0) score += 5;
-    if (p?.academics && p.academics.length > 0) score += 5;
+    if (p?.academics && (p.academics.sslc || p.academics.length > 0)) score += 5;
     if (p?.avatarUrl && p.avatarUrl.trim() !== "") score += 5;
+    if (p?.githubUrl && p.githubUrl.trim() !== "") score += 2;
+    if (p?.linkedinUrl && p.linkedinUrl.trim() !== "") score += 2;
+    if (p?.portfolioUrl && p.portfolioUrl.trim() !== "") score += 1;
     return Math.min(100, score);
   };
 
@@ -407,6 +443,9 @@ function StudentProfile() {
             student_id: apiData.student_id || apiData.usn || user?.student_id || user?.usn || prev.student_id,
             phone: apiData.phone || user?.phone || prev.phone,
             avatarUrl: apiData.avatarUrl !== undefined ? apiData.avatarUrl : (user?.avatarUrl !== undefined ? user.avatarUrl : prev.avatarUrl),
+            githubUrl: apiData.githubUrl || apiData.github_url || user?.githubUrl || prev.githubUrl,
+            linkedinUrl: apiData.linkedinUrl || apiData.linkedin_url || user?.linkedinUrl || prev.linkedinUrl,
+            portfolioUrl: apiData.portfolioUrl || apiData.portfolio_url || user?.portfolioUrl || prev.portfolioUrl,
           }));
         }
       } catch (err) {
@@ -443,6 +482,9 @@ function StudentProfile() {
         dob: profile.dob,
         gender: profile.gender,
         avatarUrl: profile.avatarUrl,
+        githubUrl: profile.githubUrl,
+        linkedinUrl: profile.linkedinUrl,
+        portfolioUrl: profile.portfolioUrl,
         objective: profile.objective,
         technicalSkills: profile.technicalSkills,
         softSkills: profile.softSkills,
@@ -544,6 +586,9 @@ function StudentProfile() {
         dob: tempData.dob,
         gender: tempData.gender,
         avatarUrl: tempData.avatarUrl,
+        githubUrl: tempData.githubUrl,
+        linkedinUrl: tempData.linkedinUrl,
+        portfolioUrl: tempData.portfolioUrl,
         objective: tempData.objective,
         technicalSkills: tempData.technicalSkills,
         softSkills: tempData.softSkills,
@@ -551,7 +596,13 @@ function StudentProfile() {
       });
     }
 
-    setMsg({ type: "success", text: "✅ Profile details updated and saved successfully!" });
+    try {
+      window.dispatchEvent(new Event("storage"));
+    } catch (e) {
+      console.log("Storage event broadcast:", e);
+    }
+
+    setMsg({ type: "success", text: "✅ Profile details saved successfully!" });
     setTimeout(() => setMsg({ type: "", text: "" }), 4000);
   };
 
@@ -936,80 +987,164 @@ function StudentProfile() {
               </div>
             </div>
 
-            {/* DETAILS GRID: LEFT & RIGHT COLUMNS */}
-            <div className="profile-meta-grid">
-              {/* LEFT COLUMN */}
-              <div className="meta-column">
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <span className="meta-val font-bold">{profile.full_name}</span>
+            {/* MAIN COLUMN CONTAINING META GRID AND SOCIAL ROW */}
+            <div className="profile-hero-main-col">
+              {/* DETAILS GRID: LEFT & RIGHT COLUMNS */}
+              <div className="profile-meta-grid">
+                {/* LEFT COLUMN */}
+                <div className="meta-column">
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span className="meta-val font-bold">{profile.full_name}</span>
+                  </div>
+
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="16" rx="2" />
+                      <line x1="7" y1="8" x2="17" y2="8" />
+                      <line x1="7" y1="12" x2="13" y2="12" />
+                    </svg>
+                    <span className="meta-val">{profile.student_id}</span>
+                  </div>
+
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                      <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                    </svg>
+                    <span className="meta-val">{profile.department}</span>
+                  </div>
+
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span className="meta-val">{profile.semester} • {profile.section || "Section A"}</span>
+                  </div>
                 </div>
 
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="16" rx="2" />
-                    <line x1="7" y1="8" x2="17" y2="8" />
-                    <line x1="7" y1="12" x2="13" y2="12" />
-                  </svg>
-                  <span className="meta-val">{profile.student_id}</span>
-                </div>
+                {/* RIGHT COLUMN */}
+                <div className="meta-column">
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    <span className="meta-val">{profile.email}</span>
+                  </div>
 
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                  </svg>
-                  <span className="meta-val">{profile.department}</span>
-                </div>
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    <span className="meta-val">{formatPhoneDisplay(profile.phone)}</span>
+                  </div>
 
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  <span className="meta-val">{profile.semester} • {profile.section || "Section A"}</span>
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <rect x="3" y="8" width="18" height="13" rx="2" />
+                      <path d="M12 2v6" />
+                      <path d="M8 4h8" />
+                    </svg>
+                    <span className="meta-val">{formatDobDisplay(profile.dob)}</span>
+                  </div>
+
+                  <div className="meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 3v18" />
+                    </svg>
+                    <span className="meta-val">{profile.gender}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* RIGHT COLUMN */}
-              <div className="meta-column">
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                  </svg>
-                  <span className="meta-val">{profile.email}</span>
-                </div>
+              {/* HERO SOCIAL PROFILE LINKS SINGLE ROW */}
+              <div className="hero-social-links-row">
+                {profile.githubUrl ? (
+                  <a
+                    href={formatExternalUrl(profile.githubUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hero-social-pill github-pill"
+                    onClick={(e) => e.stopPropagation()}
+                    title={`View ${profile.full_name}'s GitHub Profile (${profile.githubUrl})`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span>GitHub</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="external-arrow-icon">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                ) : null}
 
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                  <span className="meta-val">{formatPhoneDisplay(profile.phone)}</span>
-                </div>
+                {profile.linkedinUrl ? (
+                  <a
+                    href={formatExternalUrl(profile.linkedinUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hero-social-pill linkedin-pill"
+                    onClick={(e) => e.stopPropagation()}
+                    title={`View ${profile.full_name}'s LinkedIn Profile (${profile.linkedinUrl})`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                    </svg>
+                    <span>LinkedIn</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="external-arrow-icon">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                ) : null}
 
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <rect x="3" y="8" width="18" height="13" rx="2" />
-                    <path d="M12 2v6" />
-                    <path d="M8 4h8" />
-                  </svg>
-                  <span className="meta-val">{formatDobDisplay(profile.dob)}</span>
-                </div>
+                {profile.portfolioUrl ? (
+                  <a
+                    href={formatExternalUrl(profile.portfolioUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hero-social-pill portfolio-pill"
+                    onClick={(e) => e.stopPropagation()}
+                    title={`View ${profile.full_name}'s Portfolio Website (${profile.portfolioUrl})`}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="2" y1="12" x2="22" y2="12" />
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                    <span>Portfolio</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="external-arrow-icon">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                ) : null}
 
-                <div className="meta-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2">
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 3v18" />
-                  </svg>
-                  <span className="meta-val">{profile.gender}</span>
-                </div>
-
+                {canEditProfile && (!profile.githubUrl || !profile.linkedinUrl || !profile.portfolioUrl) && (
+                  <button
+                    type="button"
+                    className="hero-social-pill add-social-pill"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openModal("social");
+                    }}
+                    title="Add or update social profile links"
+                  >
+                    <span>➕ Add Social Links</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1227,6 +1362,135 @@ function StudentProfile() {
           </div>
         </div>
 
+        {/* 5. SOCIAL & PROFESSIONAL PROFILES CARD */}
+        <div className="profile-section-card">
+          <div className="section-card-header">
+            <div className="header-title-flex">
+              <div className="section-icon-badge purple-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.5">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="section-title" style={{ margin: 0 }}>Social & Professional Profiles</h3>
+                <span style={{ fontSize: "0.76rem", fontWeight: "700", color: "#7c3aed", background: "#f3e8ff", padding: "0.15rem 0.55rem", borderRadius: "12px", marginTop: "0.25rem", display: "inline-block" }}>
+                  🌐 Public Profile Links
+                </span>
+              </div>
+            </div>
+            {canEditProfile && (
+              <button className="section-edit-btn" onClick={() => openModal("social")}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit Links
+              </button>
+            )}
+          </div>
+
+          <div className="social-cards-grid">
+            {/* GITHUB CARD */}
+            <div className="social-profile-item-card github-card">
+              <div className="social-item-header">
+                <div className="social-icon-wrapper github-bg">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="social-platform-title">GitHub Profile</h4>
+                  <p className="social-handle-text">{profile.githubUrl ? getSocialHandle(profile.githubUrl, "github") : "Not Linked"}</p>
+                </div>
+              </div>
+              {profile.githubUrl ? (
+                <a
+                  href={formatExternalUrl(profile.githubUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-action-btn github-action"
+                  title="Open GitHub Profile"
+                >
+                  Check GitHub Profile ↗
+                </a>
+              ) : canEditProfile ? (
+                <button type="button" className="social-action-btn add-action" onClick={() => openModal("social")}>
+                  ➕ Add GitHub Link
+                </button>
+              ) : (
+                <span className="no-link-badge">No link provided</span>
+              )}
+            </div>
+
+            {/* LINKEDIN CARD */}
+            <div className="social-profile-item-card linkedin-card">
+              <div className="social-item-header">
+                <div className="social-icon-wrapper linkedin-bg">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="social-platform-title">LinkedIn Profile</h4>
+                  <p className="social-handle-text">{profile.linkedinUrl ? getSocialHandle(profile.linkedinUrl, "linkedin") : "Not Linked"}</p>
+                </div>
+              </div>
+              {profile.linkedinUrl ? (
+                <a
+                  href={formatExternalUrl(profile.linkedinUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-action-btn linkedin-action"
+                  title="Open LinkedIn Profile"
+                >
+                  Check LinkedIn Profile ↗
+                </a>
+              ) : canEditProfile ? (
+                <button type="button" className="social-action-btn add-action" onClick={() => openModal("social")}>
+                  ➕ Add LinkedIn Link
+                </button>
+              ) : (
+                <span className="no-link-badge">No link provided</span>
+              )}
+            </div>
+
+            {/* PORTFOLIO CARD */}
+            <div className="social-profile-item-card portfolio-card">
+              <div className="social-item-header">
+                <div className="social-icon-wrapper portfolio-bg">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="social-platform-title">Portfolio Website</h4>
+                  <p className="social-handle-text">{profile.portfolioUrl ? getSocialHandle(profile.portfolioUrl, "portfolio") : "Not Linked"}</p>
+                </div>
+              </div>
+              {profile.portfolioUrl ? (
+                <a
+                  href={formatExternalUrl(profile.portfolioUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-action-btn portfolio-action"
+                  title="Open Portfolio Website"
+                >
+                  Check Portfolio Website ↗
+                </a>
+              ) : canEditProfile ? (
+                <button type="button" className="social-action-btn add-action" onClick={() => openModal("social")}>
+                  ➕ Add Portfolio Link
+                </button>
+              ) : (
+                <span className="no-link-badge">No link provided</span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* 5. PRE-UNIVERSITY ACADEMICS CARD (SSLC 10th & PUC 12th) */}
         <div className="profile-section-card">
           <div className="section-card-header">
@@ -1393,7 +1657,7 @@ function StudentProfile() {
                 <polyline points="17 21 17 13 7 13 7 21" />
                 <polyline points="7 3 7 8 15 8" />
               </svg>
-              {saving ? "Saving Profile..." : "Save Profile"}
+              {saving ? "Saving Profile..." : "💾 Save Profile Changes"}
             </button>
           )}
         </div>
@@ -1406,6 +1670,7 @@ function StudentProfile() {
             <div className="modal-header">
               <h3>
                 {activeModal === "hero" && "Edit Personal Details"}
+                {activeModal === "social" && "Edit Social & Profile Links"}
                 {activeModal === "objective" && "Edit Objective"}
                 {activeModal === "tech" && "Edit Technical Skills"}
                 {activeModal === "soft" && "Edit Soft Skills"}
@@ -1602,6 +1867,111 @@ function StudentProfile() {
                       />
                     </div>
 
+                    {/* GITHUB URL */}
+                    <div className="modal-form-group">
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#24292e">
+                          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                        </svg>
+                        GitHub Link
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://github.com/username"
+                        value={tempData.githubUrl || ""}
+                        onChange={(e) => setTempData({ ...tempData, githubUrl: e.target.value })}
+                      />
+                    </div>
+
+                    {/* LINKEDIN URL */}
+                    <div className="modal-form-group">
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="#0a66c2">
+                          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                        </svg>
+                        LinkedIn Link
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/in/username"
+                        value={tempData.linkedinUrl || ""}
+                        onChange={(e) => setTempData({ ...tempData, linkedinUrl: e.target.value })}
+                      />
+                    </div>
+
+                    {/* PORTFOLIO URL */}
+                    <div className="modal-form-group" style={{ gridColumn: "span 2" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="2" y1="12" x2="22" y2="12"/>
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        Portfolio Website Link
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://yourportfolio.dev"
+                        value={tempData.portfolioUrl || ""}
+                        onChange={(e) => setTempData({ ...tempData, portfolioUrl: e.target.value })}
+                      />
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {activeModal === "social" && (
+                <div className="modal-form-vertical">
+                  <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.75rem 1rem", borderRadius: "10px", fontSize: "0.85rem", color: "#166534", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span>🔗</span> Add your professional links (GitHub, LinkedIn, Portfolio). Clickable badges will be accessible on your profile to recruiters and admins.
+                  </div>
+
+                  <div className="modal-form-group">
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.45rem", color: "#0f172a", fontWeight: "700" }}>
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="#24292e">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                      </svg>
+                      GitHub Profile URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="e.g. https://github.com/venkatesh-r"
+                      value={tempData.githubUrl || ""}
+                      onChange={(e) => setTempData({ ...tempData, githubUrl: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="modal-form-group">
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.45rem", color: "#0f172a", fontWeight: "700" }}>
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="#0a66c2">
+                        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                      </svg>
+                      LinkedIn Profile URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="e.g. https://linkedin.com/in/venkatesh-r"
+                      value={tempData.linkedinUrl || ""}
+                      onChange={(e) => setTempData({ ...tempData, linkedinUrl: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="modal-form-group">
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.45rem", color: "#0f172a", fontWeight: "700" }}>
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                      </svg>
+                      Portfolio Website URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="e.g. https://venkatesh-r.dev"
+                      value={tempData.portfolioUrl || ""}
+                      onChange={(e) => setTempData({ ...tempData, portfolioUrl: e.target.value })}
+                    />
                   </div>
                 </div>
               )}
@@ -1989,7 +2359,7 @@ function StudentProfile() {
 
             <div className="modal-footer">
               <button className="modal-cancel-btn" onClick={closeModal}>Cancel</button>
-              <button className="modal-save-btn" onClick={saveModalChanges}>Apply Changes</button>
+              <button className="modal-save-btn" onClick={saveModalChanges}>💾 Save Profile</button>
             </div>
           </div>
         </div>

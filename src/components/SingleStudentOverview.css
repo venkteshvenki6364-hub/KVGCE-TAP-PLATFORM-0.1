@@ -617,3 +617,55 @@
   color: #64748b;
   margin: 0;
 }
+
+/* STUDENT OVERVIEW HERO SOCIAL BUTTONS */
+.student-overview-social-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.overview-social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.overview-social-btn.github-btn {
+  background: #18181b;
+  color: #ffffff;
+}
+
+.overview-social-btn.github-btn:hover {
+  background: #27272a;
+  transform: translateY(-1px);
+}
+
+.overview-social-btn.linkedin-btn {
+  background: #0a66c2;
+  color: #ffffff;
+}
+
+.overview-social-btn.linkedin-btn:hover {
+  background: #084e96;
+  transform: translateY(-1px);
+}
+
+.overview-social-btn.portfolio-btn {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+.overview-social-btn.portfolio-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}

@@ -45,6 +45,9 @@ function StudentHomePage() {
     semester: storedProfile?.semester || user?.semester || data?.profile?.semester || "6th Semester (III Year)",
     year: user?.year || 3,
     avatarUrl: storedProfile?.avatarUrl || user?.avatarUrl || data?.profile?.avatarUrl || null,
+    githubUrl: storedProfile?.githubUrl || user?.githubUrl || data?.profile?.githubUrl || "https://github.com/venkatesh-r",
+    linkedinUrl: storedProfile?.linkedinUrl || user?.linkedinUrl || data?.profile?.linkedinUrl || "https://linkedin.com/in/venkatesh-r",
+    portfolioUrl: storedProfile?.portfolioUrl || user?.portfolioUrl || data?.profile?.portfolioUrl || "https://venkatesh-r.dev",
   };
 
   const [activeView, setActiveView] = useState("calendar"); // "calendar" or "graph"
@@ -266,6 +269,54 @@ function StudentHomePage() {
                 <span className="dot-sep">•</span>
                 <span>Semester: {typeof profile.semester === "string" ? profile.semester : `${profile.semester} (Year ${profile.year || 3})`}</span>
               </p>
+
+              {/* SOCIAL PROFILE LINKS SINGLE ROW */}
+              <div className="home-hero-social-row" onClick={(e) => e.stopPropagation()}>
+                {profile.githubUrl && (
+                  <a
+                    href={profile.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="home-social-pill github-pill"
+                    title={`GitHub: ${profile.githubUrl}`}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span>GitHub ↗</span>
+                  </a>
+                )}
+                {profile.linkedinUrl && (
+                  <a
+                    href={profile.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="home-social-pill linkedin-pill"
+                    title={`LinkedIn: ${profile.linkedinUrl}`}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                    </svg>
+                    <span>LinkedIn ↗</span>
+                  </a>
+                )}
+                {profile.portfolioUrl && (
+                  <a
+                    href={profile.portfolioUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="home-social-pill portfolio-pill"
+                    title={`Portfolio: ${profile.portfolioUrl}`}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <span>Portfolio ↗</span>
+                  </a>
+                )}
+              </div>
             </div>
           </div>
 
@@ -281,129 +332,7 @@ function StudentHomePage() {
           </div>
         </div>
 
-        {/* 2. MIDDLE ROW: ACTIVITY HEATMAP & SKILL READINESS RADAR */}
-        <div className="dashboard-middle-row">
-          {/* ACTIVITY HEATMAP CARD */}
-          <div className="middle-card activity-card">
-            <div className="card-top-header">
-              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <h3 className="card-title">Activity</h3>
-                <div className="view-toggle-btn-group">
-                  <button
-                    className={`view-toggle-btn ${activeView === "calendar" ? "active" : ""}`}
-                    onClick={() => setActiveView("calendar")}
-                    title="View Daily Activity Calendar"
-                  >
-                    🗓️ Calendar
-                  </button>
-                  <button
-                    className={`view-toggle-btn ${activeView === "graph" ? "active" : ""}`}
-                    onClick={() => setActiveView("graph")}
-                    title="View Overall Score Graph"
-                  >
-                    📊 Overall Score
-                  </button>
-                </div>
-              </div>
-              <span className="badge-private">PRIVATE</span>
-            </div>
-
-            {activeView === "calendar" ? (
-              <div className="heatmap-container">
-                <div className="heatmap-month-header">
-                  <span>Jan</span>
-                  <span>Feb</span>
-                  <span>Mar</span>
-                  <span>Apr</span>
-                  <span>May</span>
-                  <span>Jun</span>
-                  <span>Jul</span>
-                  <span>Aug</span>
-                  <span>Sep</span>
-                  <span>Oct</span>
-                  <span>Nov</span>
-                  <span>Dec</span>
-                </div>
-
-                <div className="heatmap-grid-matrix">{renderActivityGrid()}</div>
-
-                <p className="heatmap-footer-date">Jan 2026 - Dec 2026</p>
-              </div>
-            ) : (
-              renderSkillGrowthGraph()
-            )}
-          </div>
-
-          {/* SKILL READINESS RADAR CHART CARD */}
-          <div className="middle-card skill-readiness-card">
-            <div className="card-top-header">
-              <h3 className="card-title">Skill Readiness</h3>
-            </div>
-
-            <div className="radar-chart-container">
-              <svg className="radar-svg" viewBox="0 0 340 240">
-                {/* 5 Outer Axis Vertices:
-                    Center: (170, 120), R = 75
-                    Top: (170, 45) -> Technical
-                    Top Right: (241, 97) -> Aptitude
-                    Bottom Right: (214, 181) -> Coding
-                    Bottom Left: (126, 181) -> Communication
-                    Top Left: (99, 97) -> Activity/Profile
-                */}
-
-                {/* Grid Pentagons (5 concentric levels) */}
-                <polygon points="170,45 241,97 214,181 126,181 99,97" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-                <polygon points="170,60 227,102 205,169 135,169 113,102" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-                <polygon points="170,75 213,106 196,157 144,157 127,106" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-                <polygon points="170,90 198,111 187,144 153,144 142,111" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-                <polygon points="170,105 184,115 178,132 162,132 156,115" fill="none" stroke="#e2e8f0" strokeWidth="1" />
-
-                {/* Axis Radial Lines */}
-                <line x1="170" y1="120" x2="170" y2="45" stroke="#e2e8f0" strokeWidth="1" />
-                <line x1="170" y1="120" x2="241" y2="97" stroke="#e2e8f0" strokeWidth="1" />
-                <line x1="170" y1="120" x2="214" y2="181" stroke="#e2e8f0" strokeWidth="1" />
-                <line x1="170" y1="120" x2="126" y2="181" stroke="#e2e8f0" strokeWidth="1" />
-                <line x1="170" y1="120" x2="99" y2="97" stroke="#e2e8f0" strokeWidth="1" />
-
-                {/* Vertex Labels */}
-                <text x="170" y="32" textAnchor="middle" className="radar-label">Technical Readiness</text>
-                <text x="248" y="96" textAnchor="start" className="radar-label">Aptitude<tspan x="248" dy="11">Readiness</tspan></text>
-                <text x="218" y="196" textAnchor="start" className="radar-label">Coding Readiness</text>
-                <text x="122" y="196" textAnchor="end" className="radar-label">Communication<tspan x="122" dy="11">Readiness</tspan></text>
-                <text x="92" y="96" textAnchor="end" className="radar-label">Activity/Profile<tspan x="92" dy="11">Readiness</tspan></text>
-
-                {/* Your Score Polygon (Solid Blue) */}
-                {/* Score ratios: Tech:0.85, Apt:0.88, Cod:0.75, Comm:0.68, Act:0.78 */}
-                <polygon points="170,56 232,100 203,166 140,161 115,102" fill="rgba(37, 99, 235, 0.12)" stroke="#2563eb" strokeWidth="2" />
-                <circle cx="170" cy="56" r="3.5" fill="#2563eb" />
-                <circle cx="232" cy="100" r="3.5" fill="#2563eb" />
-                <circle cx="203" cy="166" r="3.5" fill="#2563eb" />
-                <circle cx="140" cy="161" r="3.5" fill="#2563eb" />
-                <circle cx="115" cy="102" r="3.5" fill="#2563eb" />
-
-                {/* Average Polygon (Dashed Orange) */}
-                {/* Avg ratios: Tech:0.70, Apt:0.70, Cod:0.65, Comm:0.75, Act:0.65 */}
-                <polygon points="170,68 220,104 199,160 137,166 124,105" fill="none" stroke="#f97316" strokeWidth="1.8" strokeDasharray="4 3" />
-                <circle cx="170" cy="68" r="3" fill="#f97316" />
-                <circle cx="220" cy="104" r="3" fill="#f97316" />
-                <circle cx="199" cy="160" r="3" fill="#f97316" />
-                <circle cx="137" cy="166" r="3" fill="#f97316" />
-                <circle cx="124" cy="105" r="3" fill="#f97316" />
-              </svg>
-
-              <div className="radar-legend-row">
-                <div className="legend-item">
-                  <span className="legend-line blue-solid"></span>
-                  <span>Your Score</span>
-                </div>
-                <div className="legend-item">
-                  <span className="legend-line orange-dashed"></span>
-                  <span>Average</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* 3. GRID OF 6 MODULE PROGRESS CARDS */}
 
         {/* 3. GRID OF 6 MODULE PROGRESS CARDS */}
         <div className="modules-6-grid">
