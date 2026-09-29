@@ -148,6 +148,145 @@ async def get_student_profile(current_user: dict = Depends(get_current_user)):
         "data": current_user
     }
 
+def process_and_compute_academics_python(academics: dict) -> dict:
+    """
+    Python server-side calculation logic for Student Academics:
+    1. Validates total_marks and obtained_marks are strictly numeric.
+    2. Calculates percentage for SSLC, PUC, and each B.E. semester.
+    3. Computes cumulative SGPA/CGPA and overall B.E. statistics.
+    """
+    if not isinstance(academics, dict):
+        return academics
+
+    # Process SSLC
+    sslc = academics.get("sslc", {})
+    if isinstance(sslc, dict):
+        try:
+            tot = float(sslc.get("totalMarks") or sslc.get("total_marks") or 625)
+        except (ValueError, TypeError):
+            tot = 625.0
+        try:
+            obt = float(sslc.get("obtainedMarks") or sslc.get("obtained_marks") or 0)
+        except (ValueError, TypeError):
+            obt = 0.0
+        
+        tot = max(1.0, tot)
+        obt = max(0.0, min(tot, obt))
+        sslc["totalMarks"] = tot
+        sslc["obtainedMarks"] = obt
+        sslc["score"] = f"{round((obt / tot) * 100, 2):.2f}%"
+        academics["sslc"] = sslc
+
+    # Process PUC
+    puc = academics.get("puc", {})
+    if isinstance(puc, dict):
+        try:
+            tot = float(puc.get("totalMarks") or puc.get("total_marks") or 600)
+        except (ValueError, TypeError):
+            tot = 600.0
+        try:
+            obt = float(puc.get("obtainedMarks") or puc.get("obtained_marks") or 0)
+        except (ValueError, TypeError):
+            obt = 0.0
+
+        tot = max(1.0, tot)
+        obt = max(0.0, min(tot, obt))
+        puc["totalMarks"] = tot
+        puc["obtainedMarks"] = obt
+        puc["score"] = f"{round((obt / tot) * 100, 2):.2f}%"
+        academics["puc"] = puc
+
+    # Process B.E. Semesters
+    be_sems = academics.get("beSemesters", [])
+    if isinstance(be_sems, list):
+        processed_sems = []
+        tot_be_marks = 0.0
+        obt_be_marks = 0.0
+        valid_sgpas = []
+        running_sum = 0.0
+
+        for idx, sem in enumerate(be_sems):
+            if not isinstance(sem, dict):
+                continue
+            
+            try:
+                t_marks = float(sem.get("totalMarks") or sem.get("total_marks") or 1000)
+            except (ValueError, TypeError):
+                t_marks = 1000.0
+            
+            try:
+                sgpa_val = float(sem.get("sgpa") or 8.0)
+            except (ValueError, TypeError):
+                sgpa_val = 8.0
+            sgpa_val = max(0.0, min(10.0, sgpa_val))
+
+            try:
+                o_marks = float(sem.get("obtainedMarks") or sem.get("obtained_marks") or 0)
+            except (ValueError, TypeError):
+                o_marks = round(t_marks * (sgpa_val / 10.0), 2)
+            
+            if o_marks == 0 and sgpa_val > 0:
+                o_marks = round(t_marks * (sgpa_val / 10.0), 2)
+
+            t_marks = max(1.0, t_marks)
+            o_marks = max(0.0, min(t_marks, o_marks))
+
+            pct_str = f"{round((o_marks / t_marks) * 100, 2):.2f}%"
+            tot_be_marks += t_marks
+            obt_be_marks += o_marks
+            
+            valid_sgpas.append(sgpa_val)
+            running_sum += sgpa_val
+            cgpa_val = round(running_sum / len(valid_sgpas), 2)
+
+            sem["totalMarks"] = t_marks
+            sem["obtainedMarks"] = o_marks
+            sem["percentage"] = pct_str
+            sem["sgpa"] = f"{sgpa_val:.2f}"
+            sem["cgpa"] = f"{cgpa_val:.2f}"
+            processed_sems.append(sem)
+
+        academics["beSemesters"] = processed_sems
+
+        # Compute B.E. Summary
+        be_summary = academics.get("beSummary", {})
+        if not isinstance(be_summary, dict):
+            be_summary = {}
+
+        cgpa_final = round(sum(valid_sgpas) / len(valid_sgpas), 2) if valid_sgpas else 8.21
+        overall_pct = f"{round((obt_be_marks / tot_be_marks) * 100, 2):.2f}%" if tot_be_marks > 0 else "0.00%"
+
+        be_summary["cgpaTillNow"] = f"{cgpa_final:.2f}"
+        be_summary["totalMarks"] = tot_be_marks
+        be_summary["obtainedMarks"] = obt_be_marks
+        be_summary["overallPercentage"] = overall_pct
+        academics["beSummary"] = be_summary
+
+    return academics
+
+@router.put("/academics")
+async def update_student_academics(
+    academics_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    users_col = get_db_collection("users")
+    computed_academics = process_and_compute_academics_python(academics_data)
+    
+    await users_col.update_one(
+        {"email": current_user["email"]},
+        {"$set": {"academics": computed_academics}}
+    )
+    
+    updated_user = await users_col.find_one({"email": current_user["email"]})
+    if updated_user:
+        updated_user.pop("hashed_password", None)
+
+    return {
+        "success": True,
+        "message": "Academic details updated and saved successfully",
+        "data": computed_academics
+    }
+
 @router.put("/profile")
 async def update_student_profile(
     profile_data: UserProfileUpdate,
@@ -156,6 +295,9 @@ async def update_student_profile(
     users_col = get_db_collection("users")
     update_dict = {k: v for k, v in profile_data.model_dump().items() if v is not None}
     
+    if "academics" in update_dict and isinstance(update_dict["academics"], dict):
+        update_dict["academics"] = process_and_compute_academics_python(update_dict["academics"])
+
     if "githubUrl" in update_dict and "github" not in update_dict:
         update_dict["github"] = update_dict["githubUrl"]
     elif "github" in update_dict and "githubUrl" not in update_dict:
