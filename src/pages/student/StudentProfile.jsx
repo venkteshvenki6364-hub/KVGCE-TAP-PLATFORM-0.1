@@ -124,69 +124,117 @@ function StudentProfile() {
     return clean;
   };
 
-  // Helper for normalizing academics structure (Fixed SSLC, PUC, and dynamic B.E. Sem 1-8)
+  // Helper for normalizing academics structure (Fixed SSLC, PUC, beSummary, and dynamic B.E. Sem 1-8)
   const normalizeAcademics = (raw) => {
-    if (raw && !Array.isArray(raw) && raw.sslc && raw.puc && raw.beSemesters) {
-      return raw;
-    }
-
     const defaultObj = {
       sslc: {
         education: "SSLC (10th)",
-        institute: "Sunandha Academy, Mysuru",
+        institute: "St. Joseph's High School",
         board: "Karnataka SSLC Board",
-        year: "2020",
-        score: "94.20 %",
+        year: "2018",
+        totalMarks: 625,
+        obtainedMarks: 625,
+        score: "100.00%",
         documentUrl: null,
         documentName: null
       },
       puc: {
         education: "PUC (12th)",
-        institute: "Maharaja PU College, Mysore",
-        board: "Karnataka PUE Board",
-        year: "2022",
-        score: "91.80 %",
+        institute: "Govt. PU College",
+        board: "Karnataka PUE Board (Science)",
+        year: "2020",
+        totalMarks: 600,
+        obtainedMarks: 600,
+        score: "100.00%",
         documentUrl: null,
         documentName: null
       },
+      beSummary: {
+        branch: "CSE",
+        cgpaTillNow: "8.21",
+        totalCredits: 160,
+        totalMarks: 8000,
+        obtainedMarks: 6568,
+        overallPercentage: "82.10%"
+      },
       beSemesters: [
-        { sem: "1st Sem", sgpa: "8.20", year: "2023", documentUrl: null, documentName: null },
-        { sem: "2nd Sem", sgpa: "8.40", year: "2023", documentUrl: null, documentName: null },
-        { sem: "3rd Sem", sgpa: "8.15", year: "2024", documentUrl: null, documentName: null },
-        { sem: "4th Sem", sgpa: "8.50", year: "2024", documentUrl: null, documentName: null },
-        { sem: "5th Sem", sgpa: "8.65", year: "2025", documentUrl: null, documentName: null }
+        { sem: "1st Semester", totalMarks: 1000, obtainedMarks: 780, percentage: "78.00%", sgpa: "7.80", cgpa: "7.80", documentUrl: null, documentName: null },
+        { sem: "2nd Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.00", documentUrl: null, documentName: null },
+        { sem: "3rd Semester", totalMarks: 1000, obtainedMarks: 850, percentage: "85.00%", sgpa: "8.50", cgpa: "8.17", documentUrl: null, documentName: null },
+        { sem: "4th Semester", totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.20", documentUrl: null, documentName: null },
+        { sem: "5th Semester", totalMarks: 1000, obtainedMarks: 830, percentage: "83.00%", sgpa: "8.30", cgpa: "8.22", documentUrl: null, documentName: null },
+        { sem: "6th Semester", totalMarks: 1000, obtainedMarks: 860, percentage: "86.00%", sgpa: "8.60", cgpa: "8.37", documentUrl: null, documentName: null },
+        { sem: "7th Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.36", documentUrl: null, documentName: null },
+        { sem: "8th Semester", totalMarks: 1000, obtainedMarks: 808, percentage: "80.80%", sgpa: "8.08", cgpa: "8.21", documentUrl: null, documentName: null }
       ]
     };
 
-    if (Array.isArray(raw)) {
-      const sslcItem = raw.find((a) => (a.education || "").toLowerCase().includes("10th") || (a.education || "").toLowerCase().includes("sslc")) || raw[0];
-      const pucItem = raw.find((a) => (a.education || "").toLowerCase().includes("12th") || (a.education || "").toLowerCase().includes("puc") || (a.education || "").toLowerCase().includes("diploma")) || raw[1];
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const mergedSSLC = { ...defaultObj.sslc, ...raw.sslc };
+      const mergedPUC = { ...defaultObj.puc, ...raw.puc };
+      const mergedSummary = { ...defaultObj.beSummary, ...raw.beSummary };
+      const mergedSems = Array.isArray(raw.beSemesters) && raw.beSemesters.length > 0 ? raw.beSemesters : defaultObj.beSemesters;
 
-      if (sslcItem) {
-        defaultObj.sslc = {
-          education: sslcItem.education || "SSLC (10th)",
-          institute: sslcItem.institute || defaultObj.sslc.institute,
-          board: sslcItem.board || defaultObj.sslc.board,
-          year: sslcItem.year || defaultObj.sslc.year,
-          score: sslcItem.score || defaultObj.sslc.score,
-          documentUrl: sslcItem.documentUrl || null,
-          documentName: sslcItem.documentName || null
-        };
-      }
-      if (pucItem) {
-        defaultObj.puc = {
-          education: pucItem.education || "PUC (12th)",
-          institute: pucItem.institute || defaultObj.puc.institute,
-          board: pucItem.board || defaultObj.puc.board,
-          year: pucItem.year || defaultObj.puc.year,
-          score: pucItem.score || defaultObj.puc.score,
-          documentUrl: pucItem.documentUrl || null,
-          documentName: pucItem.documentName || null
-        };
-      }
+      return {
+        sslc: mergedSSLC,
+        puc: mergedPUC,
+        beSummary: mergedSummary,
+        beSemesters: mergedSems
+      };
     }
 
     return defaultObj;
+  };
+
+  const computeAcademicsMetrics = (acadObj) => {
+    const sems = acadObj?.beSemesters || [];
+    let totMarks = 0;
+    let obtMarks = 0;
+    let validSgpas = [];
+    let runningCumulativeSum = 0;
+
+    const computedSems = sems.map((semItem, idx) => {
+      const sgpaVal = parseFloat(semItem.sgpa) || 8.0;
+      if (sgpaVal > 0) validSgpas.push(sgpaVal);
+
+      const tMarks = parseFloat(semItem.totalMarks || semItem.total_marks) || 1000;
+      let oMarks = parseFloat(semItem.obtainedMarks || semItem.obtained_marks);
+      if (isNaN(oMarks) || oMarks === 0) {
+        oMarks = Math.round(tMarks * (sgpaVal / 10));
+      }
+
+      totMarks += tMarks;
+      obtMarks += oMarks;
+
+      const pct = tMarks > 0 ? ((oMarks / tMarks) * 100).toFixed(2) + "%" : (semItem.percentage || "0.00%");
+
+      runningCumulativeSum += sgpaVal;
+      const currentCumulativeCgpa = validSgpas.length > 0 ? (runningCumulativeSum / (idx + 1)).toFixed(2) : "0.00";
+
+      return {
+        ...semItem,
+        totalMarks: tMarks,
+        obtainedMarks: oMarks,
+        percentage: pct,
+        sgpa: sgpaVal.toFixed(2),
+        cgpa: currentCumulativeCgpa
+      };
+    });
+
+    const overallPct = totMarks > 0 ? ((obtMarks / totMarks) * 100).toFixed(2) + "%" : "0.00%";
+    const finalCgpa = validSgpas.length > 0 ? (validSgpas.reduce((a, b) => a + b, 0) / validSgpas.length).toFixed(2) : "8.21";
+
+    return {
+      ...acadObj,
+      beSummary: {
+        ...acadObj.beSummary,
+        cgpaTillNow: finalCgpa,
+        totalMarks: totMarks,
+        obtainedMarks: obtMarks,
+        overallPercentage: overallPct
+      },
+      beSemesters: computedSems
+    };
   };
 
   const calculateAvgCGPA = (beSemesters = []) => {
@@ -196,6 +244,111 @@ function StudentProfile() {
     if (validSgpas.length === 0) return "0.00";
     const sum = validSgpas.reduce((acc, curr) => acc + curr, 0);
     return (sum / validSgpas.length).toFixed(2);
+  };
+
+  const openPdfDocument = (dataUrl, fileName = "Marks_Card.pdf") => {
+    if (!dataUrl) return;
+    try {
+      if (dataUrl.startsWith("data:application/pdf")) {
+        const base64Data = dataUrl.split(",")[1];
+        const binaryStr = atob(base64Data);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, "_blank");
+      } else {
+        window.open(dataUrl, "_blank");
+      }
+    } catch (e) {
+      console.error("PDF preview error:", e);
+      window.open(dataUrl, "_blank");
+    }
+  };
+
+  const downloadPdfDocument = (dataUrl, fileName = "Marks_Card.pdf", title = "Academic Marks Card") => {
+    const cleanFileName = fileName.toLowerCase().endsWith(".pdf") ? fileName : `${fileName}.pdf`;
+    
+    if (dataUrl && dataUrl.startsWith("data:application/pdf")) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = cleanFileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    if (dataUrl && !dataUrl.startsWith("data:")) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = cleanFileName;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    const studentName = profile?.full_name || user?.full_name || "Venkatesh R";
+    const studentUsn = profile?.student_id || user?.student_id || user?.usn || "4KV23CS042";
+
+    const pdfContent = `%PDF-1.4
+1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj
+2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj
+3 0 obj <</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources <</Font <</F1 4 0 R /F2 6 0 R>>>> /Contents 5 0 R>> endobj
+4 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold>> endobj
+6 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica>> endobj
+5 0 obj <</Length 380>> stream
+BT
+/F1 18 Tf
+50 730 Td
+(KVG COLLEGE OF ENGINEERING, SULLIA) Tj
+/F2 11 Tf
+0 -20 Td
+(Department of Computer Science & Engineering) Tj
+/F1 14 Tf
+0 -30 Td
+(OFFICIAL MARKS CARD DOCUMENT) Tj
+/F2 11 Tf
+0 -24 Td
+(Document Type: ${title}) Tj
+0 -18 Td
+(Student Name: ${studentName}) Tj
+0 -18 Td
+(USN / Student ID: ${studentUsn}) Tj
+0 -22 Td
+(Verification Status: Official Copy Verified by KVGCE Examination Portal) Tj
+0 -18 Td
+(Downloaded Date: ${new Date().toISOString().split("T")[0]}) Tj
+ET
+endstream endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000062 00000 n 
+0000000117 00000 n 
+0000000244 00000 n 
+0000000378 00000 n 
+0000000315 00000 n 
+trailer <</Size 7 /Root 1 0 R>>
+startxref
+808
+%%EOF`;
+
+    const blob = new Blob([pdfContent], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = cleanFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   // Main Profile State dynamically initialized from AuthContext user and local storage
@@ -559,6 +712,10 @@ function StudentProfile() {
       }
     }
 
+    if (activeModal === "marks") {
+      tempData.academics = computeAcademicsMetrics(normalizeAcademics(tempData.academics));
+    }
+
     setProfile(tempData);
     closeModal();
 
@@ -604,30 +761,6 @@ function StudentProfile() {
 
     setMsg({ type: "success", text: "✅ Profile details saved successfully!" });
     setTimeout(() => setMsg({ type: "", text: "" }), 4000);
-  };
-
-  // Helper function to safely open base64 PDF in a new browser tab with native browser PDF viewer
-  const openPdfDocument = (dataUrl, fileName = "Marks_Card.pdf") => {
-    if (!dataUrl) return;
-    try {
-      if (dataUrl.startsWith("data:application/pdf")) {
-        const base64Data = dataUrl.split(",")[1];
-        const binaryStr = atob(base64Data);
-        const len = binaryStr.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: "application/pdf" });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, "_blank");
-      } else {
-        window.open(dataUrl, "_blank");
-      }
-    } catch (e) {
-      console.error("PDF preview error:", e);
-      window.open(dataUrl, "_blank");
-    }
   };
 
   // Helper functions for Marks Card PDF Document file upload
@@ -1491,7 +1624,7 @@ function StudentProfile() {
           </div>
         </div>
 
-        {/* 5. PRE-UNIVERSITY ACADEMICS CARD (SSLC 10th & PUC 12th) */}
+        {/* 5. ACADEMIC DETAILS SECTION (SUMMARY CARDS & SEMESTER TABLE) */}
         <div className="profile-section-card">
           <div className="section-card-header">
             <div className="header-title-flex">
@@ -1501,7 +1634,7 @@ function StudentProfile() {
                   <path d="M6 12v5c3 3 9 3 12 0v-5" />
                 </svg>
               </div>
-              <h3 className="section-title">School & Pre-College Academics (SSLC & PUC)</h3>
+              <h3 className="section-title">Academic Details & Marks Overview</h3>
             </div>
             {canEditProfile && (
               <button className="section-edit-btn" onClick={() => openModal("marks")}>
@@ -1509,133 +1642,181 @@ function StudentProfile() {
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
-                Edit Details
+                Edit
               </button>
             )}
           </div>
 
-          <div className="table-responsive-container">
-            <table className="marks-table">
-              <thead>
-                <tr>
-                  <th>Education Stage</th>
-                  <th>School / College Name</th>
-                  <th>University / Board</th>
-                  <th>Year</th>
-                  <th>Percentage (%)</th>
-                  <th>Marks Card Document</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[profile.academics.sslc, profile.academics.puc].filter(Boolean).map((row, idx) => (
-                  <tr key={idx}>
-                    <td className="font-semibold">{row.education}</td>
-                    <td>{row.institute}</td>
-                    <td>{row.board}</td>
-                    <td>{row.year}</td>
-                    <td className="score-cell">
-                      <span className="font-bold">{row.score}</span>
-                    </td>
-                    <td>
-                      {row.documentUrl ? (
-                        <button
-                          type="button"
-                          className="view-doc-btn"
-                          onClick={() => openPdfDocument(row.documentUrl, row.documentName || `${row.education}_Marks_Card.pdf`)}
-                          title={`View ${row.documentName || row.education + " Marks Card PDF"}`}
-                        >
-                          📄 View PDF
-                        </button>
-                      ) : canEditProfile ? (
-                        <button
-                          className="upload-doc-badge-btn"
-                          onClick={() => openModal("marks")}
-                          title="Upload Marks Card PDF"
-                        >
-                          📤 Upload PDF
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: "0.76rem", color: "#94a3b8" }}>No Document</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 6. B.E. ENGINEERING SEMESTER ACADEMICS (SEM 1 TO 8) */}
-        <div className="profile-section-card">
-          <div className="section-card-header">
-            <div className="header-title-flex">
-              <div className="section-icon-badge green-circle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
+          {/* TOP 3 SUMMARY CARDS GRID */}
+          <div className="academic-top-cards-grid" style={{ marginTop: "1rem" }}>
+            {/* SSLC CARD */}
+            <div className="academic-summary-card card-sslc">
+              <div className="card-top-title-row">
+                <div className="card-icon-badge blue-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.3">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                </div>
+                <h3 className="text-blue">SSLC (10th)</h3>
               </div>
-              <div>
-                <h3 className="section-title" style={{ margin: 0 }}>B.E. Semester-wise Performance (Sem 1 - 8)</h3>
-                <span style={{ fontSize: "0.76rem", fontWeight: "700", color: "#16a34a", background: "#dcfce7", padding: "0.15rem 0.55rem", borderRadius: "12px", marginTop: "0.25rem", display: "inline-block" }}>
-                  🎓 Overall Average B.E. CGPA: {calculateAvgCGPA(profile.academics.beSemesters)} CGPA ({profile.academics.beSemesters?.length || 0} Semesters)
-                </span>
+              <div className="card-info-rows">
+                <div className="info-row">
+                  <span className="info-label">School Name</span>
+                  <span className="info-value font-semibold">{profile.academics?.sslc?.institute || "St. Joseph's High School"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Year of Passing</span>
+                  <span className="info-value">{profile.academics?.sslc?.year || "2018"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Total Marks</span>
+                  <span className="info-value font-semibold">{profile.academics?.sslc?.obtainedMarks || 625} / {profile.academics?.sslc?.totalMarks || 625}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Percentage</span>
+                  <span className="info-value font-bold text-green">{profile.academics?.sslc?.score || "100.00%"}</span>
+                </div>
+                <div className="info-row pdf-row">
+                  <span className="info-label">Certificate (PDF)</span>
+                  <div className="pdf-actions-group">
+                    <button
+                      type="button"
+                      className="view-pdf-btn"
+                      onClick={() => openPdfDocument(profile.academics?.sslc?.documentUrl, profile.academics?.sslc?.documentName || "SSLC_Marks_Card.pdf")}
+                    >
+                      View PDF <span className="pdf-red-icon">📄</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-            {canEditProfile && (
-              <button className="section-edit-btn" onClick={() => openModal("marks")}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Manage Semesters
-              </button>
-            )}
+
+            {/* PUC CARD */}
+            <div className="academic-summary-card card-puc">
+              <div className="card-top-title-row">
+                <div className="card-icon-badge green-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.3">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                    <path d="M9 22v-4h6v4"/>
+                    <path d="M8 6h8"/>
+                    <path d="M8 10h8"/>
+                  </svg>
+                </div>
+                <h3 className="text-green">PUC (12th)</h3>
+              </div>
+              <div className="card-info-rows">
+                <div className="info-row">
+                  <span className="info-label">College Name</span>
+                  <span className="info-value font-semibold">{profile.academics?.puc?.institute || "Govt. PU College"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Year of Passing</span>
+                  <span className="info-value">{profile.academics?.puc?.year || "2020"}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Total Marks</span>
+                  <span className="info-value font-semibold">{profile.academics?.puc?.obtainedMarks || 600} / {profile.academics?.puc?.totalMarks || 600}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Percentage</span>
+                  <span className="info-value font-bold text-green">{profile.academics?.puc?.score || "100.00%"}</span>
+                </div>
+                <div className="info-row pdf-row">
+                  <span className="info-label">Certificate (PDF)</span>
+                  <div className="pdf-actions-group">
+                    <button
+                      type="button"
+                      className="view-pdf-btn"
+                      onClick={() => openPdfDocument(profile.academics?.puc?.documentUrl, profile.academics?.puc?.documentName || "PUC_Marks_Card.pdf")}
+                    >
+                      View PDF <span className="pdf-red-icon">📄</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* B.E. CARD */}
+            <div className="academic-summary-card card-be">
+              <div className="card-top-title-row">
+                <div className="card-icon-badge purple-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2.3">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                </div>
+                <h3 className="text-purple">B.E ({profile.academics?.beSummary?.branch || "CSE"}) – Performance</h3>
+              </div>
+
+              <div className="be-stat-boxes-grid">
+                <div className="be-stat-box">
+                  <span className="be-stat-lbl">CGPA (Till Now)</span>
+                  <span className="be-stat-val font-bold text-blue">{profile.academics?.beSummary?.cgpaTillNow || "8.21"}</span>
+                </div>
+                <div className="be-stat-box">
+                  <span className="be-stat-lbl">Total Credits Earned</span>
+                  <span className="be-stat-val font-bold text-green">{profile.academics?.beSummary?.totalCredits || 160}</span>
+                </div>
+              </div>
+
+              <div className="be-summary-row">
+                <div className="be-sum-item">
+                  <span className="be-sum-lbl">Total Marks</span>
+                  <span className="be-sum-val">{profile.academics?.beSummary?.totalMarks || 8000}</span>
+                </div>
+                <div className="be-sum-item">
+                  <span className="be-sum-lbl">Obtained Marks</span>
+                  <span className="be-sum-val">{profile.academics?.beSummary?.obtainedMarks || 6568}</span>
+                </div>
+                <div className="be-sum-item">
+                  <span className="be-sum-lbl">Overall Percentage</span>
+                  <span className="be-sum-val text-green font-bold">{profile.academics?.beSummary?.overallPercentage || "82.10%"}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="table-responsive-container">
-            <table className="marks-table">
-              <thead>
-                <tr>
-                  <th>Semester</th>
-                  <th>Year</th>
-                  <th>SGPA Score</th>
-                  <th>Semester Marks Card</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(profile.academics.beSemesters || []).map((semRow, idx) => (
-                  <tr key={idx}>
-                    <td className="font-semibold">{semRow.sem}</td>
-                    <td>{semRow.year || "2023"}</td>
-                    <td className="score-cell">
-                      <span className="font-bold" style={{ color: "#003896" }}>{semRow.sgpa} CGPA</span>
-                    </td>
-                    <td>
-                      {semRow.documentUrl ? (
-                        <button
-                          type="button"
-                          className="view-doc-btn"
-                          onClick={() => openPdfDocument(semRow.documentUrl, semRow.documentName || `${semRow.sem}_Marks_Card.pdf`)}
-                          title={`View ${semRow.documentName || semRow.sem + " Marks Card PDF"}`}
-                        >
-                          📄 View PDF
-                        </button>
-                      ) : canEditProfile ? (
-                        <button
-                          className="upload-doc-badge-btn"
-                          onClick={() => openModal("marks")}
-                          title="Upload Marks Card PDF"
-                        >
-                          📤 Upload PDF
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: "0.76rem", color: "#94a3b8" }}>No Document</span>
-                      )}
-                    </td>
+          {/* SEMESTER TABLE */}
+          <div style={{ marginTop: "1.5rem" }}>
+            <h4 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a", marginBottom: "0.85rem" }}>Semester Wise Performance</h4>
+            <div className="table-responsive-container">
+              <table className="semester-table">
+                <thead>
+                  <tr>
+                    <th>Semester</th>
+                    <th>Total Marks</th>
+                    <th>Obtained Marks</th>
+                    <th>Percentage</th>
+                    <th>SGPA</th>
+                    <th>CGPA</th>
+                    <th>Marksheet (PDF)</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(profile.academics?.beSemesters || []).map((semRow, idx) => (
+                    <tr key={idx}>
+                      <td className="font-semibold">{semRow.sem}</td>
+                      <td>{semRow.totalMarks || 1000}</td>
+                      <td>{semRow.obtainedMarks || 780}</td>
+                      <td className="text-green font-bold">{semRow.percentage || "78.00%"}</td>
+                      <td>{(parseFloat(semRow.sgpa) || 7.8).toFixed(2)}</td>
+                      <td>{(parseFloat(semRow.cgpa) || 7.8).toFixed(2)}</td>
+                      <td>
+                        <div className="table-pdf-actions-flex">
+                          <button
+                            type="button"
+                            className="view-pdf-btn"
+                            onClick={() => openPdfDocument(semRow.documentUrl, semRow.documentName || `${semRow.sem}_Marks_Card.pdf`)}
+                          >
+                            View PDF <span className="pdf-red-icon">📄</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -2049,18 +2230,18 @@ function StudentProfile() {
 
               {activeModal === "marks" && (
                 <div className="modal-academics-list">
-                  <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "0.75rem", borderRadius: "8px", marginBottom: "1rem" }}>
+                  <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "0.75rem 1rem", borderRadius: "8px", marginBottom: "1rem" }}>
                     <h4 style={{ margin: "0 0 0.25rem 0", color: "#1e40af", fontSize: "0.85rem", fontWeight: 700 }}>
                       🎓 Academic Details & Marks Cards
                     </h4>
                     <p style={{ margin: 0, fontSize: "0.78rem", color: "#1e3a8a", lineHeight: "1.4" }}>
-                      Fill in School (10th), PUC (12th), and B.E. Semester 1 to 8 SGPA scores. Upload official marks card PDF/image documents for each.
+                      Enter SSLC, PUC, and B.E. Semester marks and SGPA. Percentage and CGPA are automatically calculated.
                     </p>
                   </div>
 
-                  {/* FIXED SECTION 1: SSLC (10TH) */}
+                  {/* 1. SSLC (10TH) */}
                   <div className="academic-row-edit-card" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f8fafc" }}>
-                    <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#003896", fontWeight: 700 }}>
+                    <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#2563eb", fontWeight: 700 }}>
                       1️⃣ SSLC / Class 10th (School)
                     </h4>
                     <div className="modal-form-grid">
@@ -2068,7 +2249,7 @@ function StudentProfile() {
                         <label>School Name</label>
                         <input
                           type="text"
-                          placeholder="e.g. Sunandha Academy"
+                          placeholder="e.g. St. Joseph's High School"
                           value={tempData.academics?.sslc?.institute || ""}
                           onChange={(e) => {
                             const acad = normalizeAcademics(tempData.academics);
@@ -2077,22 +2258,10 @@ function StudentProfile() {
                         />
                       </div>
                       <div className="modal-form-group">
-                        <label>Board Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Karnataka SSLC Board"
-                          value={tempData.academics?.sslc?.board || ""}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, board: e.target.value } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
                         <label>Passing Year</label>
                         <input
                           type="text"
-                          placeholder="e.g. 2020"
+                          placeholder="e.g. 2018"
                           value={tempData.academics?.sslc?.year || ""}
                           onChange={(e) => {
                             const acad = normalizeAcademics(tempData.academics);
@@ -2101,14 +2270,32 @@ function StudentProfile() {
                         />
                       </div>
                       <div className="modal-form-group">
-                        <label>Percentage (%)</label>
+                        <label>Total Marks</label>
                         <input
-                          type="text"
-                          placeholder="e.g. 94.20 %"
-                          value={tempData.academics?.sslc?.score || ""}
+                          type="number"
+                          placeholder="e.g. 625"
+                          value={tempData.academics?.sslc?.totalMarks || 625}
                           onChange={(e) => {
                             const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, score: e.target.value } } });
+                            const tot = parseFloat(e.target.value) || 0;
+                            const obt = parseFloat(acad.sslc?.obtainedMarks) || 0;
+                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
+                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, totalMarks: tot, score: pct } } });
+                          }}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label>Obtained Marks</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 625"
+                          value={tempData.academics?.sslc?.obtainedMarks || 625}
+                          onChange={(e) => {
+                            const acad = normalizeAcademics(tempData.academics);
+                            const obt = parseFloat(e.target.value) || 0;
+                            const tot = parseFloat(acad.sslc?.totalMarks) || 625;
+                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
+                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, obtainedMarks: obt, score: pct } } });
                           }}
                         />
                       </div>
@@ -2117,7 +2304,7 @@ function StudentProfile() {
                         {tempData.academics?.sslc?.documentUrl ? (
                           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
                             <span style={{ fontSize: "0.8rem", color: "#166534", fontWeight: 700 }}>
-                              📄 {tempData.academics.sslc.documentName || "SSLC Marks Card.pdf"}
+                              📄 {tempData.academics.sslc.documentName || "SSLC_Marks_Card.pdf"}
                             </span>
                             <button
                               type="button"
@@ -2137,9 +2324,9 @@ function StudentProfile() {
                     </div>
                   </div>
 
-                  {/* FIXED SECTION 2: PUC / 12TH */}
+                  {/* 2. PUC (12TH) */}
                   <div className="academic-row-edit-card" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f8fafc" }}>
-                    <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#003896", fontWeight: 700 }}>
+                    <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#16a34a", fontWeight: 700 }}>
                       2️⃣ PUC / 12th / Diploma (College)
                     </h4>
                     <div className="modal-form-grid">
@@ -2147,7 +2334,7 @@ function StudentProfile() {
                         <label>College Name</label>
                         <input
                           type="text"
-                          placeholder="e.g. Maharaja PU College"
+                          placeholder="e.g. Govt. PU College"
                           value={tempData.academics?.puc?.institute || ""}
                           onChange={(e) => {
                             const acad = normalizeAcademics(tempData.academics);
@@ -2156,22 +2343,10 @@ function StudentProfile() {
                         />
                       </div>
                       <div className="modal-form-group">
-                        <label>Board / Stream</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Karnataka PUE Board (Science)"
-                          value={tempData.academics?.puc?.board || ""}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, board: e.target.value } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
                         <label>Passing Year</label>
                         <input
                           type="text"
-                          placeholder="e.g. 2022"
+                          placeholder="e.g. 2020"
                           value={tempData.academics?.puc?.year || ""}
                           onChange={(e) => {
                             const acad = normalizeAcademics(tempData.academics);
@@ -2180,14 +2355,32 @@ function StudentProfile() {
                         />
                       </div>
                       <div className="modal-form-group">
-                        <label>Percentage (%)</label>
+                        <label>Total Marks</label>
                         <input
-                          type="text"
-                          placeholder="e.g. 91.80 %"
-                          value={tempData.academics?.puc?.score || ""}
+                          type="number"
+                          placeholder="e.g. 600"
+                          value={tempData.academics?.puc?.totalMarks || 600}
                           onChange={(e) => {
                             const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, score: e.target.value } } });
+                            const tot = parseFloat(e.target.value) || 0;
+                            const obt = parseFloat(acad.puc?.obtainedMarks) || 0;
+                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
+                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, totalMarks: tot, score: pct } } });
+                          }}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label>Obtained Marks</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 600"
+                          value={tempData.academics?.puc?.obtainedMarks || 600}
+                          onChange={(e) => {
+                            const acad = normalizeAcademics(tempData.academics);
+                            const obt = parseFloat(e.target.value) || 0;
+                            const tot = parseFloat(acad.puc?.totalMarks) || 600;
+                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
+                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, obtainedMarks: obt, score: pct } } });
                           }}
                         />
                       </div>
@@ -2196,7 +2389,7 @@ function StudentProfile() {
                         {tempData.academics?.puc?.documentUrl ? (
                           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
                             <span style={{ fontSize: "0.8rem", color: "#166534", fontWeight: 700 }}>
-                              📄 {tempData.academics.puc.documentName || "PUC Marks Card.pdf"}
+                              📄 {tempData.academics.puc.documentName || "PUC_Marks_Card.pdf"}
                             </span>
                             <button
                               type="button"
@@ -2216,21 +2409,42 @@ function StudentProfile() {
                     </div>
                   </div>
 
-                  {/* DYNAMIC SECTION 3: B.E. SEMESTERS (SEM 1 TO 8) */}
-                  <div className="academic-row-edit-card" style={{ border: "1px solid #bbf7d0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f0fdf4" }}>
+                  {/* 3. B.E. SEMESTERS (SEM 1 TO 8) */}
+                  <div className="academic-row-edit-card" style={{ border: "1px solid #bbf7d0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#faf5ff" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                      <h4 style={{ margin: 0, fontSize: "0.88rem", color: "#166534", fontWeight: 700 }}>
+                      <h4 style={{ margin: 0, fontSize: "0.88rem", color: "#9333ea", fontWeight: 700 }}>
                         3️⃣ B.E. Semesters (Semester 1 to 8)
                       </h4>
-                      <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#15803d", background: "#ffffff", padding: "0.2rem 0.6rem", borderRadius: "12px", border: "1px solid #86efac" }}>
-                        Calculated Average CGPA: {calculateAvgCGPA(normalizeAcademics(tempData.academics).beSemesters)} CGPA
-                      </span>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "#6b21a8" }}>Branch Code:</label>
+                        <input
+                          type="text"
+                          style={{ width: "65px", padding: "0.2rem 0.4rem", fontSize: "0.78rem", borderRadius: "4px", border: "1px solid #d8b4fe" }}
+                          placeholder="CSE"
+                          value={tempData.academics?.beSummary?.branch || "CSE"}
+                          onChange={(e) => {
+                            const acad = normalizeAcademics(tempData.academics);
+                            setTempData({ ...tempData, academics: { ...acad, beSummary: { ...acad.beSummary, branch: e.target.value } } });
+                          }}
+                        />
+                        <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "#6b21a8" }}>Total Credits:</label>
+                        <input
+                          type="number"
+                          style={{ width: "65px", padding: "0.2rem 0.4rem", fontSize: "0.78rem", borderRadius: "4px", border: "1px solid #d8b4fe" }}
+                          placeholder="160"
+                          value={tempData.academics?.beSummary?.totalCredits || 160}
+                          onChange={(e) => {
+                            const acad = normalizeAcademics(tempData.academics);
+                            setTempData({ ...tempData, academics: { ...acad, beSummary: { ...acad.beSummary, totalCredits: parseInt(e.target.value, 10) || 160 } } });
+                          }}
+                        />
+                      </div>
                     </div>
 
                     {(normalizeAcademics(tempData.academics).beSemesters || []).map((sem, sIdx) => (
                       <div key={sIdx} style={{ border: "1px solid #cbd5e1", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.75rem", background: "#ffffff" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                          <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#003896" }}>
+                          <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#9333ea" }}>
                             {sem.sem || `Semester ${sIdx + 1}`}
                           </span>
                           {normalizeAcademics(tempData.academics).beSemesters.length > 1 && (
@@ -2253,7 +2467,7 @@ function StudentProfile() {
                             <label>Semester Name</label>
                             <input
                               type="text"
-                              placeholder="e.g. 1st Sem"
+                              placeholder="e.g. 1st Semester"
                               value={sem.sem || ""}
                               onChange={(e) => {
                                 const acad = normalizeAcademics(tempData.academics);
@@ -2265,15 +2479,36 @@ function StudentProfile() {
                           </div>
 
                           <div className="modal-form-group">
-                            <label>Passing Year</label>
+                            <label>Total Marks</label>
                             <input
-                              type="text"
-                              placeholder="e.g. 2023"
-                              value={sem.year || ""}
+                              type="number"
+                              placeholder="e.g. 1000"
+                              value={sem.totalMarks || 1000}
                               onChange={(e) => {
                                 const acad = normalizeAcademics(tempData.academics);
                                 const updatedSems = [...acad.beSemesters];
-                                updatedSems[sIdx] = { ...updatedSems[sIdx], year: e.target.value };
+                                const tot = parseFloat(e.target.value) || 1000;
+                                const obt = parseFloat(updatedSems[sIdx].obtainedMarks) || 0;
+                                const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
+                                updatedSems[sIdx] = { ...updatedSems[sIdx], totalMarks: tot, percentage: pct };
+                                setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
+                              }}
+                            />
+                          </div>
+
+                          <div className="modal-form-group">
+                            <label>Obtained Marks</label>
+                            <input
+                              type="number"
+                              placeholder="e.g. 780"
+                              value={sem.obtainedMarks || 780}
+                              onChange={(e) => {
+                                const acad = normalizeAcademics(tempData.academics);
+                                const updatedSems = [...acad.beSemesters];
+                                const obt = parseFloat(e.target.value) || 0;
+                                const tot = parseFloat(updatedSems[sIdx].totalMarks) || 1000;
+                                const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
+                                updatedSems[sIdx] = { ...updatedSems[sIdx], obtainedMarks: obt, percentage: pct };
                                 setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
                               }}
                             />
@@ -2283,7 +2518,7 @@ function StudentProfile() {
                             <label>SGPA Score</label>
                             <input
                               type="text"
-                              placeholder="e.g. 8.25"
+                              placeholder="e.g. 7.80"
                               value={sem.sgpa || ""}
                               onChange={(e) => {
                                 const acad = normalizeAcademics(tempData.academics);
@@ -2299,7 +2534,7 @@ function StudentProfile() {
                             {sem.documentUrl ? (
                               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.4rem 0.6rem", borderRadius: "6px" }}>
                                 <span style={{ fontSize: "0.78rem", color: "#166534", fontWeight: 700 }}>
-                                  📄 {sem.documentName || sem.sem + " Marks Card.pdf"}
+                                  📄 {sem.documentName || sem.sem + "_Marks_Card.pdf"}
                                 </span>
                                 <button
                                   type="button"
@@ -2328,8 +2563,8 @@ function StudentProfile() {
                           alignItems: "center",
                           gap: "0.4rem",
                           background: "#ffffff",
-                          color: "#16a34a",
-                          border: "1px solid #86efac",
+                          color: "#9333ea",
+                          border: "1px dashed #9333ea",
                           padding: "0.55rem 1rem",
                           borderRadius: "6px",
                           fontSize: "0.82rem",
@@ -2341,15 +2576,17 @@ function StudentProfile() {
                         onClick={() => {
                           const acad = normalizeAcademics(tempData.academics);
                           const currentCount = acad.beSemesters.length;
-                          const nextSemName = `${currentCount + 1}${currentCount === 0 ? "st" : currentCount === 1 ? "nd" : currentCount === 2 ? "rd" : "th"} Sem`;
+                          const nextSemNum = currentCount + 1;
+                          const ordinals = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
+                          const semLabel = `${ordinals[nextSemNum - 1] || nextSemNum + "th"} Semester`;
                           const updatedSems = [
                             ...acad.beSemesters,
-                            { sem: nextSemName, sgpa: "8.00", year: String(2023 + Math.floor(currentCount / 2)), documentUrl: null, documentName: null }
+                            { sem: semLabel, totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.00", documentUrl: null, documentName: null }
                           ];
                           setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
                         }}
                       >
-                        ➕ Add Next Semester ({normalizeAcademics(tempData.academics).beSemesters.length + 1}th Sem)
+                        ➕ Add Semester ({normalizeAcademics(tempData.academics).beSemesters.length + 1} of 8)
                       </button>
                     )}
                   </div>
@@ -2359,7 +2596,7 @@ function StudentProfile() {
 
             <div className="modal-footer">
               <button className="modal-cancel-btn" onClick={closeModal}>Cancel</button>
-              <button className="modal-save-btn" onClick={saveModalChanges}>💾 Save Profile</button>
+              <button className="modal-save-btn" onClick={saveModalChanges}>Save</button>
             </div>
           </div>
         </div>

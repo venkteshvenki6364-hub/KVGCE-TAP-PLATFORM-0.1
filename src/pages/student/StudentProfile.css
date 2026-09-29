@@ -352,6 +352,16 @@
   font-size: 0.90rem;
 }
 
+.info-value-right-light {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.88rem;
+  text-align: right;
+  margin-left: auto;
+  max-width: 65%;
+  word-break: break-word;
+}
+
 .font-bold {
   font-weight: 800;
   font-size: 0.94rem;

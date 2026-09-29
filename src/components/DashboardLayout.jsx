@@ -1,7 +1,283 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./DashboardLayout.css";
+
+const SEARCH_INDEX = [
+  // STUDENTS & PEOPLE
+  {
+    id: "s1",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Karthik M",
+    subtitle: "4KV21CS018 • CSE • 6th Sem • Rank 1",
+    tag: "Student",
+    badgeColor: "#d97706",
+    path: "/student/overview",
+    keywords: ["karthik", "4kv21cs018", "cse", "rank 1", "computer science"],
+  },
+  {
+    id: "s2",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Sahana P",
+    subtitle: "4KV21CS042 • CSE • 6th Sem • Rank 2",
+    tag: "Student",
+    badgeColor: "#d97706",
+    path: "/student/overview",
+    keywords: ["sahana", "4kv21cs042", "cse", "rank 2"],
+  },
+  {
+    id: "s3",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Rahul J",
+    subtitle: "4KV21CS999 • CSE • 6th Sem • Rank 1400 (You)",
+    tag: "Logged In Student",
+    badgeColor: "#003896",
+    path: "/student/profile",
+    keywords: ["rahul", "myself", "me", "profile", "4kv21cs999", "student"],
+  },
+  {
+    id: "s4",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Likith R",
+    subtitle: "4KV21EC027 • ECE • 6th Sem • Rank 3",
+    tag: "Student",
+    badgeColor: "#d97706",
+    path: "/student/overview",
+    keywords: ["likith", "4kv21ec027", "ece"],
+  },
+  {
+    id: "s5",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Ananya B",
+    subtitle: "4KV21IS033 • ISE • 6th Sem • Rank 4",
+    tag: "Student",
+    badgeColor: "#2563eb",
+    path: "/student/overview",
+    keywords: ["ananya", "4kv21is033", "ise", "information science"],
+  },
+  {
+    id: "s6",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Vivek S",
+    subtitle: "4KV21ME021 • Mechanical • 6th Sem • Rank 5",
+    tag: "Student",
+    badgeColor: "#16a34a",
+    path: "/student/overview",
+    keywords: ["vivek", "4kv21me021", "mechanical", "me"],
+  },
+  {
+    id: "f1",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Prof. Ramesh Sharma",
+    subtitle: "HOD • Computer Science & Engineering",
+    tag: "Faculty",
+    badgeColor: "#7c3aed",
+    path: "/faculty/students",
+    keywords: ["ramesh", "sharma", "hod", "faculty", "professor", "cse"],
+  },
+  {
+    id: "f2",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Dr. Savitha K",
+    subtitle: "Professor • Electronics & Communication",
+    tag: "Faculty",
+    badgeColor: "#7c3aed",
+    path: "/faculty/students",
+    keywords: ["savitha", "doctor", "dr", "professor", "ece", "faculty"],
+  },
+
+  // PROJECTS & ACTIVITIES
+  {
+    id: "p1",
+    category: "projects",
+    categoryLabel: "💡 Projects & Activities",
+    title: "Smart AI Campus Placement Assistant",
+    subtitle: "React.js • FastAPI • Scikit-Learn • Web Portal",
+    tag: "Project",
+    badgeColor: "#9333ea",
+    path: "/student/activities",
+    keywords: ["smart ai", "placement", "assistant", "react", "fastapi", "project", "python", "ai"],
+  },
+  {
+    id: "p2",
+    category: "projects",
+    categoryLabel: "💡 Projects & Activities",
+    title: "IoT Based Smart Energy Metering",
+    subtitle: "Arduino • ESP32 • C++ • Hardware IoT",
+    tag: "Project",
+    badgeColor: "#9333ea",
+    path: "/student/activities",
+    keywords: ["iot", "smart energy", "metering", "arduino", "esp32", "hardware"],
+  },
+  {
+    id: "p3",
+    category: "projects",
+    categoryLabel: "💡 Projects & Activities",
+    title: "Automated Student Library Portal",
+    subtitle: "Node.js • Express • MongoDB • React",
+    tag: "Project",
+    badgeColor: "#9333ea",
+    path: "/student/activities",
+    keywords: ["library", "portal", "automated", "nodejs", "mongodb"],
+  },
+  {
+    id: "p4",
+    category: "projects",
+    categoryLabel: "💡 Projects & Activities",
+    title: "Facial Recognition Attendance System",
+    subtitle: "Python • OpenCV • Deep Learning",
+    tag: "Project",
+    badgeColor: "#9333ea",
+    path: "/student/activities",
+    keywords: ["facial recognition", "attendance", "opencv", "python", "ai"],
+  },
+
+  // TESTS & ASSESSMENTS
+  {
+    id: "t1",
+    category: "tests",
+    categoryLabel: "📝 Tests & Quizzes",
+    title: "Aptitude Practice & Placement Test",
+    subtitle: "Quantitative, Logical & Verbal Reasoning",
+    tag: "Aptitude",
+    badgeColor: "#ea580c",
+    path: "/student/aptitude",
+    keywords: ["aptitude", "math", "test", "reasoning", "quant", "placement"],
+  },
+  {
+    id: "t2",
+    category: "tests",
+    categoryLabel: "📝 Tests & Quizzes",
+    title: "Technical Coding Quiz & MCQ",
+    subtitle: "Data Structures, Algorithms & Full-Stack Development",
+    tag: "Quiz",
+    badgeColor: "#0284c7",
+    path: "/student/quiz",
+    keywords: ["technical quiz", "mcq", "coding test", "dsa", "quiz"],
+  },
+  {
+    id: "t3",
+    category: "tests",
+    categoryLabel: "📝 Tests & Quizzes",
+    title: "Live Interactive Coding Lab",
+    subtitle: "Python, C++, Java & JavaScript Challenges",
+    tag: "Coding Lab",
+    badgeColor: "#16a34a",
+    path: "/student/coding",
+    keywords: ["coding lab", "editor", "python", "cpp", "java", "code"],
+  },
+  {
+    id: "t4",
+    category: "tests",
+    categoryLabel: "📝 Tests & Quizzes",
+    title: "HR Mock Interview Simulator",
+    subtitle: "Voice & Video AI Interview Practice",
+    tag: "HR Interview",
+    badgeColor: "#dc2626",
+    path: "/student/hr-interview",
+    keywords: ["hr interview", "mock interview", "video interview", "hr"],
+  },
+  {
+    id: "t5",
+    category: "tests",
+    categoryLabel: "📝 Tests & Quizzes",
+    title: "AI Career Coach & Resume Scanner",
+    subtitle: "Skill gap analysis & placement recommendations",
+    tag: "AI Coach",
+    badgeColor: "#003896",
+    path: "/student/ai",
+    keywords: ["ai career coach", "resume", "coach", "skills", "placement bot"],
+  },
+
+  // ACADEMICS & DOCUMENTS
+  {
+    id: "a1",
+    category: "academics",
+    categoryLabel: "📄 Academics & Certificates",
+    title: "SSLC / 10th Marks & Certificate",
+    subtitle: "School Name, Total Marks (625), Percentage (70.00%) & PDF",
+    tag: "Academics",
+    badgeColor: "#2563eb",
+    path: "/student/skills",
+    keywords: ["sslc", "10th", "school", "marks", "certificate", "pdf", "10th marks card"],
+  },
+  {
+    id: "a2",
+    category: "academics",
+    categoryLabel: "📄 Academics & Certificates",
+    title: "PUC / 12th Marks & Certificate",
+    subtitle: "College Name, Total Marks (600), Percentage (63.00%) & PDF",
+    tag: "Academics",
+    badgeColor: "#16a34a",
+    path: "/student/skills",
+    keywords: ["puc", "12th", "diploma", "college", "marks card", "pdf"],
+  },
+  {
+    id: "a3",
+    category: "academics",
+    categoryLabel: "📄 Academics & Certificates",
+    title: "B.E. Semesters 1 to 8 Performance",
+    subtitle: "Total Marks, CGPA (8.24), SGPA & Marksheets (PDF)",
+    tag: "Academics",
+    badgeColor: "#9333ea",
+    path: "/student/skills",
+    keywords: ["be", "engineering", "semester", "cgpa", "sgpa", "marksheet", "sem 1", "sem 6"],
+  },
+
+  // PAGES & QUICK LINKS
+  {
+    id: "g1",
+    category: "pages",
+    categoryLabel: "🚀 Platform Pages & Navigation",
+    title: "Student Library & Resource Hub",
+    subtitle: "Study Materials, E-Books & Video Tutorials",
+    tag: "Page",
+    badgeColor: "#475569",
+    path: "/student/dashboard",
+    keywords: ["library", "dashboard", "home", "books", "notes"],
+  },
+  {
+    id: "g2",
+    category: "pages",
+    categoryLabel: "🚀 Platform Pages & Navigation",
+    title: "All College Student Rankings & Leaderboard",
+    subtitle: "Filter by Department, USN, Semester & CGPA",
+    tag: "Page",
+    badgeColor: "#d97706",
+    path: "/student/rankings",
+    keywords: ["rankings", "leaderboard", "toppers", "cgpa ranking", "usn search"],
+  },
+  {
+    id: "g3",
+    category: "pages",
+    categoryLabel: "🚀 Platform Pages & Navigation",
+    title: "Single Student Detailed Overview",
+    subtitle: "Comprehensive academic, aptitude & activity breakdown",
+    tag: "Page",
+    badgeColor: "#0284c7",
+    path: "/student/overview",
+    keywords: ["overview", "student overview", "single student"],
+  },
+  {
+    id: "g4",
+    category: "pages",
+    categoryLabel: "🚀 Platform Pages & Navigation",
+    title: "Student Profile & Public Social Links",
+    subtitle: "Personal Details, GitHub, LinkedIn, Portfolio Links",
+    tag: "Page",
+    badgeColor: "#003896",
+    path: "/student/profile",
+    keywords: ["profile", "github", "linkedin", "contact", "edit profile"],
+  },
+];
 
 const DashboardLayout = ({ children, title }) => {
   const { user, role, logout } = useAuth();
@@ -14,10 +290,59 @@ const DashboardLayout = ({ children, title }) => {
     return true;
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchBoxRef = useRef(null);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  // Close search popover on outside click or Escape key press
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // Filter search results dynamically
+  const queryTrimmed = searchQuery.trim().toLowerCase();
+  const searchResults = queryTrimmed.length === 0
+    ? []
+    : SEARCH_INDEX.filter((item) => {
+        const matchesTitle = item.title.toLowerCase().includes(queryTrimmed);
+        const matchesSub = item.subtitle.toLowerCase().includes(queryTrimmed);
+        const matchesTag = item.tag.toLowerCase().includes(queryTrimmed);
+        const matchesKw = item.keywords.some((kw) => kw.toLowerCase().includes(queryTrimmed));
+        return matchesTitle || matchesSub || matchesTag || matchesKw;
+      });
+
+  // Group search results by category
+  const groupedResults = searchResults.reduce((acc, item) => {
+    if (!acc[item.categoryLabel]) {
+      acc[item.categoryLabel] = [];
+    }
+    acc[item.categoryLabel].push(item);
+    return acc;
+  }, {});
+
+  const handleResultClick = (path) => {
+    setIsSearchOpen(false);
+    setSearchQuery("");
+    navigate(path);
   };
 
   const getNavLinks = () => {
@@ -193,21 +518,82 @@ const DashboardLayout = ({ children, title }) => {
           </div>
         </div>
 
-        <div className="header-search-container">
+        {/* UNIVERSAL SEARCH CONTAINER */}
+        <div className="header-search-container" ref={searchBoxRef}>
           <div className="search-pill-box">
             <input
               type="text"
               className="search-pill-input"
-              placeholder="Search anything..."
+              placeholder="Search anything (Person, Project, Test, Academic)..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchOpen(true)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
             />
-            <button className="search-pill-btn" aria-label="Search">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
+            {searchQuery.trim().length > 0 ? (
+              <button
+                className="search-pill-clear-btn"
+                onClick={() => {
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
+                }}
+                title="Clear Search"
+              >
+                ✕
+              </button>
+            ) : (
+              <button className="search-pill-btn" aria-label="Search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </button>
+            )}
+
+            {/* LIVE SEARCH DROPDOWN POPUP */}
+            {isSearchOpen && queryTrimmed.length > 0 && (
+              <div className="search-results-dropdown-popover">
+                {Object.keys(groupedResults).length > 0 ? (
+                  Object.entries(groupedResults).map(([categoryLabel, items]) => (
+                    <div key={categoryLabel} className="search-results-group">
+                      <div className="search-group-header-title">{categoryLabel}</div>
+                      {items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="search-result-item-card"
+                          onClick={() => handleResultClick(item.path)}
+                        >
+                          <div className="search-item-info">
+                            <span className="search-item-title">{item.title}</span>
+                            <span className="search-item-subtitle">{item.subtitle}</span>
+                          </div>
+                          <span
+                            className="search-item-tag-badge"
+                            style={{ backgroundColor: item.badgeColor }}
+                          >
+                            {item.tag}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  <div className="search-empty-state">
+                    <div className="empty-icon-wrap">🔍</div>
+                    <div className="empty-title-text">No results found for "{searchQuery}"</div>
+                    <div className="empty-sub-text">Try searching for a student name, USN, project, test, or page.</div>
+                    <div className="search-quick-chips">
+                      <button onClick={() => setSearchQuery("Rankings")}>🏆 Rankings</button>
+                      <button onClick={() => setSearchQuery("Project")}>💡 Projects</button>
+                      <button onClick={() => setSearchQuery("Aptitude")}>📝 Aptitude</button>
+                      <button onClick={() => setSearchQuery("SSLC")}>📄 SSLC</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

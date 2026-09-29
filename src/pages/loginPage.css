@@ -465,6 +465,13 @@
   font-size: 14px;
 }
 
+.input-rel-box input::-ms-reveal,
+.input-rel-box input::-ms-clear {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+
 .input-rel-box input::placeholder {
   color: #9ca3af;
   opacity: 1;

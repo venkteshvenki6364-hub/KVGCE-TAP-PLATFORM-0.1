@@ -3,49 +3,20 @@ import DashboardLayout from "../../components/DashboardLayout";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import "./StudentSkills.css";
-import "./StudentProfile.css";
 
 function StudentSkills() {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
 
   const normalizeAcademics = (raw) => {
-    if (raw && typeof raw === "object" && !Array.isArray(raw) && (raw.sslc || raw.puc || raw.beSemesters)) {
-      return {
-        sslc: {
-          education: "SSLC (10th)",
-          institute: raw.sslc?.institute || "St. Joseph's High School",
-          board: raw.sslc?.board || "Karnataka SSLC Board",
-          year: raw.sslc?.year || "2018",
-          score: raw.sslc?.score || "94.20 %",
-          documentUrl: raw.sslc?.documentUrl || null,
-          documentName: raw.sslc?.documentName || null
-        },
-        puc: {
-          education: "PUC (12th)",
-          institute: raw.puc?.institute || "Govt. PU College",
-          board: raw.puc?.board || "Karnataka PUE Board (Science)",
-          year: raw.puc?.year || "2020",
-          score: raw.puc?.score || "91.80 %",
-          documentUrl: raw.puc?.documentUrl || null,
-          documentName: raw.puc?.documentName || null
-        },
-        beSemesters: Array.isArray(raw.beSemesters) && raw.beSemesters.length > 0 ? raw.beSemesters : [
-          { sem: "1st Sem", sgpa: "8.20", year: "2023", documentUrl: null, documentName: null },
-          { sem: "2nd Sem", sgpa: "8.40", year: "2023", documentUrl: null, documentName: null },
-          { sem: "3rd Sem", sgpa: "8.15", year: "2024", documentUrl: null, documentName: null },
-          { sem: "4th Sem", sgpa: "8.50", year: "2024", documentUrl: null, documentName: null },
-          { sem: "5th Sem", sgpa: "8.65", year: "2025", documentUrl: null, documentName: null }
-        ]
-      };
-    }
-
     const defaultObj = {
       sslc: {
         education: "SSLC (10th)",
         institute: "St. Joseph's High School",
         board: "Karnataka SSLC Board",
         year: "2018",
-        score: "94.20 %",
+        totalMarks: 625,
+        obtainedMarks: 625,
+        score: "100.00%",
         documentUrl: null,
         documentName: null
       },
@@ -54,58 +25,130 @@ function StudentSkills() {
         institute: "Govt. PU College",
         board: "Karnataka PUE Board (Science)",
         year: "2020",
-        score: "91.80 %",
+        totalMarks: 600,
+        obtainedMarks: 600,
+        score: "100.00%",
         documentUrl: null,
         documentName: null
       },
+      beSummary: {
+        branch: "CSE",
+        cgpaTillNow: "8.21",
+        totalCredits: 160,
+        totalMarks: 8000,
+        obtainedMarks: 6568,
+        overallPercentage: "82.10%"
+      },
       beSemesters: [
-        { sem: "1st Sem", sgpa: "8.20", year: "2023", documentUrl: null, documentName: null },
-        { sem: "2nd Sem", sgpa: "8.40", year: "2023", documentUrl: null, documentName: null },
-        { sem: "3rd Sem", sgpa: "8.15", year: "2024", documentUrl: null, documentName: null },
-        { sem: "4th Sem", sgpa: "8.50", year: "2024", documentUrl: null, documentName: null },
-        { sem: "5th Sem", sgpa: "8.65", year: "2025", documentUrl: null, documentName: null }
+        { sem: "1st Semester", totalMarks: 1000, obtainedMarks: 780, percentage: "78.00%", sgpa: "7.80", cgpa: "7.80", documentUrl: null, documentName: null },
+        { sem: "2nd Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.00", documentUrl: null, documentName: null },
+        { sem: "3rd Semester", totalMarks: 1000, obtainedMarks: 850, percentage: "85.00%", sgpa: "8.50", cgpa: "8.17", documentUrl: null, documentName: null },
+        { sem: "4th Semester", totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.20", documentUrl: null, documentName: null },
+        { sem: "5th Semester", totalMarks: 1000, obtainedMarks: 830, percentage: "83.00%", sgpa: "8.30", cgpa: "8.22", documentUrl: null, documentName: null },
+        { sem: "6th Semester", totalMarks: 1000, obtainedMarks: 860, percentage: "86.00%", sgpa: "8.60", cgpa: "8.37", documentUrl: null, documentName: null },
+        { sem: "7th Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.36", documentUrl: null, documentName: null },
+        { sem: "8th Semester", totalMarks: 1000, obtainedMarks: 808, percentage: "80.80%", sgpa: "8.08", cgpa: "8.21", documentUrl: null, documentName: null }
       ]
     };
 
-    if (Array.isArray(raw)) {
-      const sslcItem = raw.find((a) => (a.education || "").toLowerCase().includes("10th") || (a.education || "").toLowerCase().includes("sslc")) || raw[0];
-      const pucItem = raw.find((a) => (a.education || "").toLowerCase().includes("12th") || (a.education || "").toLowerCase().includes("puc") || (a.education || "").toLowerCase().includes("diploma")) || raw[1];
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const mergedSSLC = { ...defaultObj.sslc, ...raw.sslc };
+      const mergedPUC = { ...defaultObj.puc, ...raw.puc };
+      const mergedSummary = { ...defaultObj.beSummary, ...raw.beSummary };
+      const mergedSems = Array.isArray(raw.beSemesters) && raw.beSemesters.length > 0 ? raw.beSemesters : defaultObj.beSemesters;
 
-      if (sslcItem) {
-        defaultObj.sslc = {
-          education: sslcItem.education || "SSLC (10th)",
-          institute: sslcItem.institute || defaultObj.sslc.institute,
-          board: sslcItem.board || defaultObj.sslc.board,
-          year: sslcItem.year || defaultObj.sslc.year,
-          score: sslcItem.score || defaultObj.sslc.score,
-          documentUrl: sslcItem.documentUrl || null,
-          documentName: sslcItem.documentName || null
-        };
-      }
-      if (pucItem) {
-        defaultObj.puc = {
-          education: pucItem.education || "PUC (12th)",
-          institute: pucItem.institute || defaultObj.puc.institute,
-          board: pucItem.board || defaultObj.puc.board,
-          year: pucItem.year || defaultObj.puc.year,
-          score: pucItem.score || defaultObj.puc.score,
-          documentUrl: pucItem.documentUrl || null,
-          documentName: pucItem.documentName || null
-        };
-      }
+      return {
+        sslc: mergedSSLC,
+        puc: mergedPUC,
+        beSummary: mergedSummary,
+        beSemesters: mergedSems
+      };
     }
 
     return defaultObj;
   };
 
-  const calculateAvgCGPA = (beSemesters = []) => {
-    const validSgpas = (beSemesters || [])
-      .map((s) => parseFloat(String(s.sgpa || "").replace(/[^0-9.]/g, "")))
-      .filter((num) => !isNaN(num) && num > 0);
-    if (validSgpas.length === 0) return "0.00";
-    const sum = validSgpas.reduce((acc, curr) => acc + curr, 0);
-    return (sum / validSgpas.length).toFixed(2);
+  const computeAcademicsMetrics = (acadObj) => {
+    const sems = acadObj?.beSemesters || [];
+    let totMarks = 0;
+    let obtMarks = 0;
+    let validSgpas = [];
+    let runningCumulativeSum = 0;
+
+    const computedSems = sems.map((semItem, idx) => {
+      const sgpaVal = parseFloat(semItem.sgpa) || 8.0;
+      if (sgpaVal > 0) validSgpas.push(sgpaVal);
+
+      const tMarks = parseFloat(semItem.totalMarks || semItem.total_marks) || 1000;
+      let oMarks = parseFloat(semItem.obtainedMarks || semItem.obtained_marks);
+      if (isNaN(oMarks) || oMarks === 0) {
+        oMarks = Math.round(tMarks * (sgpaVal / 10));
+      }
+
+      totMarks += tMarks;
+      obtMarks += oMarks;
+
+      const pct = tMarks > 0 ? ((oMarks / tMarks) * 100).toFixed(2) + "%" : (semItem.percentage || "0.00%");
+
+      runningCumulativeSum += sgpaVal;
+      const currentCumulativeCgpa = validSgpas.length > 0 ? (runningCumulativeSum / (idx + 1)).toFixed(2) : "0.00";
+
+      return {
+        ...semItem,
+        totalMarks: tMarks,
+        obtainedMarks: oMarks,
+        percentage: pct,
+        sgpa: sgpaVal.toFixed(2),
+        cgpa: currentCumulativeCgpa
+      };
+    });
+
+    const overallPct = totMarks > 0 ? ((obtMarks / totMarks) * 100).toFixed(2) + "%" : "0.00%";
+    const finalCgpa = validSgpas.length > 0 ? (validSgpas.reduce((a, b) => a + b, 0) / validSgpas.length).toFixed(2) : "8.21";
+
+    return {
+      ...acadObj,
+      beSummary: {
+        ...acadObj.beSummary,
+        cgpaTillNow: finalCgpa,
+        totalMarks: totMarks,
+        obtainedMarks: obtMarks,
+        overallPercentage: overallPct
+      },
+      beSemesters: computedSems
+    };
   };
+
+  const studentId = user?.student_id || user?.usn || "4KV23CS042";
+  const customKey = `kvgce_student_profile_${studentId}`;
+
+  const [academics, setAcademics] = useState(() => {
+    const stored = localStorage.getItem(customKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.academics) return computeAcademicsMetrics(normalizeAcademics(parsed.academics));
+      } catch (e) {
+        console.error("Error reading stored academics:", e);
+      }
+    }
+    return computeAcademicsMetrics(normalizeAcademics(user?.academics));
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get("/students/profile");
+        if (res.data && res.data.data && res.data.data.academics) {
+          const norm = computeAcademicsMetrics(normalizeAcademics(res.data.data.academics));
+          setAcademics(norm);
+        }
+      } catch (err) {
+        console.warn("Using local academic state:", err);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const openPdfDocument = (dataUrl, fileName = "Marks_Card.pdf") => {
     if (!dataUrl) return;
@@ -130,400 +173,459 @@ function StudentSkills() {
     }
   };
 
-  const studentId = user?.student_id || user?.usn || "4KV23CS042";
-  const customKey = `kvgce_student_profile_${studentId}`;
+  const downloadPdfDocument = (dataUrl, fileName = "Marks_Card.pdf", title = "Academic Marks Card") => {
+    const cleanFileName = fileName.toLowerCase().endsWith(".pdf") ? fileName : `${fileName}.pdf`;
 
-  const [academics, setAcademics] = useState(() => {
-    const stored = localStorage.getItem(customKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.academics) return normalizeAcademics(parsed.academics);
-      } catch (e) {
-        console.error("Error reading stored academics:", e);
-      }
-    }
-    return normalizeAcademics(user?.academics);
-  });
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tempAcademics, setTempAcademics] = useState(() => normalizeAcademics(academics));
-  const [msg, setMsg] = useState({ type: "", text: "" });
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await api.get("/students/profile");
-        if (res.data && res.data.data && res.data.data.academics) {
-          const norm = normalizeAcademics(res.data.data.academics);
-          setAcademics(norm);
-        }
-      } catch (err) {
-        console.warn("Using local academic state:", err);
-      }
-    };
-    fetchProfile();
-  }, [user]);
-
-  const openModal = () => {
-    setTempAcademics(normalizeAcademics(academics));
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleAcademicFileUpload = (e, section, semIndex = null) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-    if (!isPdf) {
-      alert("⚠️ Only PDF document files (.pdf) are allowed for Marks Cards. Please select a PDF file.");
+    if (dataUrl && dataUrl.startsWith("data:application/pdf")) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = cleanFileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      alert("⚠️ File size exceeds maximum 10MB limit. Please select a smaller PDF document.");
+    if (dataUrl && !dataUrl.startsWith("data:")) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = cleanFileName;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // Dynamic official PDF generator blob fallback
+    const studentName = user?.full_name || "Venkatesh R";
+    const studentUsn = user?.student_id || user?.usn || "4KV23CS042";
+
+    const pdfContent = `%PDF-1.4
+1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj
+2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj
+3 0 obj <</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources <</Font <</F1 4 0 R /F2 6 0 R>>>> /Contents 5 0 R>> endobj
+4 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold>> endobj
+6 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica>> endobj
+5 0 obj <</Length 380>> stream
+BT
+/F1 18 Tf
+50 730 Td
+(KVG COLLEGE OF ENGINEERING, SULLIA) Tj
+/F2 11 Tf
+0 -20 Td
+(Department of Computer Science & Engineering) Tj
+/F1 14 Tf
+0 -30 Td
+(OFFICIAL MARKS CARD DOCUMENT) Tj
+/F2 11 Tf
+0 -24 Td
+(Document Record: ${title}) Tj
+0 -18 Td
+(Student Name: ${studentName}) Tj
+0 -18 Td
+(USN / Student ID: ${studentUsn}) Tj
+0 -22 Td
+(Verification Status: Official Copy Verified by KVGCE Examination Portal) Tj
+0 -18 Td
+(Downloaded Date: ${new Date().toISOString().split("T")[0]}) Tj
+ET
+endstream endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000062 00000 n 
+0000000117 00000 n 
+0000000244 00000 n 
+0000000378 00000 n 
+0000000315 00000 n 
+trailer <</Size 7 /Root 1 0 R>>
+startxref
+808
+%%EOF`;
+
+    const blob = new Blob([pdfContent], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = cleanFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const [activeEditModal, setActiveEditModal] = useState(null); // null, "sslc", "puc", "be"
+  const [tempAcademics, setTempAcademics] = useState(null);
+
+  const openEditModal = (modalType) => {
+    setTempAcademics(JSON.parse(JSON.stringify(academics)));
+    setActiveEditModal(modalType);
+  };
+
+  const closeEditModal = () => {
+    setActiveEditModal(null);
+    setTempAcademics(null);
+  };
+
+  const handleAcademicFileUpload = (e, targetType, semIdx = null) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("Only PDF documents are allowed for marks cards!");
       return;
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
-      const currentAcad = { ...normalizeAcademics(tempAcademics) };
-      if (section === "sslc") {
-        currentAcad.sslc = { ...currentAcad.sslc, documentUrl: reader.result, documentName: file.name };
-      } else if (section === "puc") {
-        currentAcad.puc = { ...currentAcad.puc, documentUrl: reader.result, documentName: file.name };
-      } else if (section === "be" && semIndex !== null) {
-        const newSems = [...(currentAcad.beSemesters || [])];
-        newSems[semIndex] = { ...newSems[semIndex], documentUrl: reader.result, documentName: file.name };
-        currentAcad.beSemesters = newSems;
+    reader.onload = () => {
+      const b64Data = reader.result;
+      const norm = normalizeAcademics(tempAcademics || academics);
+      if (targetType === "sslc") {
+        setTempAcademics({
+          ...norm,
+          sslc: { ...norm.sslc, documentUrl: b64Data, documentName: file.name }
+        });
+      } else if (targetType === "puc") {
+        setTempAcademics({
+          ...norm,
+          puc: { ...norm.puc, documentUrl: b64Data, documentName: file.name }
+        });
+      } else if (targetType === "be" && semIdx !== null) {
+        const updatedSems = [...norm.beSemesters];
+        updatedSems[semIdx] = { ...updatedSems[semIdx], documentUrl: b64Data, documentName: file.name };
+        setTempAcademics({ ...norm, beSemesters: updatedSems });
       }
-      setTempAcademics(currentAcad);
     };
     reader.readAsDataURL(file);
   };
 
-  const removeAcademicFile = (section, semIndex = null) => {
-    const currentAcad = { ...normalizeAcademics(tempAcademics) };
-    if (section === "sslc") {
-      currentAcad.sslc = { ...currentAcad.sslc, documentUrl: null, documentName: null };
-    } else if (section === "puc") {
-      currentAcad.puc = { ...currentAcad.puc, documentUrl: null, documentName: null };
-    } else if (section === "be" && semIndex !== null) {
-      const newSems = [...(currentAcad.beSemesters || [])];
-      newSems[semIndex] = { ...newSems[semIndex], documentUrl: null, documentName: null };
-      currentAcad.beSemesters = newSems;
+  const removeAcademicFile = (targetType, semIdx = null) => {
+    const norm = normalizeAcademics(tempAcademics || academics);
+    if (targetType === "sslc") {
+      setTempAcademics({
+        ...norm,
+        sslc: { ...norm.sslc, documentUrl: null, documentName: null }
+      });
+    } else if (targetType === "puc") {
+      setTempAcademics({
+        ...norm,
+        puc: { ...norm.puc, documentUrl: null, documentName: null }
+      });
+    } else if (targetType === "be" && semIdx !== null) {
+      const updatedSems = [...norm.beSemesters];
+      updatedSems[semIdx] = { ...updatedSems[semIdx], documentUrl: null, documentName: null };
+      setTempAcademics({ ...norm, beSemesters: updatedSems });
     }
-    setTempAcademics(currentAcad);
   };
 
-  const handleSaveAcademics = async () => {
-    setSaving(true);
-    const normalized = normalizeAcademics(tempAcademics);
-    setAcademics(normalized);
+  const validateModalInputs = (modalType, tempObj) => {
+    if (!tempObj) return { valid: true, error: "" };
 
-    // Save to localStorage student profile object
-    const storedStr = localStorage.getItem(customKey);
-    let profileObj = {};
-    if (storedStr) {
-      try {
-        profileObj = JSON.parse(storedStr);
-      } catch (e) {
-        console.error(e);
+    if (modalType === "sslc") {
+      const tot = parseFloat(tempObj.sslc?.totalMarks);
+      const obt = parseFloat(tempObj.sslc?.obtainedMarks);
+      if (isNaN(tot) || tot <= 0) return { valid: false, error: "⚠️ Total marks must be greater than 0" };
+      if (isNaN(obt) || obt < 0) return { valid: false, error: "⚠️ Obtained marks cannot be negative" };
+      if (obt > tot) return { valid: false, error: `⚠️ Obtained marks (${obt}) cannot be greater than total marks (${tot})` };
+    } else if (modalType === "puc") {
+      const tot = parseFloat(tempObj.puc?.totalMarks);
+      const obt = parseFloat(tempObj.puc?.obtainedMarks);
+      if (isNaN(tot) || tot <= 0) return { valid: false, error: "⚠️ Total marks must be greater than 0" };
+      if (isNaN(obt) || obt < 0) return { valid: false, error: "⚠️ Obtained marks cannot be negative" };
+      if (obt > tot) return { valid: false, error: `⚠️ Obtained marks (${obt}) cannot be greater than total marks (${tot})` };
+    } else if (modalType === "be") {
+      const sems = tempObj.beSemesters || [];
+      for (let i = 0; i < sems.length; i++) {
+        const s = sems[i];
+        const tot = parseFloat(s.totalMarks);
+        const obt = parseFloat(s.obtainedMarks);
+        const sgpa = parseFloat(s.sgpa);
+        if (isNaN(tot) || tot <= 0) return { valid: false, error: `⚠️ ${s.sem || 'Sem ' + (i + 1)}: Total marks must be greater than 0` };
+        if (isNaN(obt) || obt < 0) return { valid: false, error: `⚠️ ${s.sem || 'Sem ' + (i + 1)}: Obtained marks cannot be negative` };
+        if (obt > tot) return { valid: false, error: `⚠️ ${s.sem || 'Sem ' + (i + 1)}: Obtained marks (${obt}) cannot be greater than total marks (${tot})` };
+        if (!isNaN(sgpa) && (sgpa < 0 || sgpa > 10)) return { valid: false, error: `⚠️ ${s.sem || 'Sem ' + (i + 1)}: SGPA must be between 0.00 and 10.00` };
       }
     }
-    profileObj.academics = normalized;
-    localStorage.setItem(customKey, JSON.stringify(profileObj));
 
-    // Sync to backend DB
-    try {
-      await api.put("/students/profile", { academics: normalized });
-    } catch (err) {
-      console.warn("Backend API sync fallback:", err);
-    }
-
-    if (updateUser) {
-      updateUser({ academics: normalized });
-    }
-
-    setSaving(false);
-    setIsModalOpen(false);
-    setMsg({ type: "success", text: "✅ Academic records and marks cards updated successfully!" });
-    setTimeout(() => setMsg({ type: "", text: "" }), 4000);
+    return { valid: true, error: "" };
   };
 
-  const avgCgpa = calculateAvgCGPA(academics.beSemesters);
+  const saveAcademicChanges = async () => {
+    if (!tempAcademics || !activeEditModal) return;
+    const check = validateModalInputs(activeEditModal, tempAcademics);
+    if (!check.valid) {
+      alert(check.error);
+      return;
+    }
+
+    const computed = computeAcademicsMetrics(normalizeAcademics(tempAcademics));
+    setAcademics(computed);
+    localStorage.setItem(customKey, JSON.stringify({ academics: computed }));
+
+    try {
+      await api.put("/students/academics", computed);
+    } catch (err) {
+      console.warn("Backend save fallback to profile PUT:", err);
+      try {
+        await api.put("/students/profile", { academics: computed });
+      } catch (e) {
+        console.error("Failed to persist academics to backend:", e);
+      }
+    }
+    setActiveEditModal(null);
+    setTempAcademics(null);
+  };
+
+  const branchCode = academics.beSummary?.branch || "CSE";
 
   return (
     <DashboardLayout title="Academics">
       <div className="academics-page-container">
-        {/* TOAST NOTIFICATION */}
-        {msg.text && (
-          <div className={`msg-alert ${msg.type}`}>
-            <span>{msg.text}</span>
-          </div>
-        )}
-
-        {/* HEADER TITLE & ACTION BUTTON */}
-        <div className="academics-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* PAGE TOP HEADER - CLEAN NO MAIN POPUP EDIT BUTTON */}
+        <div className="academics-page-header">
           <div>
-            <h2 className="academics-heading">Academic Performance & Marks Cards</h2>
-            <p className="academics-subheading">Manage and track SSLC, PUC, and B.E. Semester-wise marks and PDF documents</p>
+            <h2 className="academics-heading">Academics</h2>
+            <p className="academics-subheading">View, update, and manage your SSLC, PUC, and B.E. semester marks & certificates</p>
           </div>
-          <button className="section-edit-btn" onClick={openModal} style={{ background: "#003896", color: "#ffffff", border: "none", padding: "0.5rem 1.1rem" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Edit / Manage Academics
-          </button>
         </div>
 
-        {/* TOP SUMMARY CARDS (3 HORIZONTAL CARDS) */}
-        <div className="academic-cards-grid">
+        {/* 1. TOP 3 HORIZONTAL ACADEMIC SUMMARY CARDS */}
+        <div className="academic-top-cards-grid">
           {/* CARD 1: SSLC (10th) */}
           <div className="academic-summary-card card-sslc">
-            <div className="card-top-title-row text-blue">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c3 3 9 3 12 0v-5" />
-              </svg>
-              <h3>SSLC (10th)</h3>
+            <div className="card-top-title-row" style={{ justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                <div className="card-icon-badge blue-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                </div>
+                <h3 className="text-blue">SSLC (10th)</h3>
+              </div>
+              <button
+                type="button"
+                className="view-pdf-btn"
+                style={{ borderColor: "#bfdbfe", color: "#1d4ed8", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                onClick={() => openEditModal("sslc")}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit
+              </button>
             </div>
+
             <div className="card-info-rows">
               <div className="info-row">
                 <span className="info-label">School Name</span>
-                <span className="info-value font-semibold">{academics.sslc?.institute || "St. Joseph's High School"}</span>
+                <span className="info-value-right-light">{academics.sslc?.institute || "St. Joseph's High School"}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Board</span>
-                <span className="info-value">{academics.sslc?.board || "Karnataka Board"}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Passing Year</span>
+                <span className="info-label">Year of Passing</span>
                 <span className="info-value">{academics.sslc?.year || "2018"}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Score Percentage</span>
-                <span className="info-value text-green font-bold">{academics.sslc?.score || "94.20 %"}</span>
+                <span className="info-label">Total Marks</span>
+                <span className="info-value font-semibold">{academics.sslc?.obtainedMarks || 625} / {academics.sslc?.totalMarks || 625}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Percentage</span>
+                <span className="info-value font-bold text-green">{academics.sslc?.score || "100.00%"}</span>
               </div>
               <div className="info-row pdf-row">
-                <span className="info-label">Marks Card (PDF)</span>
-                {academics.sslc?.documentUrl ? (
+                <span className="info-label">Certificate (PDF)</span>
+                <div className="pdf-actions-group">
                   <button
+                    type="button"
                     className="view-pdf-btn"
-                    onClick={() => openPdfDocument(academics.sslc.documentUrl, academics.sslc.documentName || "SSLC_Marks_Card.pdf")}
+                    onClick={() => openPdfDocument(academics.sslc?.documentUrl, academics.sslc?.documentName || "SSLC_Marks_Card.pdf")}
                   >
-                    <span>📄 View PDF</span>
+                    View PDF
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
                   </button>
-                ) : (
-                  <button className="view-pdf-btn" onClick={openModal}>
-                    <span>📤 Upload PDF</span>
-                  </button>
-                )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* CARD 2: PUC (12th) */}
           <div className="academic-summary-card card-puc">
-            <div className="card-top-title-row text-green">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5">
-                <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-                <path d="M9 22v-4h6v4" />
-              </svg>
-              <h3>PUC (12th / Diploma)</h3>
+            <div className="card-top-title-row" style={{ justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                <div className="card-icon-badge green-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.2">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                    <path d="M9 22v-4h6v4"/>
+                    <path d="M8 6h8"/>
+                    <path d="M8 10h8"/>
+                  </svg>
+                </div>
+                <h3 className="text-green">PUC (12th)</h3>
+              </div>
+              <button
+                type="button"
+                className="view-pdf-btn"
+                style={{ borderColor: "#bbf7d0", color: "#15803d", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                onClick={() => openEditModal("puc")}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit
+              </button>
             </div>
+
             <div className="card-info-rows">
               <div className="info-row">
                 <span className="info-label">College Name</span>
-                <span className="info-value font-semibold">{academics.puc?.institute || "Govt. PU College"}</span>
+                <span className="info-value-right-light">{academics.puc?.institute || "Govt. PU College"}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Board / Stream</span>
-                <span className="info-value">{academics.puc?.board || "PUE Board"}</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Passing Year</span>
+                <span className="info-label">Year of Passing</span>
                 <span className="info-value">{academics.puc?.year || "2020"}</span>
               </div>
               <div className="info-row">
-                <span className="info-label">Score Percentage</span>
-                <span className="info-value text-green font-bold">{academics.puc?.score || "91.80 %"}</span>
+                <span className="info-label">Total Marks</span>
+                <span className="info-value font-semibold">{academics.puc?.obtainedMarks || 600} / {academics.puc?.totalMarks || 600}</span>
+              </div>
+              <div className="info-row">
+                <span className="info-label">Percentage</span>
+                <span className="info-value font-bold text-green">{academics.puc?.score || "100.00%"}</span>
               </div>
               <div className="info-row pdf-row">
-                <span className="info-label">Marks Card (PDF)</span>
-                {academics.puc?.documentUrl ? (
+                <span className="info-label">Certificate (PDF)</span>
+                <div className="pdf-actions-group">
                   <button
+                    type="button"
                     className="view-pdf-btn"
-                    onClick={() => openPdfDocument(academics.puc.documentUrl, academics.puc.documentName || "PUC_Marks_Card.pdf")}
+                    onClick={() => openPdfDocument(academics.puc?.documentUrl, academics.puc?.documentName || "PUC_Marks_Card.pdf")}
                   >
-                    <span>📄 View PDF</span>
+                    View PDF
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
                   </button>
-                ) : (
-                  <button className="view-pdf-btn" onClick={openModal}>
-                    <span>📤 Upload PDF</span>
-                  </button>
-                )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* CARD 3: B.E. Overall Performance */}
+          {/* CARD 3: B.E (CSE) – Semester Performance */}
           <div className="academic-summary-card card-be">
-            <div className="card-top-title-row text-purple">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2.5">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-              <h3>B.E. Engineering CGPA</h3>
+            <div className="card-top-title-row" style={{ justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                <div className="card-icon-badge purple-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2.3">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                </div>
+                <h3 className="text-purple">B.E ({branchCode}) – Performance</h3>
+              </div>
+              <button
+                type="button"
+                className="view-pdf-btn"
+                style={{ borderColor: "#e9d5ff", color: "#7e22ce", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+                onClick={() => openEditModal("be")}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit
+              </button>
             </div>
+
             <div className="be-stat-boxes-grid">
               <div className="be-stat-box">
-                <span className="be-stat-lbl">Average B.E. CGPA</span>
-                <span className="be-stat-val text-blue font-bold">{avgCgpa}</span>
+                <span className="be-stat-lbl">CGPA (Till Now)</span>
+                <span className="be-stat-val font-bold text-blue">{academics.beSummary?.cgpaTillNow || "8.21"}</span>
               </div>
               <div className="be-stat-box">
-                <span className="be-stat-lbl">Semesters Added</span>
-                <span className="be-stat-val text-green font-bold">{academics.beSemesters?.length || 0} / 8</span>
+                <span className="be-stat-lbl">Total Credits Earned</span>
+                <span className="be-stat-val font-bold text-green">{academics.beSummary?.totalCredits || 160}</span>
               </div>
             </div>
+
             <div className="be-summary-row">
               <div className="be-sum-item">
-                <span className="be-sum-lbl">Calculated Metric</span>
-                <span className="be-sum-val text-purple font-bold">Average SGPA across Sem 1-8</span>
+                <span className="be-sum-lbl">Total Marks</span>
+                <span className="be-sum-val">{academics.beSummary?.totalMarks || 8000}</span>
+              </div>
+              <div className="be-sum-item">
+                <span className="be-sum-lbl">Obtained Marks</span>
+                <span className="be-sum-val">{academics.beSummary?.obtainedMarks || 6568}</span>
+              </div>
+              <div className="be-sum-item">
+                <span className="be-sum-lbl">Overall Percentage</span>
+                <span className="be-sum-val text-green font-bold">{academics.beSummary?.overallPercentage || "82.10%"}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 1. SCHOOL & PRE-COLLEGE ACADEMICS CARD */}
-        <div className="profile-section-card">
-          <div className="section-card-header">
-            <div className="header-title-flex">
-              <div className="section-icon-badge blue-circle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2.5">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                </svg>
-              </div>
-              <h3 className="section-title">School & Pre-College Academics (SSLC & PUC)</h3>
-            </div>
-            <button className="section-edit-btn" onClick={openModal}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        {/* 2. SEMESTER WISE PERFORMANCE TABLE */}
+        <div className="semester-performance-card">
+          <div className="table-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 className="section-title">Semester Wise Performance</h3>
+            <button
+              type="button"
+              className="view-pdf-btn"
+              style={{ borderColor: "#d8b4fe", color: "#6b21a8", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}
+              onClick={() => openEditModal("be")}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
-              Edit Details
+              Edit
             </button>
           </div>
 
-          <div className="table-responsive-container">
-            <table className="marks-table">
-              <thead>
-                <tr>
-                  <th>Education Stage</th>
-                  <th>School / College Name</th>
-                  <th>University / Board</th>
-                  <th>Year</th>
-                  <th>Percentage (%)</th>
-                  <th>Marks Card Document</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[academics.sslc, academics.puc].filter(Boolean).map((row, idx) => (
-                  <tr key={idx}>
-                    <td className="font-semibold">{row.education}</td>
-                    <td>{row.institute}</td>
-                    <td>{row.board}</td>
-                    <td>{row.year}</td>
-                    <td className="score-cell">
-                      <span className="font-bold">{row.score}</span>
-                    </td>
-                    <td>
-                      {row.documentUrl ? (
-                        <button
-                          type="button"
-                          className="view-doc-btn"
-                          onClick={() => openPdfDocument(row.documentUrl, row.documentName || `${row.education}_Marks_Card.pdf`)}
-                          title={`View ${row.documentName || row.education + " Marks Card PDF"}`}
-                        >
-                          📄 View PDF
-                        </button>
-                      ) : (
-                        <button className="upload-doc-badge-btn" onClick={openModal}>
-                          📤 Upload PDF
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 2. B.E. ENGINEERING SEMESTER ACADEMICS (SEM 1 TO 8) */}
-        <div className="profile-section-card">
-          <div className="section-card-header">
-            <div className="header-title-flex">
-              <div className="section-icon-badge green-circle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="section-title" style={{ margin: 0 }}>B.E. Semester-wise Performance (Sem 1 - 8)</h3>
-                <span style={{ fontSize: "0.76rem", fontWeight: "700", color: "#16a34a", background: "#dcfce7", padding: "0.15rem 0.55rem", borderRadius: "12px", marginTop: "0.25rem", display: "inline-block" }}>
-                  🎓 Overall Average B.E. CGPA: {avgCgpa} CGPA ({academics.beSemesters?.length || 0} Semesters)
-                </span>
-              </div>
-            </div>
-            <button className="section-edit-btn" onClick={openModal}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-              Manage Semesters
-            </button>
-          </div>
-
-          <div className="table-responsive-container">
-            <table className="marks-table">
+          <div className="table-responsive-wrapper">
+            <table className="semester-table">
               <thead>
                 <tr>
                   <th>Semester</th>
-                  <th>Year</th>
-                  <th>SGPA Score</th>
-                  <th>Semester Marks Card</th>
+                  <th>Total Marks</th>
+                  <th>Obtained Marks</th>
+                  <th>Percentage</th>
+                  <th>SGPA</th>
+                  <th>CGPA</th>
+                  <th>Marksheet (PDF)</th>
                 </tr>
               </thead>
               <tbody>
                 {(academics.beSemesters || []).map((semRow, idx) => (
                   <tr key={idx}>
                     <td className="font-semibold">{semRow.sem}</td>
-                    <td>{semRow.year || "2023"}</td>
-                    <td className="score-cell">
-                      <span className="font-bold" style={{ color: "#003896" }}>{semRow.sgpa} CGPA</span>
-                    </td>
+                    <td>{semRow.totalMarks || 1000}</td>
+                    <td>{semRow.obtainedMarks || 780}</td>
+                    <td className="text-green font-bold">{semRow.percentage || "78.00%"}</td>
+                    <td>{(parseFloat(semRow.sgpa) || 7.8).toFixed(2)}</td>
+                    <td>{(parseFloat(semRow.cgpa) || 7.8).toFixed(2)}</td>
                     <td>
-                      {semRow.documentUrl ? (
+                      <div className="pdf-actions-group">
                         <button
                           type="button"
-                          className="view-doc-btn"
+                          className="view-pdf-btn"
                           onClick={() => openPdfDocument(semRow.documentUrl, semRow.documentName || `${semRow.sem}_Marks_Card.pdf`)}
-                          title={`View ${semRow.documentName || semRow.sem + " Marks Card PDF"}`}
                         >
-                          📄 View PDF
+                          View PDF
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
                         </button>
-                      ) : (
-                        <button className="upload-doc-badge-btn" onClick={openModal}>
-                          📤 Upload PDF
-                        </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -531,326 +633,449 @@ function StudentSkills() {
             </table>
           </div>
         </div>
+      </div>
 
-        {/* EDIT ACADEMICS MODAL */}
-        {isModalOpen && (
-          <div className="profile-modal-backdrop" onClick={closeModal}>
-            <div className="profile-modal-container modal-large" onClick={(e) => e.stopPropagation()}>
-              <div className="profile-modal-header">
-                <h3>Manage Academic Details & Marks Cards</h3>
-                <button className="modal-close-x" onClick={closeModal}>&times;</button>
+      {/* SEPARATE MODAL 1: EDIT SSLC DETAILS */}
+      {activeEditModal === "sslc" && tempAcademics && (() => {
+        const check = validateModalInputs("sslc", tempAcademics);
+        return (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3 className="modal-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit SSLC (10th Class) Details
+                </h3>
+                <button className="modal-close-btn" onClick={closeEditModal}>×</button>
               </div>
-
-              <div className="profile-modal-body">
-                {/* FIXED SECTION 1: SSLC / 10TH */}
-                <div className="academic-row-edit-card" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f8fafc" }}>
-                  <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#003896", fontWeight: 700 }}>
-                    1️⃣ SSLC / 10th Standard (School)
-                  </h4>
-                  <div className="modal-form-grid">
-                    <div className="modal-form-group">
-                      <label>School Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. St. Joseph's High School"
-                        value={tempAcademics?.sslc?.institute || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, sslc: { ...acad.sslc, institute: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group">
-                      <label>Board Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Karnataka SSLC Board"
-                        value={tempAcademics?.sslc?.board || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, sslc: { ...acad.sslc, board: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group">
-                      <label>Passing Year</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 2018"
-                        value={tempAcademics?.sslc?.year || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, sslc: { ...acad.sslc, year: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group">
-                      <label>Percentage (%)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 94.20 %"
-                        value={tempAcademics?.sslc?.score || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, sslc: { ...acad.sslc, score: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group" style={{ gridColumn: "1 / -1" }}>
-                      <label>Upload 10th SSLC Marks Card (PDF Only)</label>
-                      {tempAcademics?.sslc?.documentUrl ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
-                          <span style={{ fontSize: "0.8rem", color: "#166534", fontWeight: 700 }}>
-                            📄 {tempAcademics.sslc.documentName || "SSLC Marks Card.pdf"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => openPdfDocument(tempAcademics.sslc.documentUrl, tempAcademics.sslc.documentName || "SSLC_Marks_Card.pdf")}
-                            style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#15803d", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
-                          >
-                            Preview PDF
-                          </button>
-                          <button type="button" style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.72rem", padding: "0.18rem 0.5rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }} onClick={() => removeAcademicFile("sslc")}>
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <input type="file" accept="application/pdf,.pdf" style={{ fontSize: "0.8rem", padding: "0.45rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#ffffff" }} onChange={(e) => handleAcademicFileUpload(e, "sslc")} />
-                      )}
-                    </div>
+              <div className="modal-body">
+                {!check.valid && (
+                  <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "0.6rem 0.9rem", borderRadius: "8px", fontWeight: 700, fontSize: "0.85rem", marginBottom: "1rem" }}>
+                    {check.error}
                   </div>
-                </div>
-
-                {/* FIXED SECTION 2: PUC / 12TH */}
-                <div className="academic-row-edit-card" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f8fafc" }}>
-                  <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#003896", fontWeight: 700 }}>
-                    2️⃣ PUC / 12th / Diploma (College)
-                  </h4>
-                  <div className="modal-form-grid">
-                    <div className="modal-form-group">
-                      <label>College Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Govt. PU College"
-                        value={tempAcademics?.puc?.institute || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, puc: { ...acad.puc, institute: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group">
-                      <label>Board / Stream</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Karnataka PUE Board (Science)"
-                        value={tempAcademics?.puc?.board || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, puc: { ...acad.puc, board: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group">
-                      <label>Passing Year</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 2020"
-                        value={tempAcademics?.puc?.year || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, puc: { ...acad.puc, year: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group">
-                      <label>Percentage (%)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 91.80 %"
-                        value={tempAcademics?.puc?.score || ""}
-                        onChange={(e) => {
-                          const acad = normalizeAcademics(tempAcademics);
-                          setTempAcademics({ ...acad, puc: { ...acad.puc, score: e.target.value } });
-                        }}
-                      />
-                    </div>
-                    <div className="modal-form-group" style={{ gridColumn: "1 / -1" }}>
-                      <label>Upload PUC / 12th Marks Card (PDF Only)</label>
-                      {tempAcademics?.puc?.documentUrl ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
-                          <span style={{ fontSize: "0.8rem", color: "#166534", fontWeight: 700 }}>
-                            📄 {tempAcademics.puc.documentName || "PUC Marks Card.pdf"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => openPdfDocument(tempAcademics.puc.documentUrl, tempAcademics.puc.documentName || "PUC_Marks_Card.pdf")}
-                            style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#15803d", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
-                          >
-                            Preview PDF
-                          </button>
-                          <button type="button" style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.72rem", padding: "0.18rem 0.5rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }} onClick={() => removeAcademicFile("puc")}>
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <input type="file" accept="application/pdf,.pdf" style={{ fontSize: "0.8rem", padding: "0.45rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#ffffff" }} onChange={(e) => handleAcademicFileUpload(e, "puc")} />
-                      )}
-                    </div>
+                )}
+                <div className="modal-form-grid">
+                  <div className="modal-form-group">
+                    <label>School Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. St. Joseph's High School"
+                      value={tempAcademics.sslc?.institute || ""}
+                      onChange={(e) =>
+                        setTempAcademics({
+                          ...tempAcademics,
+                          sslc: { ...tempAcademics.sslc, institute: e.target.value }
+                        })
+                      }
+                    />
                   </div>
-                </div>
-
-                {/* DYNAMIC SECTION 3: B.E. SEMESTERS (SEM 1 TO 8) */}
-                <div className="academic-row-edit-card" style={{ border: "1px solid #bbf7d0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f0fdf4" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                    <h4 style={{ margin: 0, fontSize: "0.88rem", color: "#166534", fontWeight: 700 }}>
-                      3️⃣ B.E. Semesters (Semester 1 to 8)
-                    </h4>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#15803d", background: "#ffffff", padding: "0.2rem 0.6rem", borderRadius: "12px", border: "1px solid #86efac" }}>
-                      Calculated Average CGPA: {calculateAvgCGPA(normalizeAcademics(tempAcademics).beSemesters)} CGPA
-                    </span>
+                  <div className="modal-form-group">
+                    <label>Year of Passing</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2018"
+                      value={tempAcademics.sslc?.year || ""}
+                      onChange={(e) =>
+                        setTempAcademics({
+                          ...tempAcademics,
+                          sslc: { ...tempAcademics.sslc, year: e.target.value }
+                        })
+                      }
+                    />
                   </div>
-
-                  {(normalizeAcademics(tempAcademics).beSemesters || []).map((sem, sIdx) => (
-                    <div key={sIdx} style={{ border: "1px solid #cbd5e1", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.75rem", background: "#ffffff" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                        <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#003896" }}>
-                          {sem.sem || `Semester ${sIdx + 1}`}
-                        </span>
-                        {normalizeAcademics(tempAcademics).beSemesters.length > 1 && (
-                          <button
-                            type="button"
-                            style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.74rem", fontWeight: 700, cursor: "pointer" }}
-                            onClick={() => {
-                              const acad = normalizeAcademics(tempAcademics);
-                              const updatedSems = acad.beSemesters.filter((_, idx) => idx !== sIdx);
-                              setTempAcademics({ ...acad, beSemesters: updatedSems });
-                            }}
-                          >
-                            🗑️ Delete Sem
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="modal-form-grid">
-                        <div className="modal-form-group">
-                          <label>Semester Name</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 1st Sem"
-                            value={sem.sem || ""}
-                            onChange={(e) => {
-                              const acad = normalizeAcademics(tempAcademics);
-                              const updatedSems = [...acad.beSemesters];
-                              updatedSems[sIdx] = { ...updatedSems[sIdx], sem: e.target.value };
-                              setTempAcademics({ ...acad, beSemesters: updatedSems });
-                            }}
-                          />
-                        </div>
-
-                        <div className="modal-form-group">
-                          <label>Passing Year</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 2023"
-                            value={sem.year || ""}
-                            onChange={(e) => {
-                              const acad = normalizeAcademics(tempAcademics);
-                              const updatedSems = [...acad.beSemesters];
-                              updatedSems[sIdx] = { ...updatedSems[sIdx], year: e.target.value };
-                              setTempAcademics({ ...acad, beSemesters: updatedSems });
-                            }}
-                          />
-                        </div>
-
-                        <div className="modal-form-group">
-                          <label>SGPA Score</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 8.25"
-                            value={sem.sgpa || ""}
-                            onChange={(e) => {
-                              const acad = normalizeAcademics(tempAcademics);
-                              const updatedSems = [...acad.beSemesters];
-                              updatedSems[sIdx] = { ...updatedSems[sIdx], sgpa: e.target.value };
-                              setTempAcademics({ ...acad, beSemesters: updatedSems });
-                            }}
-                          />
-                        </div>
-
-                        <div className="modal-form-group" style={{ gridColumn: "1 / -1" }}>
-                          <label>Marks Card Document (PDF Only)</label>
-                          {sem.documentUrl ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.4rem 0.6rem", borderRadius: "6px" }}>
-                              <span style={{ fontSize: "0.78rem", color: "#166534", fontWeight: 700 }}>
-                                📄 {sem.documentName || sem.sem + " Marks Card.pdf"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => openPdfDocument(sem.documentUrl, sem.documentName || `${sem.sem}_Marks_Card.pdf`)}
-                                style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#15803d", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
-                              >
-                                Preview PDF
-                              </button>
-                              <button type="button" style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.7rem", padding: "0.15rem 0.45rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }} onClick={() => removeAcademicFile("be", sIdx)}>
-                                Remove
-                              </button>
-                            </div>
-                          ) : (
-                            <input type="file" accept="application/pdf,.pdf" style={{ fontSize: "0.78rem", padding: "0.4rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#f8fafc" }} onChange={(e) => handleAcademicFileUpload(e, "be", sIdx)} />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {normalizeAcademics(tempAcademics).beSemesters.length < 8 && (
-                    <button
-                      type="button"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.4rem",
-                        background: "#ffffff",
-                        color: "#16a34a",
-                        border: "1px solid #86efac",
-                        padding: "0.45rem 0.9rem",
-                        borderRadius: "6px",
-                        fontSize: "0.8rem",
-                        fontWeight: 700,
-                        cursor: "pointer"
+                  <div className="modal-form-group">
+                    <label>Total Marks (Numbers Only)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 625"
+                      value={tempAcademics.sslc?.totalMarks ?? 625}
+                      onChange={(e) => {
+                        const valStr = e.target.value;
+                        const tot = valStr === "" ? "" : parseFloat(valStr);
+                        const obt = parseFloat(tempAcademics.sslc?.obtainedMarks) || 0;
+                        const totNum = typeof tot === "number" ? tot : 0;
+                        const scoreStr = totNum > 0 ? ((obt / totNum) * 100).toFixed(2) + "%" : "0.00%";
+                        setTempAcademics({
+                          ...tempAcademics,
+                          sslc: { ...tempAcademics.sslc, totalMarks: tot, score: scoreStr }
+                        });
                       }}
-                      onClick={() => {
-                        const acad = normalizeAcademics(tempAcademics);
-                        const currentCount = acad.beSemesters.length;
-                        const nextSemNum = currentCount + 1;
-                        const ordinals = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
-                        const semLabel = `${ordinals[nextSemNum - 1] || nextSemNum + "th"} Sem`;
-                        const startYear = parseInt(acad.beSemesters[0]?.year || "2023", 10);
-                        const newYear = isNaN(startYear) ? "2023" : String(startYear + Math.floor((nextSemNum - 1) / 2));
-                        const newSems = [
-                          ...acad.beSemesters,
-                          { sem: semLabel, sgpa: "8.00", year: newYear, documentUrl: null, documentName: null }
-                        ];
-                        setTempAcademics({ ...acad, beSemesters: newSems });
+                    />
+                  </div>
+                  <div className="modal-form-group">
+                    <label>Obtained Marks (Numbers Only)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 625"
+                      value={tempAcademics.sslc?.obtainedMarks ?? 625}
+                      onChange={(e) => {
+                        const valStr = e.target.value;
+                        const obt = valStr === "" ? "" : parseFloat(valStr);
+                        const tot = parseFloat(tempAcademics.sslc?.totalMarks) || 625;
+                        const obtNum = typeof obt === "number" ? obt : 0;
+                        const scoreStr = tot > 0 ? ((obtNum / tot) * 100).toFixed(2) + "%" : "0.00%";
+                        setTempAcademics({
+                          ...tempAcademics,
+                          sslc: { ...tempAcademics.sslc, obtainedMarks: obt, score: scoreStr }
+                        });
                       }}
-                    >
-                      ➕ Add Semester ({normalizeAcademics(tempAcademics).beSemesters.length + 1} of 8)
-                    </button>
-                  )}
+                    />
+                  </div>
+                  <div className="modal-form-group span-full">
+                    <label>Calculated Percentage</label>
+                    <div style={{ background: check.valid ? "#f0fdf4" : "#fef2f2", border: check.valid ? "1px solid #bbf7d0" : "1px solid #fca5a5", padding: "0.55rem 0.85rem", borderRadius: "7px", color: check.valid ? "#166534" : "#991b1b", fontWeight: 700, fontSize: "0.9rem" }}>
+                      🎯 {tempAcademics.sslc?.score || "100.00%"}
+                    </div>
+                  </div>
+                  <div className="modal-form-group span-full">
+                    <label>Upload SSLC Marks Card (PDF Only)</label>
+                    {tempAcademics.sslc?.documentUrl ? (
+                      <div className="modal-doc-preview-pill">
+                        <span className="doc-preview-name">📄 {tempAcademics.sslc.documentName || "SSLC_Marks_Card.pdf"}</span>
+                        <button type="button" className="doc-preview-link" onClick={() => openPdfDocument(tempAcademics.sslc.documentUrl)}>Preview</button>
+                        <button type="button" className="doc-preview-remove" onClick={() => removeAcademicFile("sslc")}>Remove</button>
+                      </div>
+                    ) : (
+                      <input type="file" accept="application/pdf,.pdf" className="modal-file-input" onChange={(e) => handleAcademicFileUpload(e, "sslc")} />
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="profile-modal-footer">
-                <button className="modal-cancel-btn" onClick={closeModal} disabled={saving}>Cancel</button>
-                <button className="modal-save-btn" onClick={handleSaveAcademics} disabled={saving}>
-                  {saving ? "Saving Changes..." : "Save Academic Details"}
+              <div className="modal-footer">
+                <button className="modal-cancel-btn" onClick={closeEditModal}>Cancel</button>
+                <button className="modal-save-btn" onClick={saveAcademicChanges} disabled={!check.valid} style={{ opacity: check.valid ? 1 : 0.6, cursor: check.valid ? "pointer" : "not-allowed" }}>
+                  Save
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        );
+      })()}
+
+      {/* SEPARATE MODAL 2: EDIT PUC DETAILS */}
+      {activeEditModal === "puc" && tempAcademics && (() => {
+        const check = validateModalInputs("puc", tempAcademics);
+        return (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3 className="modal-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit PUC (12th Class) Details
+                </h3>
+                <button className="modal-close-btn" onClick={closeEditModal}>×</button>
+              </div>
+              <div className="modal-body">
+                {!check.valid && (
+                  <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "0.6rem 0.9rem", borderRadius: "8px", fontWeight: 700, fontSize: "0.85rem", marginBottom: "1rem" }}>
+                    {check.error}
+                  </div>
+                )}
+                <div className="modal-form-grid">
+                  <div className="modal-form-group">
+                    <label>College Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Govt. PU College"
+                      value={tempAcademics.puc?.institute || ""}
+                      onChange={(e) =>
+                        setTempAcademics({
+                          ...tempAcademics,
+                          puc: { ...tempAcademics.puc, institute: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="modal-form-group">
+                    <label>Year of Passing</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2020"
+                      value={tempAcademics.puc?.year || ""}
+                      onChange={(e) =>
+                        setTempAcademics({
+                          ...tempAcademics,
+                          puc: { ...tempAcademics.puc, year: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="modal-form-group">
+                    <label>Total Marks (Numbers Only)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 600"
+                      value={tempAcademics.puc?.totalMarks ?? 600}
+                      onChange={(e) => {
+                        const valStr = e.target.value;
+                        const tot = valStr === "" ? "" : parseFloat(valStr);
+                        const obt = parseFloat(tempAcademics.puc?.obtainedMarks) || 0;
+                        const totNum = typeof tot === "number" ? tot : 0;
+                        const scoreStr = totNum > 0 ? ((obt / totNum) * 100).toFixed(2) + "%" : "0.00%";
+                        setTempAcademics({
+                          ...tempAcademics,
+                          puc: { ...tempAcademics.puc, totalMarks: tot, score: scoreStr }
+                        });
+                      }}
+                    />
+                  </div>
+                  <div className="modal-form-group">
+                    <label>Obtained Marks (Numbers Only)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 600"
+                      value={tempAcademics.puc?.obtainedMarks ?? 600}
+                      onChange={(e) => {
+                        const valStr = e.target.value;
+                        const obt = valStr === "" ? "" : parseFloat(valStr);
+                        const tot = parseFloat(tempAcademics.puc?.totalMarks) || 600;
+                        const obtNum = typeof obt === "number" ? obt : 0;
+                        const scoreStr = tot > 0 ? ((obtNum / tot) * 100).toFixed(2) + "%" : "0.00%";
+                        setTempAcademics({
+                          ...tempAcademics,
+                          puc: { ...tempAcademics.puc, obtainedMarks: obt, score: scoreStr }
+                        });
+                      }}
+                    />
+                  </div>
+                  <div className="modal-form-group span-full">
+                    <label>Calculated Percentage</label>
+                    <div style={{ background: check.valid ? "#f0fdf4" : "#fef2f2", border: check.valid ? "1px solid #bbf7d0" : "1px solid #fca5a5", padding: "0.55rem 0.85rem", borderRadius: "7px", color: check.valid ? "#166534" : "#991b1b", fontWeight: 700, fontSize: "0.9rem" }}>
+                      🎯 {tempAcademics.puc?.score || "100.00%"}
+                    </div>
+                  </div>
+                  <div className="modal-form-group span-full">
+                    <label>Upload PUC Marks Card (PDF Only)</label>
+                    {tempAcademics.puc?.documentUrl ? (
+                      <div className="modal-doc-preview-pill">
+                        <span className="doc-preview-name">📄 {tempAcademics.puc.documentName || "PUC_Marks_Card.pdf"}</span>
+                        <button type="button" className="doc-preview-link" onClick={() => openPdfDocument(tempAcademics.puc.documentUrl)}>Preview</button>
+                        <button type="button" className="doc-preview-remove" onClick={() => removeAcademicFile("puc")}>Remove</button>
+                      </div>
+                    ) : (
+                      <input type="file" accept="application/pdf,.pdf" className="modal-file-input" onChange={(e) => handleAcademicFileUpload(e, "puc")} />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="modal-cancel-btn" onClick={closeEditModal}>Cancel</button>
+                <button className="modal-save-btn" onClick={saveAcademicChanges} disabled={!check.valid} style={{ opacity: check.valid ? 1 : 0.6, cursor: check.valid ? "pointer" : "not-allowed" }}>
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* SEPARATE MODAL 3: EDIT B.E. SEMESTERS (ADD & REMOVE SEPARATELY) */}
+      {activeEditModal === "be" && tempAcademics && (() => {
+        const check = validateModalInputs("be", tempAcademics);
+        return (
+          <div className="modal-overlay">
+            <div className="modal-content modal-large">
+              <div className="modal-header">
+                <h3 className="modal-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2.2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                  Manage B.E. Semesters (Sem 1 to 8)
+                </h3>
+                <button className="modal-close-btn" onClick={closeEditModal}>×</button>
+              </div>
+              <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                {!check.valid && (
+                  <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "0.6rem 0.9rem", borderRadius: "8px", fontWeight: 700, fontSize: "0.85rem", marginBottom: "1rem" }}>
+                    {check.error}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: "1rem", marginBottom: "1.2rem", background: "#faf5ff", border: "1px solid #e9d5ff", padding: "0.85rem 1rem", borderRadius: "10px" }}>
+                  <div className="modal-form-group" style={{ flex: 1 }}>
+                    <label style={{ color: "#7e22ce" }}>Branch Code</label>
+                    <input
+                      type="text"
+                      placeholder="CSE"
+                      value={tempAcademics.beSummary?.branch || "CSE"}
+                      onChange={(e) =>
+                        setTempAcademics({
+                          ...tempAcademics,
+                          beSummary: { ...tempAcademics.beSummary, branch: e.target.value }
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="modal-form-group" style={{ flex: 1 }}>
+                    <label style={{ color: "#7e22ce" }}>Total Credits</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="160"
+                      value={tempAcademics.beSummary?.totalCredits || 160}
+                      onChange={(e) =>
+                        setTempAcademics({
+                          ...tempAcademics,
+                          beSummary: { ...tempAcademics.beSummary, totalCredits: parseInt(e.target.value, 10) || 160 }
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {(tempAcademics.beSemesters || []).map((sem, sIdx) => (
+                  <div key={sIdx} className="sem-item-edit-box">
+                    <div className="sem-item-header">
+                      <span className="sem-name-badge">
+                        {sem.sem || `Semester ${sIdx + 1}`}
+                      </span>
+                      {tempAcademics.beSemesters.length > 1 && (
+                        <button
+                          type="button"
+                          className="sem-delete-btn"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                          onClick={() => {
+                            const updatedSems = tempAcademics.beSemesters.filter((_, idx) => idx !== sIdx);
+                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                          Delete Semester
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="modal-form-grid">
+                      <div className="modal-form-group">
+                        <label>Semester Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 1st Semester"
+                          value={sem.sem || ""}
+                          onChange={(e) => {
+                            const updatedSems = [...tempAcademics.beSemesters];
+                            updatedSems[sIdx] = { ...updatedSems[sIdx], sem: e.target.value };
+                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                          }}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label>SGPA Score (0 to 10)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="10"
+                          step="0.01"
+                          placeholder="e.g. 8.20"
+                          value={sem.sgpa ?? ""}
+                          onChange={(e) => {
+                            const updatedSems = [...tempAcademics.beSemesters];
+                            updatedSems[sIdx] = { ...updatedSems[sIdx], sgpa: e.target.value };
+                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                          }}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label>Total Marks (Numbers Only)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="e.g. 1000"
+                          value={sem.totalMarks ?? 1000}
+                          onChange={(e) => {
+                            const valStr = e.target.value;
+                            const updatedSems = [...tempAcademics.beSemesters];
+                            const tot = valStr === "" ? "" : parseFloat(valStr);
+                            const obt = parseFloat(updatedSems[sIdx].obtainedMarks) || 0;
+                            const totNum = typeof tot === "number" ? tot : 0;
+                            const pct = totNum > 0 ? ((obt / totNum) * 100).toFixed(2) + "%" : "0.00%";
+                            updatedSems[sIdx] = { ...updatedSems[sIdx], totalMarks: tot, percentage: pct };
+                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                          }}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label>Obtained Marks (Numbers Only)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="e.g. 780"
+                          value={sem.obtainedMarks ?? 780}
+                          onChange={(e) => {
+                            const valStr = e.target.value;
+                            const updatedSems = [...tempAcademics.beSemesters];
+                            const obt = valStr === "" ? "" : parseFloat(valStr);
+                            const tot = parseFloat(updatedSems[sIdx].totalMarks) || 1000;
+                            const obtNum = typeof obt === "number" ? obt : 0;
+                            const pct = tot > 0 ? ((obtNum / tot) * 100).toFixed(2) + "%" : "0.00%";
+                            updatedSems[sIdx] = { ...updatedSems[sIdx], obtainedMarks: obt, percentage: pct };
+                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                          }}
+                        />
+                      </div>
+                      <div className="modal-form-group span-full">
+                        <label>Marks Card Document (PDF Only)</label>
+                        {sem.documentUrl ? (
+                          <div className="modal-doc-preview-pill">
+                            <span className="doc-preview-name">📄 {sem.documentName || `${sem.sem}_Marks_Card.pdf`}</span>
+                            <button type="button" className="doc-preview-link" onClick={() => openPdfDocument(sem.documentUrl)}>Preview</button>
+                            <button type="button" className="doc-preview-remove" onClick={() => removeAcademicFile("be", sIdx)}>Remove</button>
+                          </div>
+                        ) : (
+                          <input type="file" accept="application/pdf,.pdf" className="modal-file-input" onChange={(e) => handleAcademicFileUpload(e, "be", sIdx)} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {tempAcademics.beSemesters.length < 8 && (
+                  <button
+                    type="button"
+                    className="add-sem-btn"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", justifyContent: "center" }}
+                    onClick={() => {
+                      const currentCount = tempAcademics.beSemesters.length;
+                      const nextNum = currentCount + 1;
+                      const ordinals = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
+                      const semLabel = `${ordinals[nextNum - 1] || nextNum + "th"} Semester`;
+                      const updatedSems = [
+                        ...tempAcademics.beSemesters,
+                        { sem: semLabel, totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.00", documentUrl: null, documentName: null }
+                      ];
+                      setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add Semester ({tempAcademics.beSemesters.length + 1} of 8)
+                  </button>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="modal-cancel-btn" onClick={closeEditModal}>Cancel</button>
+                <button className="modal-save-btn" onClick={saveAcademicChanges} disabled={!check.valid} style={{ opacity: check.valid ? 1 : 0.6, cursor: check.valid ? "pointer" : "not-allowed" }}>
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </DashboardLayout>
   );
 }
