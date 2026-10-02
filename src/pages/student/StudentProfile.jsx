@@ -1,8 +1,45 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import "./StudentProfile.css";
+
+
+const DEFAULT_STUDENT_PROJECTS = [
+  {
+    id: "38472615",
+    project_id: "38472615",
+    title: "KVGCE TAP Portal & Placement Management Platform",
+    description: "An end-to-end talent assessment and campus placement management web application built for KVGCE students and training officers. Features automated student rankings, aptitude tests, and real-time dashboard analytics.",
+    githubUrl: "https://github.com/venkatesh-r/kvgce-tap-platform",
+    hostedUrl: "https://kvgce-tap.vercel.app",
+    pptUrl: null,
+    pptName: "KVGCE_TAP_Presentation.pptx",
+    pdfUrl: null,
+    pdfName: "KVGCE_TAP_Project_Report.pdf",
+    documentUrl: null,
+    documentName: "KVGCE_TAP_Project_Report.pdf",
+    documentType: "pdf",
+    techStack: ["React.js", "FastAPI", "MongoDB", "Python"]
+  },
+  {
+    id: "72910463",
+    project_id: "72910463",
+    title: "AI-Powered Skill Assessment & Career Assistant",
+    description: "An interactive AI platform that conducts mock HR & Technical interviews, analyzes coding submissions, and delivers personalized career learning roadmaps for engineering graduates.",
+    githubUrl: "https://github.com/venkatesh-r/ai-career-assistant",
+    hostedUrl: "https://ai-career-assistant.demo.dev",
+    pptUrl: null,
+    pptName: "AI_Career_Assistant_Presentation.pptx",
+    pdfUrl: null,
+    pdfName: "AI_Career_Assistant_Report.pdf",
+    documentUrl: null,
+    documentName: "AI_Career_Assistant_Presentation.pptx",
+    documentType: "ppt",
+    techStack: ["Python", "PyTorch", "React", "Node.js"]
+  }
+];
 
 function StudentProfile() {
   const { user, role, updateUser } = useAuth();
@@ -15,7 +52,7 @@ function StudentProfile() {
   const formatExternalUrl = (urlStr) => {
     if (!urlStr) return "";
     let clean = String(urlStr).trim();
-    if (!clean) return "";
+    if (!clean || clean === "#") return "";
     if (!/^https?:\/\//i.test(clean)) {
       return `https://${clean}`;
     }
@@ -57,7 +94,7 @@ function StudentProfile() {
   // Helper for displaying phone with default +91
   const formatPhoneDisplay = (phoneStr) => {
     const raw = getRaw10Digits(phoneStr);
-    if (!raw) return "+91 9108612345";
+    if (!raw) return "Not Provided";
     return `+91 ${raw}`;
   };
 
@@ -85,7 +122,7 @@ function StudentProfile() {
 
   // Helper for converting DOB to YYYY-MM-DD for date picker
   const getValidIsoDate = (dobStr) => {
-    if (!dobStr) return "2004-02-28";
+    if (!dobStr) return "2004-01-01";
     const clean = String(dobStr).trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
     if (/^\d{2}[-/.]\d{2}[-/.]\d{4}$/.test(clean)) {
@@ -99,12 +136,12 @@ function StudentProfile() {
     if (!isNaN(parsed.getTime())) {
       return parsed.toISOString().split("T")[0];
     }
-    return "2004-02-28";
+    return "2004-01-01";
   };
 
   // Helper for formatting DOB display
   const formatDobDisplay = (dobStr) => {
-    if (!dobStr) return "28 Feb 2004";
+    if (!dobStr) return "Not Provided";
     const clean = String(dobStr).trim();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
@@ -129,23 +166,23 @@ function StudentProfile() {
     const defaultObj = {
       sslc: {
         education: "SSLC (10th)",
-        institute: "St. Joseph's High School",
+        institute: "",
         board: "Karnataka SSLC Board",
-        year: "2018",
+        year: "",
         totalMarks: 625,
-        obtainedMarks: 625,
-        score: "100.00%",
+        obtainedMarks: 500,
+        score: "80.00%",
         documentUrl: null,
         documentName: null
       },
       puc: {
         education: "PUC (12th)",
-        institute: "Govt. PU College",
+        institute: "",
         board: "Karnataka PUE Board (Science)",
-        year: "2020",
+        year: "",
         totalMarks: 600,
-        obtainedMarks: 600,
-        score: "100.00%",
+        obtainedMarks: 500,
+        score: "83.33%",
         documentUrl: null,
         documentName: null
       },
@@ -293,8 +330,8 @@ function StudentProfile() {
       return;
     }
 
-    const studentName = profile?.full_name || user?.full_name || "Venkatesh R";
-    const studentUsn = profile?.student_id || user?.student_id || user?.usn || "4KV23CS042";
+    const studentName = profile?.full_name || user?.full_name || "Student";
+    const studentUsn = profile?.student_id || user?.student_id || user?.usn || "USN";
 
     const pdfContent = `%PDF-1.4
 1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj
@@ -353,9 +390,9 @@ startxref
 
   // Main Profile State dynamically initialized from AuthContext user and local storage
   const [profile, setProfile] = useState(() => {
-    const studentId = user?.student_id || user?.usn || "4KV23CS042";
-    const customKey = `kvgce_student_profile_${studentId}`;
-    const stored = localStorage.getItem(customKey);
+    const studentId = user?.student_id || user?.usn || user?.user_id || "";
+    const customKey = studentId ? `kvgce_student_profile_${studentId}` : null;
+    const stored = customKey ? localStorage.getItem(customKey) : null;
     let parsedStored = null;
     if (stored) {
       try {
@@ -368,23 +405,20 @@ startxref
     const rawAcademics = parsedStored?.academics || user?.academics;
 
     return {
-      full_name: parsedStored?.full_name || user?.full_name || "Venkatesh R",
-      student_id: parsedStored?.student_id || user?.student_id || user?.usn || "4KV23CS042",
+      full_name: parsedStored?.full_name || user?.full_name || "",
+      student_id: parsedStored?.student_id || user?.student_id || user?.usn || user?.user_id || "",
       department: parsedStored?.department || user?.department || "Computer Science & Engineering",
-      semester: parsedStored?.semester || user?.semester || "6th Semester (III Year)",
+      semester: parsedStored?.semester || (user?.semester ? (typeof user.semester === "number" ? `${user.semester}th Semester` : user.semester) : "6th Semester"),
       section: parsedStored?.section || user?.section || "Section A",
-      email: parsedStored?.email || user?.email || "venkatesh.r@kvgce.ac.in",
-      phone: parsedStored?.phone || user?.phone || "+91 91086 12345",
-      dob: parsedStored?.dob || user?.dob || "28 Feb 2004",
+      email: parsedStored?.email || user?.email || "",
+      phone: parsedStored?.phone || user?.phone || "",
+      dob: parsedStored?.dob || user?.dob || "",
       gender: parsedStored?.gender || user?.gender || "Male",
       avatarUrl: parsedStored?.avatarUrl !== undefined ? parsedStored.avatarUrl : (user?.avatarUrl !== undefined ? user.avatarUrl : ""),
-      githubUrl: parsedStored?.githubUrl || user?.githubUrl || "https://github.com/venkatesh-r",
-      linkedinUrl: parsedStored?.linkedinUrl || user?.linkedinUrl || "https://linkedin.com/in/venkatesh-r",
-      portfolioUrl: parsedStored?.portfolioUrl || user?.portfolioUrl || "https://venkatesh-r.dev",
-      objective:
-        parsedStored?.objective ||
-        user?.objective ||
-        "To work in a challenging environment where I can utilize my skills and knowledge to contribute to the growth of the organization while enhancing my professional abilities and learning new technologies.",
+      githubUrl: parsedStored?.githubUrl || user?.githubUrl || user?.github || "",
+      linkedinUrl: parsedStored?.linkedinUrl || user?.linkedinUrl || user?.linkedin || "",
+      portfolioUrl: parsedStored?.portfolioUrl || user?.portfolioUrl || user?.portfolio || "",
+      objective: parsedStored?.objective || user?.objective || "",
       technicalSkills:
         parsedStored?.technicalSkills ||
         user?.technicalSkills || [
@@ -416,6 +450,7 @@ startxref
           "Quick Learner",
         ],
       academics: normalizeAcademics(rawAcademics),
+      projects: parsedStored?.projects || user?.projects || DEFAULT_STUDENT_PROJECTS,
     };
   });
 
@@ -442,6 +477,7 @@ startxref
     if (p?.technicalSkills && p.technicalSkills.length > 0) score += 5;
     if (p?.softSkills && p.softSkills.length > 0) score += 5;
     if (p?.academics && (p.academics.sslc || p.academics.length > 0)) score += 5;
+    if (p?.projects && p.projects.length > 0) score += 5;
     if (p?.avatarUrl && p.avatarUrl.trim() !== "") score += 5;
     if (p?.githubUrl && p.githubUrl.trim() !== "") score += 2;
     if (p?.linkedinUrl && p.linkedinUrl.trim() !== "") score += 2;
@@ -642,6 +678,7 @@ startxref
         technicalSkills: profile.technicalSkills,
         softSkills: profile.softSkills,
         academics: profile.academics,
+        projects: profile.projects,
       });
     }
 
@@ -716,6 +753,36 @@ startxref
       tempData.academics = computeAcademicsMetrics(normalizeAcademics(tempData.academics));
     }
 
+    if (activeModal === "project") {
+      const pData = tempData.editingProject;
+      if (!pData || !pData.title || !pData.title.trim()) {
+        setMsg({ type: "error", text: "⚠️ Please enter a Project Title." });
+        setTimeout(() => setMsg({ type: "", text: "" }), 4000);
+        return;
+      }
+      const cleanProj = {
+        id: pData.id || `proj_${Date.now()}`,
+        title: pData.title.trim(),
+        githubUrl: formatExternalUrl(pData.githubUrl),
+        hostedUrl: formatExternalUrl(pData.hostedUrl),
+        description: pData.description ? pData.description.trim() : "",
+        techStack: pData.techStack || (pData.techStackInput ? pData.techStackInput.split(",").map(s => s.trim()).filter(Boolean) : []),
+        documentUrl: pData.documentUrl || null,
+        documentName: pData.documentName || null,
+        documentType: pData.documentType || (pData.documentName && (pData.documentName.endsWith(".ppt") || pData.documentName.endsWith(".pptx")) ? "ppt" : "pdf")
+      };
+
+      const existingProjects = [...(tempData.projects || profile.projects || [])];
+      const idx = existingProjects.findIndex(p => p.id === cleanProj.id);
+      if (idx >= 0) {
+        existingProjects[idx] = cleanProj;
+      } else {
+        existingProjects.push(cleanProj);
+      }
+      tempData.projects = existingProjects;
+      delete tempData.editingProject;
+    }
+
     setProfile(tempData);
     closeModal();
 
@@ -750,6 +817,7 @@ startxref
         technicalSkills: tempData.technicalSkills,
         softSkills: tempData.softSkills,
         academics: tempData.academics,
+        projects: tempData.projects,
       });
     }
 
@@ -761,6 +829,140 @@ startxref
 
     setMsg({ type: "success", text: "✅ Profile details saved successfully!" });
     setTimeout(() => setMsg({ type: "", text: "" }), 4000);
+  };
+
+  // Helper functions for Project Document (PPT/PDF) Preview & Download
+  const openProjectDocument = (docUrl, docName, docTitle = "Project", docType = "pdf") => {
+    if (docUrl) {
+      if (docUrl.startsWith("data:application/pdf") || (docName && docName.toLowerCase().endsWith(".pdf"))) {
+        openPdfDocument(docUrl, docName || `${docTitle}_Document.pdf`);
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = docUrl;
+      link.download = docName || `${docTitle}_Presentation.pptx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    const isPpt = docType === "ppt" || (docName && (docName.endsWith(".ppt") || docName.endsWith(".pptx")));
+    const content = `=====================================================
+KVG COLLEGE OF ENGINEERING (KVGCE), SULLIA
+DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
+PROJECT REPORT & PRESENTATION
+=====================================================
+
+Project Title: ${docTitle}
+Student Name: ${profile.full_name}
+USN: ${profile.student_id}
+Department: ${profile.department}
+
+Document File: ${docName || (isPpt ? `${docTitle}_Presentation.pptx` : `${docTitle}_Report.pdf`)}
+Document Type: ${isPpt ? "PowerPoint Presentation (PPT)" : "Project Report PDF Document"}
+Generated Date: ${new Date().toLocaleDateString()}
+
+-----------------------------------------------------
+PROJECT OVERVIEW & KEY HIGHLIGHTS:
+-----------------------------------------------------
+- Full-stack technical application developed by ${profile.full_name}.
+- Code repository and live host environment integrated.
+- Technical architecture and project presentation slides prepared.
+
+=====================================================
+KVGCE Training & Placement Cell (TAP)
+=====================================================`;
+
+    const blob = new Blob([content], { type: isPpt ? "application/vnd.ms-powerpoint" : "application/pdf" });
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = docName || (isPpt ? `${docTitle.replace(/\s+/g, "_")}_Presentation.pptx` : `${docTitle.replace(/\s+/g, "_")}_Report.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  };
+
+  const handleOpenAddProjectModal = () => {
+    if (!canEditProfile) return;
+    setActiveModal("project");
+    setTempData({
+      ...profile,
+      editingProject: {
+        id: `proj_${Date.now()}`,
+        title: "",
+        githubUrl: "",
+        hostedUrl: "",
+        description: "",
+        techStackInput: "",
+        techStack: [],
+        documentUrl: null,
+        documentName: null,
+        documentType: null
+      }
+    });
+  };
+
+  const handleOpenEditProjectModal = (proj) => {
+    if (!canEditProfile) return;
+    setActiveModal("project");
+    setTempData({
+      ...profile,
+      editingProject: {
+        ...proj,
+        techStackInput: proj.techStack ? proj.techStack.join(", ") : ""
+      }
+    });
+  };
+
+  const handleDeleteProject = (projId) => {
+    if (!canEditProfile) return;
+    const updatedProjects = (profile.projects || []).filter(p => p.id !== projId);
+    const updatedProfile = { ...profile, projects: updatedProjects };
+    setProfile(updatedProfile);
+
+    const studentId = profile.student_id || user?.student_id || user?.usn || "4KV23CS042";
+    const customKey = `kvgce_student_profile_${studentId}`;
+    localStorage.setItem(customKey, JSON.stringify(updatedProfile));
+
+    if (updateUser) {
+      updateUser({ projects: updatedProjects });
+    }
+
+    api.put("/students/profile", { projects: updatedProjects }).catch(err => console.warn(err));
+
+    setMsg({ type: "success", text: "Project deleted successfully." });
+    setTimeout(() => setMsg({ type: "", text: "" }), 3500);
+  };
+
+  const handleProjectDocumentUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const fileName = file.name;
+    const isPpt = fileName.endsWith(".ppt") || fileName.endsWith(".pptx") || file.type.includes("presentation") || file.type.includes("powerpoint");
+    const docType = isPpt ? "ppt" : "pdf";
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTempData((prev) => ({
+        ...prev,
+        editingProject: {
+          ...prev.editingProject,
+          documentUrl: reader.result,
+          documentName: fileName,
+          documentType: docType
+        }
+      }));
+      setMsg({
+        type: "success",
+        text: `✅ Uploaded project document: ${fileName}`
+      });
+      setTimeout(() => setMsg({ type: "", text: "" }), 3500);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Helper functions for Marks Card PDF Document file upload
@@ -1624,6 +1826,8 @@ startxref
           </div>
         </div>
 
+
+
         {/* 5. ACADEMIC DETAILS SECTION (SUMMARY CARDS & SEMESTER TABLE) */}
         <div className="profile-section-card">
           <div className="section-card-header">
@@ -1636,15 +1840,29 @@ startxref
               </div>
               <h3 className="section-title">Academic Details & Marks Overview</h3>
             </div>
-            {canEditProfile && (
-              <button className="section-edit-btn" onClick={() => openModal("marks")}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-                Edit
-              </button>
-            )}
+            <Link
+              to="/student/skills"
+              className="section-edit-btn manage-academics-link-btn"
+              style={{
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                padding: "0.45rem 0.9rem",
+                borderRadius: "6px",
+                background: "#eff6ff",
+                color: "#2563eb",
+                border: "1px solid #bfdbfe",
+                fontWeight: "700",
+                fontSize: "0.82rem"
+              }}
+            >
+              <span>Manage Academics</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
           </div>
 
           {/* TOP 3 SUMMARY CARDS GRID */}
@@ -1679,15 +1897,13 @@ startxref
                 </div>
                 <div className="info-row pdf-row">
                   <span className="info-label">Certificate (PDF)</span>
-                  <div className="pdf-actions-group">
-                    <button
-                      type="button"
-                      className="view-pdf-btn"
-                      onClick={() => openPdfDocument(profile.academics?.sslc?.documentUrl, profile.academics?.sslc?.documentName || "SSLC_Marks_Card.pdf")}
-                    >
-                      View PDF <span className="pdf-red-icon">📄</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className="view-pdf-btn"
+                    onClick={() => openPdfDocument(profile.academics?.sslc?.documentUrl, profile.academics?.sslc?.documentName || "SSLC_Marks_Card.pdf")}
+                  >
+                    View PDF <span className="pdf-red-icon">📄</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1724,15 +1940,13 @@ startxref
                 </div>
                 <div className="info-row pdf-row">
                   <span className="info-label">Certificate (PDF)</span>
-                  <div className="pdf-actions-group">
-                    <button
-                      type="button"
-                      className="view-pdf-btn"
-                      onClick={() => openPdfDocument(profile.academics?.puc?.documentUrl, profile.academics?.puc?.documentName || "PUC_Marks_Card.pdf")}
-                    >
-                      View PDF <span className="pdf-red-icon">📄</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className="view-pdf-btn"
+                    onClick={() => openPdfDocument(profile.academics?.puc?.documentUrl, profile.academics?.puc?.documentName || "PUC_Marks_Card.pdf")}
+                  >
+                    View PDF <span className="pdf-red-icon">📄</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1752,10 +1966,6 @@ startxref
                 <div className="be-stat-box">
                   <span className="be-stat-lbl">CGPA (Till Now)</span>
                   <span className="be-stat-val font-bold text-blue">{profile.academics?.beSummary?.cgpaTillNow || "8.21"}</span>
-                </div>
-                <div className="be-stat-box">
-                  <span className="be-stat-lbl">Total Credits Earned</span>
-                  <span className="be-stat-val font-bold text-green">{profile.academics?.beSummary?.totalCredits || 160}</span>
                 </div>
               </div>
 
@@ -1802,7 +2012,6 @@ startxref
                       <td>{(parseFloat(semRow.sgpa) || 7.8).toFixed(2)}</td>
                       <td>{(parseFloat(semRow.cgpa) || 7.8).toFixed(2)}</td>
                       <td>
-                        <div className="table-pdf-actions-flex">
                           <button
                             type="button"
                             className="view-pdf-btn"
@@ -1810,7 +2019,6 @@ startxref
                           >
                             View PDF <span className="pdf-red-icon">📄</span>
                           </button>
-                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1820,7 +2028,142 @@ startxref
           </div>
         </div>
 
-        {/* 6. BOTTOM ALERT STRIP & SAVE BUTTON */}
+        {/* 6. PROJECTS & PORTFOLIO SECTION (READ-ONLY VIEW WITH LINK TO DEDICATED PROJECTS PAGE) */}
+        <div className="profile-section-card projects-section-card">
+          <div className="section-card-header">
+            <div className="header-title-flex">
+              <div className="section-icon-badge purple-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="section-title">Projects & Portfolio</h3>
+                <p className="section-subtitle-text">Technical projects, live web applications, GitHub repositories, and uploaded presentations.</p>
+              </div>
+            </div>
+            <Link to="/student/projects" className="section-edit-btn manage-projects-link-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.85rem", borderRadius: "6px", background: "#f3e8ff", color: "#7c3aed", border: "1px solid #d8b4fe", fontWeight: "700", fontSize: "0.82rem" }}>
+              <span>Manage Projects</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
+          </div>
+
+          <div className="projects-grid">
+            {(profile.projects || []).map((proj) => {
+              const pid = String(proj.project_id || proj.id);
+              const githubFormatted = formatExternalUrl(proj.githubUrl);
+              const hostedFormatted = formatExternalUrl(proj.hostedUrl);
+
+              return (
+                <div key={pid} className="project-card">
+                  <div className="project-card-top">
+                    <div className="project-title-badge-wrap">
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", flexWrap: "wrap", marginBottom: "0.25rem" }}>
+                        <h4 className="project-title" style={{ margin: 0 }}>{proj.title}</h4>
+                        <span className="project-id-badge" style={{ padding: "0.15rem 0.5rem", borderRadius: "4px", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", fontSize: "0.72rem", fontWeight: "700", fontFamily: "monospace" }}>
+                          Project ID: {pid}
+                        </span>
+                      </div>
+                      {proj.techStack && proj.techStack.length > 0 && (
+                        <div className="project-tech-pills">
+                          {proj.techStack.map((tech, tIdx) => (
+                            <span key={tIdx} className="project-tech-pill">{tech}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {proj.description && <p className="project-description">{proj.description}</p>}
+
+                  {/* ACTION LINKS & DUAL FILE BADGES ROW + BOTTOM RIGHT MARKS */}
+                  <div className="project-links-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.6rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                      {githubFormatted !== "" && (
+                        <a href={githubFormatted} target="_blank" rel="noopener noreferrer" className="project-link-badge github">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                          </svg>
+                          <span>GitHub Code</span>
+                        </a>
+                      )}
+
+                      {hostedFormatted !== "" && (
+                        <a href={hostedFormatted} target="_blank" rel="noopener noreferrer" className="project-link-badge hosted">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                          </svg>
+                          <span>Hosted Website</span>
+                        </a>
+                      )}
+
+                      {(proj.pptName || proj.pptUrl || (proj.documentType === "ppt" && proj.documentName)) && (
+                        <button
+                          type="button"
+                          className="project-link-badge doc ppt"
+                          onClick={() => openProjectDocument(proj.pptUrl || proj.documentUrl, proj.pptName || proj.documentName, proj.title, "ppt")}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                          </svg>
+                          <span>View PPT</span>
+                        </button>
+                      )}
+
+                      {(proj.pdfName || proj.pdfUrl || (proj.documentType === "pdf" && proj.documentName) || (!proj.pptName && !proj.pptUrl && proj.documentName)) && (
+                        <button
+                          type="button"
+                          className="project-link-badge doc pdf"
+                          onClick={() => openProjectDocument(proj.pdfUrl || proj.documentUrl, proj.pdfName || proj.documentName, proj.title, "pdf")}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                          </svg>
+                          <span>View PDF</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* BOTTOM-RIGHT FACULTY MARKS POSITION */}
+                    {proj.marks !== undefined && proj.marks !== null ? (
+                      <div className="project-marks-badge-container" style={{ marginLeft: "auto", textAlign: "right" }}>
+                        <div className="project-marks-pill" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.3rem 0.65rem", borderRadius: "16px", background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d", fontWeight: "800", fontSize: "0.8rem" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>Faculty Approved: <strong>{proj.marks}/100</strong></span>
+                        </div>
+                        {proj.faculty_name && (
+                          <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "0.1rem" }}>
+                            Approved by: {proj.faculty_name}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="project-marks-badge-container" style={{ marginLeft: "auto", textAlign: "right" }}>
+                        <div className="project-marks-pill" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", padding: "0.3rem 0.65rem", borderRadius: "16px", background: "#f8fafc", border: "1px solid #cbd5e1", color: "#64748b", fontWeight: "700", fontSize: "0.78rem" }}>
+                          <span>Not Evaluated</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+
+
+        {/* 7. BOTTOM ALERT STRIP & SAVE BUTTON */}
         <div className="profile-bottom-strip">
           <div className="info-alert-box">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2.5">
@@ -1833,12 +2176,7 @@ startxref
 
           {canEditProfile && (
             <button className="save-profile-action-btn" onClick={handleSaveProfile} disabled={saving}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                <polyline points="17 21 17 13 7 13 7 21" />
-                <polyline points="7 3 7 8 15 8" />
-              </svg>
-              {saving ? "Saving Profile..." : "💾 Save Profile Changes"}
+              {saving ? "Saving Profile..." : "Save Profile Changes"}
             </button>
           )}
         </div>
@@ -1855,7 +2193,6 @@ startxref
                 {activeModal === "objective" && "Edit Objective"}
                 {activeModal === "tech" && "Edit Technical Skills"}
                 {activeModal === "soft" && "Edit Soft Skills"}
-                {activeModal === "marks" && "Edit Marks & CGPA"}
               </h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
             </div>
@@ -2228,370 +2565,127 @@ startxref
                 </div>
               )}
 
-              {activeModal === "marks" && (
-                <div className="modal-academics-list">
-                  <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "0.75rem 1rem", borderRadius: "8px", marginBottom: "1rem" }}>
-                    <h4 style={{ margin: "0 0 0.25rem 0", color: "#1e40af", fontSize: "0.85rem", fontWeight: 700 }}>
-                      🎓 Academic Details & Marks Cards
-                    </h4>
-                    <p style={{ margin: 0, fontSize: "0.78rem", color: "#1e3a8a", lineHeight: "1.4" }}>
-                      Enter SSLC, PUC, and B.E. Semester marks and SGPA. Percentage and CGPA are automatically calculated.
-                    </p>
+              {activeModal === "project" && (
+                <div className="modal-form-vertical">
+                  <div style={{ background: "#faf5ff", border: "1px solid #e9d5ff", padding: "0.75rem 1rem", borderRadius: "10px", fontSize: "0.85rem", color: "#6b21a8", fontWeight: "600" }}>
+                    🚀 Add or edit technical project details, repository links, hosted live site, presentation PPT, and description.
                   </div>
 
-                  {/* 1. SSLC (10TH) */}
-                  <div className="academic-row-edit-card" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f8fafc" }}>
-                    <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#2563eb", fontWeight: 700 }}>
-                      1️⃣ SSLC / Class 10th (School)
-                    </h4>
-                    <div className="modal-form-grid">
-                      <div className="modal-form-group">
-                        <label>School Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. St. Joseph's High School"
-                          value={tempData.academics?.sslc?.institute || ""}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, institute: e.target.value } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Passing Year</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 2018"
-                          value={tempData.academics?.sslc?.year || ""}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, year: e.target.value } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Total Marks</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 625"
-                          value={tempData.academics?.sslc?.totalMarks || 625}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            const tot = parseFloat(e.target.value) || 0;
-                            const obt = parseFloat(acad.sslc?.obtainedMarks) || 0;
-                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
-                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, totalMarks: tot, score: pct } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Obtained Marks</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 625"
-                          value={tempData.academics?.sslc?.obtainedMarks || 625}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            const obt = parseFloat(e.target.value) || 0;
-                            const tot = parseFloat(acad.sslc?.totalMarks) || 625;
-                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
-                            setTempData({ ...tempData, academics: { ...acad, sslc: { ...acad.sslc, obtainedMarks: obt, score: pct } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group" style={{ gridColumn: "1 / -1" }}>
-                        <label>Upload 10th SSLC Marks Card (PDF Only)</label>
-                        {tempData.academics?.sslc?.documentUrl ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#166534", fontWeight: 700 }}>
-                              📄 {tempData.academics.sslc.documentName || "SSLC_Marks_Card.pdf"}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => openPdfDocument(tempData.academics.sslc.documentUrl, tempData.academics.sslc.documentName || "SSLC_Marks_Card.pdf")}
-                              style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#15803d", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
-                            >
-                              Preview PDF
-                            </button>
-                            <button type="button" style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.72rem", padding: "0.18rem 0.5rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }} onClick={() => removeAcademicFile("sslc")}>
-                              Remove
-                            </button>
-                          </div>
-                        ) : (
-                          <input type="file" accept="application/pdf,.pdf" style={{ fontSize: "0.8rem", padding: "0.45rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#ffffff" }} onChange={(e) => handleAcademicFileUpload(e, "sslc")} />
-                        )}
-                      </div>
+                  {/* Project Title */}
+                  <div className="modal-form-group">
+                    <label>Project Title *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. KVGCE TAP Portal & Placement Management Platform"
+                      value={tempData.editingProject?.title || ""}
+                      onChange={(e) => setTempData({
+                        ...tempData,
+                        editingProject: { ...tempData.editingProject, title: e.target.value }
+                      })}
+                    />
+                  </div>
+
+                  {/* GitHub & Hosted Links Grid */}
+                  <div className="modal-form-grid">
+                    <div className="modal-form-group">
+                      <label>GitHub Project Link</label>
+                      <input
+                        type="url"
+                        placeholder="https://github.com/username/project-repo"
+                        value={tempData.editingProject?.githubUrl || ""}
+                        onChange={(e) => setTempData({
+                          ...tempData,
+                          editingProject: { ...tempData.editingProject, githubUrl: e.target.value }
+                        })}
+                      />
+                    </div>
+
+                    <div className="modal-form-group">
+                      <label>Hosted Website Link</label>
+                      <input
+                        type="url"
+                        placeholder="https://my-project-live.vercel.app"
+                        value={tempData.editingProject?.hostedUrl || ""}
+                        onChange={(e) => setTempData({
+                          ...tempData,
+                          editingProject: { ...tempData.editingProject, hostedUrl: e.target.value }
+                        })}
+                      />
                     </div>
                   </div>
 
-                  {/* 2. PUC (12TH) */}
-                  <div className="academic-row-edit-card" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#f8fafc" }}>
-                    <h4 style={{ margin: "0 0 0.75rem 0", fontSize: "0.88rem", color: "#16a34a", fontWeight: 700 }}>
-                      2️⃣ PUC / 12th / Diploma (College)
-                    </h4>
-                    <div className="modal-form-grid">
-                      <div className="modal-form-group">
-                        <label>College Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Govt. PU College"
-                          value={tempData.academics?.puc?.institute || ""}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, institute: e.target.value } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Passing Year</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 2020"
-                          value={tempData.academics?.puc?.year || ""}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, year: e.target.value } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Total Marks</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 600"
-                          value={tempData.academics?.puc?.totalMarks || 600}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            const tot = parseFloat(e.target.value) || 0;
-                            const obt = parseFloat(acad.puc?.obtainedMarks) || 0;
-                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
-                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, totalMarks: tot, score: pct } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Obtained Marks</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 600"
-                          value={tempData.academics?.puc?.obtainedMarks || 600}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            const obt = parseFloat(e.target.value) || 0;
-                            const tot = parseFloat(acad.puc?.totalMarks) || 600;
-                            const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
-                            setTempData({ ...tempData, academics: { ...acad, puc: { ...acad.puc, obtainedMarks: obt, score: pct } } });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group" style={{ gridColumn: "1 / -1" }}>
-                        <label>Upload PUC / 12th Marks Card (PDF Only)</label>
-                        {tempData.academics?.puc?.documentUrl ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
-                            <span style={{ fontSize: "0.8rem", color: "#166534", fontWeight: 700 }}>
-                              📄 {tempData.academics.puc.documentName || "PUC_Marks_Card.pdf"}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => openPdfDocument(tempData.academics.puc.documentUrl, tempData.academics.puc.documentName || "PUC_Marks_Card.pdf")}
-                              style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#15803d", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
-                            >
-                              Preview PDF
-                            </button>
-                            <button type="button" style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.72rem", padding: "0.18rem 0.5rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }} onClick={() => removeAcademicFile("puc")}>
-                              Remove
-                            </button>
-                          </div>
-                        ) : (
-                          <input type="file" accept="application/pdf,.pdf" style={{ fontSize: "0.8rem", padding: "0.45rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#ffffff" }} onChange={(e) => handleAcademicFileUpload(e, "puc")} />
-                        )}
-                      </div>
-                    </div>
+                  {/* Technologies Used / Tech Stack */}
+                  <div className="modal-form-group">
+                    <label>Technologies / Tech Stack (Comma Separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. React.js, Python, FastAPI, MongoDB, Tailwind CSS"
+                      value={tempData.editingProject?.techStackInput !== undefined ? tempData.editingProject.techStackInput : (tempData.editingProject?.techStack ? tempData.editingProject.techStack.join(", ") : "")}
+                      onChange={(e) => setTempData({
+                        ...tempData,
+                        editingProject: {
+                          ...tempData.editingProject,
+                          techStackInput: e.target.value,
+                          techStack: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                        }
+                      })}
+                    />
                   </div>
 
-                  {/* 3. B.E. SEMESTERS (SEM 1 TO 8) */}
-                  <div className="academic-row-edit-card" style={{ border: "1px solid #bbf7d0", borderRadius: "10px", padding: "1rem", marginBottom: "1rem", background: "#faf5ff" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                      <h4 style={{ margin: 0, fontSize: "0.88rem", color: "#9333ea", fontWeight: 700 }}>
-                        3️⃣ B.E. Semesters (Semester 1 to 8)
-                      </h4>
-                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                        <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "#6b21a8" }}>Branch Code:</label>
-                        <input
-                          type="text"
-                          style={{ width: "65px", padding: "0.2rem 0.4rem", fontSize: "0.78rem", borderRadius: "4px", border: "1px solid #d8b4fe" }}
-                          placeholder="CSE"
-                          value={tempData.academics?.beSummary?.branch || "CSE"}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, beSummary: { ...acad.beSummary, branch: e.target.value } } });
-                          }}
-                        />
-                        <label style={{ fontSize: "0.76rem", fontWeight: 700, color: "#6b21a8" }}>Total Credits:</label>
-                        <input
-                          type="number"
-                          style={{ width: "65px", padding: "0.2rem 0.4rem", fontSize: "0.78rem", borderRadius: "4px", border: "1px solid #d8b4fe" }}
-                          placeholder="160"
-                          value={tempData.academics?.beSummary?.totalCredits || 160}
-                          onChange={(e) => {
-                            const acad = normalizeAcademics(tempData.academics);
-                            setTempData({ ...tempData, academics: { ...acad, beSummary: { ...acad.beSummary, totalCredits: parseInt(e.target.value, 10) || 160 } } });
-                          }}
-                        />
+                  {/* Project Description */}
+                  <div className="modal-form-group">
+                    <label>Project Description</label>
+                    <textarea
+                      rows="4"
+                      className="modal-textarea"
+                      placeholder="Describe the problem your project solves, key features implemented, database architecture, and performance results..."
+                      value={tempData.editingProject?.description || ""}
+                      onChange={(e) => setTempData({
+                        ...tempData,
+                        editingProject: { ...tempData.editingProject, description: e.target.value }
+                      })}
+                    />
+                  </div>
+
+                  {/* Project Document Upload (PPT or PDF) */}
+                  <div className="modal-form-group">
+                    <label>Project Presentation / Report Document (PPT or PDF)</label>
+                    {tempData.editingProject?.documentName || tempData.editingProject?.documentUrl ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#faf5ff", border: "1px solid #d8b4fe", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
+                        <span style={{ fontSize: "0.82rem", color: "#6b21a8", fontWeight: 700 }}>
+                          {tempData.editingProject.documentType === "ppt" ? "📊" : "📄"} {tempData.editingProject.documentName || "Project_Document.pdf"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openProjectDocument(tempData.editingProject.documentUrl, tempData.editingProject.documentName, tempData.editingProject.title || "Project", tempData.editingProject.documentType)}
+                          style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#9333ea", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
+                        >
+                          Preview Document
+                        </button>
+                        <button
+                          type="button"
+                          style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.72rem", padding: "0.18rem 0.5rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }}
+                          onClick={() => setTempData({
+                            ...tempData,
+                            editingProject: { ...tempData.editingProject, documentUrl: null, documentName: null, documentType: null }
+                          })}
+                        >
+                          Remove
+                        </button>
                       </div>
-                    </div>
-
-                    {(normalizeAcademics(tempData.academics).beSemesters || []).map((sem, sIdx) => (
-                      <div key={sIdx} style={{ border: "1px solid #cbd5e1", borderRadius: "8px", padding: "0.75rem", marginBottom: "0.75rem", background: "#ffffff" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                          <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#9333ea" }}>
-                            {sem.sem || `Semester ${sIdx + 1}`}
-                          </span>
-                          {normalizeAcademics(tempData.academics).beSemesters.length > 1 && (
-                            <button
-                              type="button"
-                              style={{ background: "none", border: "none", color: "#ef4444", fontSize: "0.74rem", fontWeight: 700, cursor: "pointer" }}
-                              onClick={() => {
-                                const acad = normalizeAcademics(tempData.academics);
-                                const updatedSems = acad.beSemesters.filter((_, idx) => idx !== sIdx);
-                                setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
-                              }}
-                            >
-                              🗑️ Delete Sem
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="modal-form-grid">
-                          <div className="modal-form-group">
-                            <label>Semester Name</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. 1st Semester"
-                              value={sem.sem || ""}
-                              onChange={(e) => {
-                                const acad = normalizeAcademics(tempData.academics);
-                                const updatedSems = [...acad.beSemesters];
-                                updatedSems[sIdx] = { ...updatedSems[sIdx], sem: e.target.value };
-                                setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
-                              }}
-                            />
-                          </div>
-
-                          <div className="modal-form-group">
-                            <label>Total Marks</label>
-                            <input
-                              type="number"
-                              placeholder="e.g. 1000"
-                              value={sem.totalMarks || 1000}
-                              onChange={(e) => {
-                                const acad = normalizeAcademics(tempData.academics);
-                                const updatedSems = [...acad.beSemesters];
-                                const tot = parseFloat(e.target.value) || 1000;
-                                const obt = parseFloat(updatedSems[sIdx].obtainedMarks) || 0;
-                                const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
-                                updatedSems[sIdx] = { ...updatedSems[sIdx], totalMarks: tot, percentage: pct };
-                                setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
-                              }}
-                            />
-                          </div>
-
-                          <div className="modal-form-group">
-                            <label>Obtained Marks</label>
-                            <input
-                              type="number"
-                              placeholder="e.g. 780"
-                              value={sem.obtainedMarks || 780}
-                              onChange={(e) => {
-                                const acad = normalizeAcademics(tempData.academics);
-                                const updatedSems = [...acad.beSemesters];
-                                const obt = parseFloat(e.target.value) || 0;
-                                const tot = parseFloat(updatedSems[sIdx].totalMarks) || 1000;
-                                const pct = tot > 0 ? ((obt / tot) * 100).toFixed(2) + "%" : "0.00%";
-                                updatedSems[sIdx] = { ...updatedSems[sIdx], obtainedMarks: obt, percentage: pct };
-                                setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
-                              }}
-                            />
-                          </div>
-
-                          <div className="modal-form-group">
-                            <label>SGPA Score</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. 7.80"
-                              value={sem.sgpa || ""}
-                              onChange={(e) => {
-                                const acad = normalizeAcademics(tempData.academics);
-                                const updatedSems = [...acad.beSemesters];
-                                updatedSems[sIdx] = { ...updatedSems[sIdx], sgpa: e.target.value };
-                                setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
-                              }}
-                            />
-                          </div>
-
-                          <div className="modal-form-group" style={{ gridColumn: "1 / -1" }}>
-                            <label>Marks Card Document (PDF Only)</label>
-                            {sem.documentUrl ? (
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "0.4rem 0.6rem", borderRadius: "6px" }}>
-                                <span style={{ fontSize: "0.78rem", color: "#166534", fontWeight: 700 }}>
-                                  📄 {sem.documentName || sem.sem + "_Marks_Card.pdf"}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => openPdfDocument(sem.documentUrl, sem.documentName || `${sem.sem}_Marks_Card.pdf`)}
-                                  style={{ background: "none", border: "none", fontSize: "0.75rem", color: "#15803d", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}
-                                >
-                                  Preview PDF
-                                </button>
-                                <button type="button" style={{ marginLeft: "auto", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", fontSize: "0.7rem", padding: "0.15rem 0.45rem", borderRadius: "4px", cursor: "pointer", fontWeight: 700 }} onClick={() => removeAcademicFile("be", sIdx)}>
-                                  Remove
-                                </button>
-                              </div>
-                            ) : (
-                              <input type="file" accept="application/pdf,.pdf" style={{ fontSize: "0.78rem", padding: "0.4rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#f8fafc" }} onChange={(e) => handleAcademicFileUpload(e, "be", sIdx)} />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {normalizeAcademics(tempData.academics).beSemesters.length < 8 && (
-                      <button
-                        type="button"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.4rem",
-                          background: "#ffffff",
-                          color: "#9333ea",
-                          border: "1px dashed #9333ea",
-                          padding: "0.55rem 1rem",
-                          borderRadius: "6px",
-                          fontSize: "0.82rem",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          width: "100%",
-                          justifyContent: "center"
-                        }}
-                        onClick={() => {
-                          const acad = normalizeAcademics(tempData.academics);
-                          const currentCount = acad.beSemesters.length;
-                          const nextSemNum = currentCount + 1;
-                          const ordinals = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
-                          const semLabel = `${ordinals[nextSemNum - 1] || nextSemNum + "th"} Semester`;
-                          const updatedSems = [
-                            ...acad.beSemesters,
-                            { sem: semLabel, totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.00", documentUrl: null, documentName: null }
-                          ];
-                          setTempData({ ...tempData, academics: { ...acad, beSemesters: updatedSems } });
-                        }}
-                      >
-                        ➕ Add Semester ({normalizeAcademics(tempData.academics).beSemesters.length + 1} of 8)
-                      </button>
+                    ) : (
+                      <input
+                        type="file"
+                        accept=".pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        style={{ fontSize: "0.8rem", padding: "0.45rem", border: "1px dashed #cbd5e1", borderRadius: "6px", width: "100%", background: "#ffffff" }}
+                        onChange={(e) => handleProjectDocumentUpload(e)}
+                      />
                     )}
                   </div>
                 </div>
               )}
+
+
             </div>
 
             <div className="modal-footer">

@@ -4,6 +4,7 @@ import DashboardLayout from "../../components/DashboardLayout";
 import SingleStudentOverview from "../../components/SingleStudentOverview";
 import AdminFacultyView from "../../components/admin/AdminFacultyView";
 import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
+import CodingProblemBuilder from "../../components/quiz/CodingProblemBuilder";
 import api from "../../services/api";
 import "./AdminHomePage.css";
 
@@ -619,7 +620,13 @@ function AdminHomePage() {
             className={`admin-nav-tab ${activeTab === "quizBuilder" ? "active" : ""}`}
             onClick={() => setActiveTab("quizBuilder")}
           >
-            📝 Quiz & Question Builder
+            📝 Quiz & Aptitude Builder
+          </button>
+          <button
+            className={`admin-nav-tab ${activeTab === "codingBuilder" ? "active" : ""}`}
+            onClick={() => setActiveTab("codingBuilder")}
+          >
+            💻 Coding Lab Builder
           </button>
           <button
             className={`admin-nav-tab ${activeTab === "analytics" ? "active" : ""}`}
@@ -633,6 +640,13 @@ function AdminHomePage() {
         {activeTab === "quizBuilder" && (
           <div style={{ marginTop: "1rem" }}>
             <QuizQuestionBuilder quizTitle="Aptitude & Technical Quiz Editor" onBack={() => setActiveTab("analysis")} />
+          </div>
+        )}
+
+        {/* TAB: CODING LAB BUILDER */}
+        {activeTab === "codingBuilder" && (
+          <div style={{ marginTop: "1rem" }}>
+            <CodingProblemBuilder onBack={() => setActiveTab("analysis")} onPublishSuccess={() => setActiveTab("analysis")} />
           </div>
         )}
 

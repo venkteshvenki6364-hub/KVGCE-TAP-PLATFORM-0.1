@@ -3,6 +3,145 @@
   margin: 0 auto;
 }
 
+/* AVAILABLE TESTS GRID VIEW */
+.aptitude-header-banner {
+  background: linear-gradient(135deg, #003896 0%, #1e40af 100%);
+  color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 56, 150, 0.15);
+}
+
+.aptitude-header-banner h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.aptitude-header-banner p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.tests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.test-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.test-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.test-card-top {
+  margin-bottom: 1.25rem;
+}
+
+.test-card-category {
+  display: inline-block;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.test-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 0.5rem 0;
+}
+
+.test-card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+}
+
+.test-card-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.test-card-status {
+  padding: 0.75rem 0;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-badge-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-badge-pill.red { background: #fee2e2; color: #dc2626; }
+.status-badge-pill.orange { background: #ffedd5; color: #ea580c; }
+.status-badge-pill.blue { background: #dbeafe; color: #2563eb; }
+.status-badge-pill.green { background: #d1fae5; color: #059669; }
+.status-badge-pill.neutral { background: #f1f5f9; color: #64748b; }
+
+.btn-start-test {
+  background: var(--primary-color);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.btn-start-test:hover {
+  background: #002870;
+}
+
+.btn-back-link {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.btn-back-link:hover {
+  background: #f1f5f9;
+}
+
+/* TEST INTERFACE STYLING */
 .test-header {
   display: flex;
   justify-content: space-between;
@@ -247,10 +386,15 @@
   box-shadow: 0 10px 20px rgba(31, 46, 109, 0.2);
 }
 
+.score-summary-circle.red { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+.score-summary-circle.orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
+.score-summary-circle.blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.score-summary-circle.green { background: linear-gradient(135deg, #059669, #047857); }
+
 .big-score {
   font-size: 2.2rem;
   font-weight: 800;
-  color: var(--accent-gold);
+  color: #ffffff;
 }
 
 .result-stats-grid {
@@ -308,5 +452,22 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 1rem;
+  margin: 1rem 0.5rem 0 0.5rem;
 }
+
+.btn-secondary-action {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 1rem 0.5rem 0 0.5rem;
+}
+
+.btn-secondary-action:hover {
+  background: #e2e8f0;
+}
+

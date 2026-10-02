@@ -13,6 +13,7 @@ import AptitudeModule from "./pages/student/AptitudeModule";
 import TechnicalQuizModule from "./pages/student/TechnicalQuizModule";
 import CodingPracticeModule from "./pages/student/CodingPracticeModule";
 import ActivitiesModule from "./pages/student/ActivitiesModule";
+import StudentProjectsPage from "./pages/student/StudentProjectsPage";
 import AICareerAssistant from "./pages/student/AICareerAssistant";
 import HRInterviewPage from "./pages/student/HRInterviewPage";
 import StudentRankingsPage from "./pages/student/StudentRankingsPage";
@@ -77,6 +78,14 @@ function App() {
             }
           />
           <Route
+            path="/student/academics"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <StudentSkills />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/student/aptitude"
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
@@ -105,6 +114,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
                 <CodingPracticeModule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/projects"
+            element={
+              <ProtectedRoute allowedRoles={["student", "admin"]}>
+                <StudentProjectsPage />
               </ProtectedRoute>
             }
           />
@@ -259,6 +276,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["faculty", "admin"]}>
                 <FacultyHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/faculty/projects"
+            element={
+              <ProtectedRoute allowedRoles={["faculty", "admin"]}>
+                <FacultyHomePage defaultTab="projects" />
               </ProtectedRoute>
             }
           />

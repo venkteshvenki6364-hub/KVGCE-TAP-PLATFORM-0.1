@@ -4,8 +4,55 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import "./StudentSkills.css";
 
+
 function StudentSkills() {
   const { user } = useAuth();
+
+  const SEM_ORDINALS = {
+    1: "1st Semester",
+    2: "2nd Semester",
+    3: "3rd Semester",
+    4: "4th Semester",
+    5: "5th Semester",
+    6: "6th Semester",
+    7: "7th Semester",
+    8: "8th Semester"
+  };
+
+  const getSemNumber = (semObj) => {
+    if (typeof semObj?.semNumber === "number" && semObj.semNumber >= 1 && semObj.semNumber <= 8) {
+      return semObj.semNumber;
+    }
+    if (typeof semObj?.sem_number === "number" && semObj.sem_number >= 1 && semObj.sem_number <= 8) {
+      return semObj.sem_number;
+    }
+    const str = String(semObj?.sem || "");
+    const match = str.match(/\d+/);
+    if (match) {
+      const num = parseInt(match[0], 10);
+      if (num >= 1 && num <= 8) return num;
+    }
+    return null;
+  };
+
+  const ensureUniqueSemesters = (semList) => {
+    if (!Array.isArray(semList)) return [];
+    const seen = new Set();
+    const result = [];
+    for (const s of semList) {
+      const num = getSemNumber(s);
+      if (num && !seen.has(num)) {
+        seen.add(num);
+        result.push({
+          ...s,
+          semNumber: num,
+          sem_number: num,
+          sem: SEM_ORDINALS[num] || s.sem || `${num}th Semester`
+        });
+      }
+    }
+    return result.sort((a, b) => a.semNumber - b.semNumber);
+  };
 
   const normalizeAcademics = (raw) => {
     const defaultObj = {
@@ -34,20 +81,19 @@ function StudentSkills() {
       beSummary: {
         branch: "CSE",
         cgpaTillNow: "8.21",
-        totalCredits: 160,
         totalMarks: 8000,
         obtainedMarks: 6568,
         overallPercentage: "82.10%"
       },
       beSemesters: [
-        { sem: "1st Semester", totalMarks: 1000, obtainedMarks: 780, percentage: "78.00%", sgpa: "7.80", cgpa: "7.80", documentUrl: null, documentName: null },
-        { sem: "2nd Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.00", documentUrl: null, documentName: null },
-        { sem: "3rd Semester", totalMarks: 1000, obtainedMarks: 850, percentage: "85.00%", sgpa: "8.50", cgpa: "8.17", documentUrl: null, documentName: null },
-        { sem: "4th Semester", totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.20", documentUrl: null, documentName: null },
-        { sem: "5th Semester", totalMarks: 1000, obtainedMarks: 830, percentage: "83.00%", sgpa: "8.30", cgpa: "8.22", documentUrl: null, documentName: null },
-        { sem: "6th Semester", totalMarks: 1000, obtainedMarks: 860, percentage: "86.00%", sgpa: "8.60", cgpa: "8.37", documentUrl: null, documentName: null },
-        { sem: "7th Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.36", documentUrl: null, documentName: null },
-        { sem: "8th Semester", totalMarks: 1000, obtainedMarks: 808, percentage: "80.80%", sgpa: "8.08", cgpa: "8.21", documentUrl: null, documentName: null }
+        { semNumber: 1, sem_number: 1, sem: "1st Semester", totalMarks: 1000, obtainedMarks: 780, percentage: "78.00%", sgpa: "7.80", cgpa: "7.80", documentUrl: null, documentName: null },
+        { semNumber: 2, sem_number: 2, sem: "2nd Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.00", documentUrl: null, documentName: null },
+        { semNumber: 3, sem_number: 3, sem: "3rd Semester", totalMarks: 1000, obtainedMarks: 850, percentage: "85.00%", sgpa: "8.50", cgpa: "8.17", documentUrl: null, documentName: null },
+        { semNumber: 4, sem_number: 4, sem: "4th Semester", totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.20", documentUrl: null, documentName: null },
+        { semNumber: 5, sem_number: 5, sem: "5th Semester", totalMarks: 1000, obtainedMarks: 830, percentage: "83.00%", sgpa: "8.30", cgpa: "8.22", documentUrl: null, documentName: null },
+        { semNumber: 6, sem_number: 6, sem: "6th Semester", totalMarks: 1000, obtainedMarks: 860, percentage: "86.00%", sgpa: "8.60", cgpa: "8.37", documentUrl: null, documentName: null },
+        { semNumber: 7, sem_number: 7, sem: "7th Semester", totalMarks: 1000, obtainedMarks: 820, percentage: "82.00%", sgpa: "8.20", cgpa: "8.36", documentUrl: null, documentName: null },
+        { semNumber: 8, sem_number: 8, sem: "8th Semester", totalMarks: 1000, obtainedMarks: 808, percentage: "80.80%", sgpa: "8.08", cgpa: "8.21", documentUrl: null, documentName: null }
       ]
     };
 
@@ -55,7 +101,9 @@ function StudentSkills() {
       const mergedSSLC = { ...defaultObj.sslc, ...raw.sslc };
       const mergedPUC = { ...defaultObj.puc, ...raw.puc };
       const mergedSummary = { ...defaultObj.beSummary, ...raw.beSummary };
-      const mergedSems = Array.isArray(raw.beSemesters) && raw.beSemesters.length > 0 ? raw.beSemesters : defaultObj.beSemesters;
+      const mergedSems = Array.isArray(raw.beSemesters) && raw.beSemesters.length > 0 
+        ? ensureUniqueSemesters(raw.beSemesters) 
+        : ensureUniqueSemesters(defaultObj.beSemesters);
 
       return {
         sslc: mergedSSLC,
@@ -69,7 +117,7 @@ function StudentSkills() {
   };
 
   const computeAcademicsMetrics = (acadObj) => {
-    const sems = acadObj?.beSemesters || [];
+    const sems = ensureUniqueSemesters(acadObj?.beSemesters || []);
     let totMarks = 0;
     let obtMarks = 0;
     let validSgpas = [];
@@ -77,7 +125,7 @@ function StudentSkills() {
 
     const computedSems = sems.map((semItem, idx) => {
       const sgpaVal = parseFloat(semItem.sgpa) || 8.0;
-      if (sgpaVal > 0) validSgpas.push(sgpaVal);
+      validSgpas.push(sgpaVal);
 
       const tMarks = parseFloat(semItem.totalMarks || semItem.total_marks) || 1000;
       let oMarks = parseFloat(semItem.obtainedMarks || semItem.obtained_marks);
@@ -91,7 +139,7 @@ function StudentSkills() {
       const pct = tMarks > 0 ? ((oMarks / tMarks) * 100).toFixed(2) + "%" : (semItem.percentage || "0.00%");
 
       runningCumulativeSum += sgpaVal;
-      const currentCumulativeCgpa = validSgpas.length > 0 ? (runningCumulativeSum / (idx + 1)).toFixed(2) : "0.00";
+      const currentCumulativeCgpa = (runningCumulativeSum / (idx + 1)).toFixed(2);
 
       return {
         ...semItem,
@@ -104,7 +152,7 @@ function StudentSkills() {
     });
 
     const overallPct = totMarks > 0 ? ((obtMarks / totMarks) * 100).toFixed(2) + "%" : "0.00%";
-    const finalCgpa = validSgpas.length > 0 ? (validSgpas.reduce((a, b) => a + b, 0) / validSgpas.length).toFixed(2) : "8.21";
+    const finalCgpa = validSgpas.length > 0 ? (runningCumulativeSum / validSgpas.length).toFixed(2) : "8.21";
 
     return {
       ...acadObj,
@@ -438,19 +486,17 @@ startxref
               </div>
               <div className="info-row pdf-row">
                 <span className="info-label">Certificate (PDF)</span>
-                <div className="pdf-actions-group">
-                  <button
-                    type="button"
-                    className="view-pdf-btn"
-                    onClick={() => openPdfDocument(academics.sslc?.documentUrl, academics.sslc?.documentName || "SSLC_Marks_Card.pdf")}
-                  >
-                    View PDF
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="view-pdf-btn"
+                  onClick={() => openPdfDocument(academics.sslc?.documentUrl, academics.sslc?.documentName || "SSLC_Marks_Card.pdf")}
+                >
+                  View PDF
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -502,19 +548,17 @@ startxref
               </div>
               <div className="info-row pdf-row">
                 <span className="info-label">Certificate (PDF)</span>
-                <div className="pdf-actions-group">
-                  <button
-                    type="button"
-                    className="view-pdf-btn"
-                    onClick={() => openPdfDocument(academics.puc?.documentUrl, academics.puc?.documentName || "PUC_Marks_Card.pdf")}
-                  >
-                    View PDF
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="view-pdf-btn"
+                  onClick={() => openPdfDocument(academics.puc?.documentUrl, academics.puc?.documentName || "PUC_Marks_Card.pdf")}
+                >
+                  View PDF
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" style={{ marginLeft: "2px" }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -548,10 +592,6 @@ startxref
               <div className="be-stat-box">
                 <span className="be-stat-lbl">CGPA (Till Now)</span>
                 <span className="be-stat-val font-bold text-blue">{academics.beSummary?.cgpaTillNow || "8.21"}</span>
-              </div>
-              <div className="be-stat-box">
-                <span className="be-stat-lbl">Total Credits Earned</span>
-                <span className="be-stat-val font-bold text-green">{academics.beSummary?.totalCredits || 160}</span>
               </div>
             </div>
 
@@ -613,7 +653,6 @@ startxref
                     <td>{(parseFloat(semRow.sgpa) || 7.8).toFixed(2)}</td>
                     <td>{(parseFloat(semRow.cgpa) || 7.8).toFixed(2)}</td>
                     <td>
-                      <div className="pdf-actions-group">
                         <button
                           type="button"
                           className="view-pdf-btn"
@@ -625,7 +664,6 @@ startxref
                             <polyline points="14 2 14 8 20 8" />
                           </svg>
                         </button>
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -915,156 +953,167 @@ startxref
                       }
                     />
                   </div>
-                  <div className="modal-form-group" style={{ flex: 1 }}>
-                    <label style={{ color: "#7e22ce" }}>Total Credits</label>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="160"
-                      value={tempAcademics.beSummary?.totalCredits || 160}
-                      onChange={(e) =>
-                        setTempAcademics({
-                          ...tempAcademics,
-                          beSummary: { ...tempAcademics.beSummary, totalCredits: parseInt(e.target.value, 10) || 160 }
-                        })
-                      }
-                    />
-                  </div>
                 </div>
 
-                {(tempAcademics.beSemesters || []).map((sem, sIdx) => (
-                  <div key={sIdx} className="sem-item-edit-box">
-                    <div className="sem-item-header">
-                      <span className="sem-name-badge">
-                        {sem.sem || `Semester ${sIdx + 1}`}
-                      </span>
-                      {tempAcademics.beSemesters.length > 1 && (
-                        <button
-                          type="button"
-                          className="sem-delete-btn"
-                          style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
-                          onClick={() => {
-                            const updatedSems = tempAcademics.beSemesters.filter((_, idx) => idx !== sIdx);
-                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
-                          }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
-                          Delete Semester
-                        </button>
-                      )}
-                    </div>
+                {(() => {
+                  const currentSems = ensureUniqueSemesters(tempAcademics.beSemesters || []);
+                  const existingSemNumbers = new Set(currentSems.map((s) => s.semNumber));
+                  const missingSemNumbers = [1, 2, 3, 4, 5, 6, 7, 8].filter((num) => !existingSemNumbers.has(num));
 
-                    <div className="modal-form-grid">
-                      <div className="modal-form-group">
-                        <label>Semester Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 1st Semester"
-                          value={sem.sem || ""}
-                          onChange={(e) => {
-                            const updatedSems = [...tempAcademics.beSemesters];
-                            updatedSems[sIdx] = { ...updatedSems[sIdx], sem: e.target.value };
-                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>SGPA Score (0 to 10)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="10"
-                          step="0.01"
-                          placeholder="e.g. 8.20"
-                          value={sem.sgpa ?? ""}
-                          onChange={(e) => {
-                            const updatedSems = [...tempAcademics.beSemesters];
-                            updatedSems[sIdx] = { ...updatedSems[sIdx], sgpa: e.target.value };
-                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Total Marks (Numbers Only)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          placeholder="e.g. 1000"
-                          value={sem.totalMarks ?? 1000}
-                          onChange={(e) => {
-                            const valStr = e.target.value;
-                            const updatedSems = [...tempAcademics.beSemesters];
-                            const tot = valStr === "" ? "" : parseFloat(valStr);
-                            const obt = parseFloat(updatedSems[sIdx].obtainedMarks) || 0;
-                            const totNum = typeof tot === "number" ? tot : 0;
-                            const pct = totNum > 0 ? ((obt / totNum) * 100).toFixed(2) + "%" : "0.00%";
-                            updatedSems[sIdx] = { ...updatedSems[sIdx], totalMarks: tot, percentage: pct };
-                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group">
-                        <label>Obtained Marks (Numbers Only)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="e.g. 780"
-                          value={sem.obtainedMarks ?? 780}
-                          onChange={(e) => {
-                            const valStr = e.target.value;
-                            const updatedSems = [...tempAcademics.beSemesters];
-                            const obt = valStr === "" ? "" : parseFloat(valStr);
-                            const tot = parseFloat(updatedSems[sIdx].totalMarks) || 1000;
-                            const obtNum = typeof obt === "number" ? obt : 0;
-                            const pct = tot > 0 ? ((obtNum / tot) * 100).toFixed(2) + "%" : "0.00%";
-                            updatedSems[sIdx] = { ...updatedSems[sIdx], obtainedMarks: obt, percentage: pct };
-                            setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
-                          }}
-                        />
-                      </div>
-                      <div className="modal-form-group span-full">
-                        <label>Marks Card Document (PDF Only)</label>
-                        {sem.documentUrl ? (
-                          <div className="modal-doc-preview-pill">
-                            <span className="doc-preview-name">📄 {sem.documentName || `${sem.sem}_Marks_Card.pdf`}</span>
-                            <button type="button" className="doc-preview-link" onClick={() => openPdfDocument(sem.documentUrl)}>Preview</button>
-                            <button type="button" className="doc-preview-remove" onClick={() => removeAcademicFile("be", sIdx)}>Remove</button>
+                  return (
+                    <>
+                      {currentSems.map((sem, sIdx) => {
+                        const semNum = sem.semNumber;
+                        const semTitle = SEM_ORDINALS[semNum] || sem.sem || `${semNum}th Semester`;
+
+                        return (
+                          <div key={semNum} className="sem-item-edit-box">
+                            <div className="sem-item-header">
+                              <span className="sem-name-badge">{semTitle}</span>
+                              {currentSems.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="sem-delete-btn"
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                                  onClick={() => {
+                                    const updatedSems = currentSems.filter((s) => s.semNumber !== semNum);
+                                    setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                                  }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                  Delete {semTitle}
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="modal-form-grid">
+                              <div className="modal-form-group">
+                                <label>Semester Name</label>
+                                <input
+                                  type="text"
+                                  readOnly
+                                  disabled
+                                  value={semTitle}
+                                  style={{ backgroundColor: "#f1f5f9", cursor: "not-allowed", color: "#475569" }}
+                                />
+                              </div>
+                              <div className="modal-form-group">
+                                <label>SGPA Score (0 to 10)</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  step="0.01"
+                                  placeholder="e.g. 8.20"
+                                  value={sem.sgpa ?? ""}
+                                  onChange={(e) => {
+                                    const updatedSems = currentSems.map((s) =>
+                                      s.semNumber === semNum ? { ...s, sgpa: e.target.value } : s
+                                    );
+                                    setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                                  }}
+                                />
+                              </div>
+                              <div className="modal-form-group">
+                                <label>Total Marks (Numbers Only)</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="e.g. 1000"
+                                  value={sem.totalMarks ?? 1000}
+                                  onChange={(e) => {
+                                    const valStr = e.target.value;
+                                    const tot = valStr === "" ? "" : parseFloat(valStr);
+                                    const obt = parseFloat(sem.obtainedMarks) || 0;
+                                    const totNum = typeof tot === "number" ? tot : 0;
+                                    const pct = totNum > 0 ? ((obt / totNum) * 100).toFixed(2) + "%" : "0.00%";
+                                    const updatedSems = currentSems.map((s) =>
+                                      s.semNumber === semNum ? { ...s, totalMarks: tot, percentage: pct } : s
+                                    );
+                                    setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                                  }}
+                                />
+                              </div>
+                              <div className="modal-form-group">
+                                <label>Obtained Marks (Numbers Only)</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  placeholder="e.g. 780"
+                                  value={sem.obtainedMarks ?? 780}
+                                  onChange={(e) => {
+                                    const valStr = e.target.value;
+                                    const obt = valStr === "" ? "" : parseFloat(valStr);
+                                    const tot = parseFloat(sem.totalMarks) || 1000;
+                                    const obtNum = typeof obt === "number" ? obt : 0;
+                                    const pct = tot > 0 ? ((obtNum / tot) * 100).toFixed(2) + "%" : "0.00%";
+                                    const updatedSems = currentSems.map((s) =>
+                                      s.semNumber === semNum ? { ...s, obtainedMarks: obt, percentage: pct } : s
+                                    );
+                                    setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
+                                  }}
+                                />
+                              </div>
+                              <div className="modal-form-group span-full">
+                                <label>Marks Card Document (PDF Only)</label>
+                                {sem.documentUrl ? (
+                                  <div className="modal-doc-preview-pill">
+                                    <span className="doc-preview-name">📄 {sem.documentName || `${semTitle}_Marks_Card.pdf`}</span>
+                                    <button type="button" className="doc-preview-link" onClick={() => openPdfDocument(sem.documentUrl)}>Preview</button>
+                                    <button type="button" className="doc-preview-remove" onClick={() => removeAcademicFile("be", sIdx)}>Remove</button>
+                                  </div>
+                                ) : (
+                                  <input type="file" accept="application/pdf,.pdf" className="modal-file-input" onChange={(e) => handleAcademicFileUpload(e, "be", sIdx)} />
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        ) : (
-                          <input type="file" accept="application/pdf,.pdf" className="modal-file-input" onChange={(e) => handleAcademicFileUpload(e, "be", sIdx)} />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                        );
+                      })}
 
-                {tempAcademics.beSemesters.length < 8 && (
-                  <button
-                    type="button"
-                    className="add-sem-btn"
-                    style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", justifyContent: "center" }}
-                    onClick={() => {
-                      const currentCount = tempAcademics.beSemesters.length;
-                      const nextNum = currentCount + 1;
-                      const ordinals = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
-                      const semLabel = `${ordinals[nextNum - 1] || nextNum + "th"} Semester`;
-                      const updatedSems = [
-                        ...tempAcademics.beSemesters,
-                        { sem: semLabel, totalMarks: 1000, obtainedMarks: 800, percentage: "80.00%", sgpa: "8.00", cgpa: "8.00", documentUrl: null, documentName: null }
-                      ];
-                      setTempAcademics({ ...tempAcademics, beSemesters: updatedSems });
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Add Semester ({tempAcademics.beSemesters.length + 1} of 8)
-                  </button>
-                )}
+                      {missingSemNumbers.length > 0 && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem" }}>
+                          {missingSemNumbers.map((missingNum) => {
+                            const missingTitle = SEM_ORDINALS[missingNum];
+                            return (
+                              <button
+                                key={missingNum}
+                                type="button"
+                                className="add-sem-btn"
+                                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", justifyContent: "center" }}
+                                onClick={() => {
+                                  const newSemObj = {
+                                    semNumber: missingNum,
+                                    sem_number: missingNum,
+                                    sem: missingTitle,
+                                    totalMarks: 1000,
+                                    obtainedMarks: 800,
+                                    percentage: "80.00%",
+                                    sgpa: "8.00",
+                                    cgpa: "8.00",
+                                    documentUrl: null,
+                                    documentName: null
+                                  };
+                                  const updated = ensureUniqueSemesters([...currentSems, newSemObj]);
+                                  setTempAcademics({ ...tempAcademics, beSemesters: updated });
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <line x1="12" y1="5" x2="12" y2="19" />
+                                  <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add {missingTitle}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
               <div className="modal-footer">
                 <button className="modal-cancel-btn" onClick={closeEditModal}>Cancel</button>

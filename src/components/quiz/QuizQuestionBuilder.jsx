@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "../../services/api";
 import "./QuizQuestionBuilder.css";
 
 // Initial sample questions matching screenshot
@@ -44,9 +45,11 @@ const INITIAL_QUESTIONS = [
   },
 ];
 
-export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", onBack, onPublish }) {
+export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defaultCategory = "Technical", onBack, onPublish }) {
   // Stepper state: 1 = Add Question, 2 = Question List, 3 = Review & Publish
   const [currentStep, setCurrentStep] = useState(1);
+  const [assessmentTitle, setAssessmentTitle] = useState(quizTitle);
+  const [quizCategory, setQuizCategory] = useState(defaultCategory);
 
   // Question list state
   const [questions, setQuestions] = useState(INITIAL_QUESTIONS);
@@ -71,10 +74,12 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", onBa
   const [passingScore, setPassingScore] = useState(40); // percent
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [publishing, setPublishing] = useState(false);
 
   // Calculate totals
   const totalQuestions = questions.length;
   const totalMarks = questions.reduce((acc, q) => acc + (q.marks || 0), 0);
+
 
   // Handle Option Text Change
   const handleOptionTextChange = (index, text) => {
@@ -199,9 +204,60 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", onBa
   };
 
   // Publish Quiz
-  const handlePublishQuiz = () => {
-    alert("Quiz published successfully! Students can now access this assessment.");
-    if (onPublish) onPublish({ questions, timeLimit, passingScore, totalMarks });
+  const handlePublishQuiz = async () => {
+    if (questions.length === 0) {
+      alert("Please add at least one question before publishing.");
+      return;
+    }
+
+    setPublishing(true);
+
+    const formattedQuestions = questions.map((q) => {
+      let correctIdx = 0;
+      if (Array.isArray(q.options)) {
+        const foundIdx = q.options.findIndex((opt) => opt.isCorrect);
+        if (foundIdx >= 0) correctIdx = foundIdx;
+      }
+      return {
+        id: q.id,
+        question: q.question,
+        type: q.type || "MCQ (Single Correct)",
+        options: (q.options || []).map((o) => (typeof o === "object" ? o.text : String(o))),
+        correct_answer: correctIdx,
+        explanation: q.explanation || "",
+        marks: q.marks || 2,
+        category: quizCategory,
+      };
+    });
+
+    const quizPayload = {
+      title: assessmentTitle || quizTitle,
+      description: `Assessment for ${quizCategory} domain`,
+      category: quizCategory, // "Aptitude" or "Technical"
+      duration_minutes: Number(timeLimit) || 30,
+      total_marks: totalMarks,
+      pass_marks: Math.round((totalMarks * passingScore) / 100) || 10,
+      questions: formattedQuestions,
+      is_published: true,
+    };
+
+    try {
+      await api.post("/assessments", quizPayload);
+      setSuccessMsg(`Quiz "${quizPayload.title}" published successfully to student portal!`);
+    } catch (err) {
+      console.warn("Backend API save issue, applying local fallback sync:", err);
+      setSuccessMsg(`Quiz "${quizPayload.title}" published locally!`);
+    }
+
+    // Local Storage synchronization
+    const localQuizzes = JSON.parse(localStorage.getItem("kvgce_published_quizzes") || "[]");
+    localQuizzes.unshift({ ...quizPayload, _id: "quiz_" + Date.now(), created_at: new Date().toISOString() });
+    localStorage.setItem("kvgce_published_quizzes", JSON.stringify(localQuizzes));
+
+    setPublishing(false);
+    setTimeout(() => setSuccessMsg(""), 4000);
+
+    if (onPublish) onPublish(quizPayload);
   };
 
   return (
@@ -209,7 +265,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", onBa
       {/* 1. TOP BREADCRUMB & HEADER ACTION BAR */}
       <div className="q-builder-top-bar">
         <div className="q-builder-breadcrumbs">
-          <span>{quizTitle}</span>
+          <span>{quizCategory}</span>
           <span className="bc-sep">›</span>
           <span>Create New Quiz</span>
           <span className="bc-sep">›</span>
@@ -217,8 +273,26 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", onBa
         </div>
 
         <div className="q-builder-title-row">
-          <div>
-            <h2 className="q-builder-main-title">Add Questions to Quiz</h2>
+          <div style={{ flex: 1, maxWidth: "600px" }}>
+            <div style={{ display: "flex", gap: "0.8rem", marginBottom: "0.4rem" }}>
+              <input
+                type="text"
+                value={assessmentTitle}
+                onChange={(e) => setAssessmentTitle(e.target.value)}
+                placeholder="Quiz Title (e.g. Technical Quiz / Quantitative Aptitude)"
+                className="select-field"
+                style={{ fontWeight: "700", fontSize: "1.1rem" }}
+              />
+              <select
+                value={quizCategory}
+                onChange={(e) => setQuizCategory(e.target.value)}
+                className="select-field"
+                style={{ width: "180px", fontWeight: "600" }}
+              >
+                <option value="Technical">Technical Quiz</option>
+                <option value="Aptitude">Aptitude Test</option>
+              </select>
+            </div>
             <p className="q-builder-sub-title">
               Create and manage questions for your quiz. You can add, edit, reorder and review questions.
             </p>
@@ -226,7 +300,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", onBa
 
           <div className="q-builder-top-actions">
             <button className="btn-outline-blue" onClick={onBack || (() => window.history.back())}>
-              ← Back to Quiz Settings
+              ← Back to Dashboard
             </button>
             <button className="btn-solid-blue" onClick={() => setShowPreviewModal(true)}>
               👁️ Preview Quiz

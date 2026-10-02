@@ -20,13 +20,36 @@ const SEARCH_INDEX = [
     id: "s2",
     category: "students",
     categoryLabel: "🎓 Students & Faculty",
-    title: "Sahana P",
+    title: "Venkatesh V",
     subtitle: "4KV21CS042 • CSE • 6th Sem • Rank 2",
     tag: "Student",
     badgeColor: "#d97706",
     path: "/student/overview",
-    keywords: ["sahana", "4kv21cs042", "cse", "rank 2"],
+    keywords: ["venkatesh", "venkatesh v", "4kv21cs042", "cse", "rank 2", "student"],
   },
+  {
+    id: "s2b",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Anish K",
+    subtitle: "4KV21CS008 • CSE • 6th Sem • Rank 9",
+    tag: "Student",
+    badgeColor: "#2563eb",
+    path: "/student/overview",
+    keywords: ["anish", "anish k", "4kv21cs008", "cse", "rank 9", "student"],
+  },
+  {
+    id: "s2c",
+    category: "students",
+    categoryLabel: "🎓 Students & Faculty",
+    title: "Sahana P",
+    subtitle: "4KV21CS043 • CSE • 6th Sem • Rank 3",
+    tag: "Student",
+    badgeColor: "#d97706",
+    path: "/student/overview",
+    keywords: ["sahana", "4kv21cs043", "cse", "rank 3"],
+  },
+
   {
     id: "s3",
     category: "students",
@@ -400,7 +423,7 @@ const DashboardLayout = ({ children, title }) => {
           ),
         },
         {
-          path: "/student/activities",
+          path: "/student/projects",
           label: "Projects",
           icon: (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -453,6 +476,7 @@ const DashboardLayout = ({ children, title }) => {
     } else if (role === "faculty") {
       return [
         { path: "/faculty/dashboard", label: "Overview", icon: "📊" },
+        { path: "/faculty/projects", label: "Project Evaluation", icon: "💡" },
         { path: "/faculty/students", label: "Student List", icon: "👥" },
         { path: "/student/overview", label: "Student Single Overview", icon: "👤" },
         { path: "/student/rankings", label: "Rankings", icon: "🏆" },

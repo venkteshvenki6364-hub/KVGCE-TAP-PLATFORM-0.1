@@ -367,7 +367,7 @@
   font-size: 0.94rem;
 }
 
-.score-cell {
+.marks-table .score-cell {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -1242,3 +1242,201 @@
   padding: 0.5rem;
   border-radius: 6px;
 }
+
+/* PROJECTS & PORTFOLIO SECTION */
+.projects-section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.section-subtitle-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0.15rem 0 0 0;
+  font-weight: 500;
+}
+
+.add-project-btn {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #166534 !important;
+  font-weight: 700 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.add-project-btn:hover {
+  background: #dcfce7 !important;
+  border-color: #4ade80 !important;
+}
+
+/* 1 ROW PER PROJECT */
+.projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.project-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition: all 0.2s ease;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.project-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.project-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.project-title-badge-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.project-title {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.project-tech-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.project-tech-pill {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+}
+
+.project-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.project-icon-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.project-icon-btn.edit-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.project-icon-btn.delete-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.project-description {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.project-links-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.project-link-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.project-link-badge.github {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+.project-link-badge.github:hover {
+  background-color: #1e293b;
+}
+
+.project-link-badge.hosted {
+  background-color: #f0f9ff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
+.project-link-badge.hosted:hover {
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.project-link-badge.doc.pdf {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.project-link-badge.doc.pdf:hover {
+  background-color: #dcfce7;
+  border-color: #86efac;
+}
+
+.project-link-badge.doc.ppt {
+  background-color: #faf5ff;
+  color: #9333ea;
+  border-color: #e9d5ff;
+}
+
+.project-link-badge.doc.ppt:hover {
+  background-color: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+

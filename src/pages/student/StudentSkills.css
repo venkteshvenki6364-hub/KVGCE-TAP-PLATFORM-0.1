@@ -227,7 +227,7 @@
 /* CARD 3: B.E. STAT BOXES */
 .be-stat-boxes-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -236,20 +236,22 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 0.85rem 1rem;
-  text-align: center;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .be-stat-lbl {
-  display: block;
-  font-size: 0.76rem;
+  display: inline-block;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #64748b;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
 
 .be-stat-val {
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.2;
 }

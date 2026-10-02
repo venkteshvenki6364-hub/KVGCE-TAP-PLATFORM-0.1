@@ -1,0 +1,530 @@
+.student-rankings-wrapper-component {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 1. FILTER BAR ROW (5 COLUMNS: USN, BATCH, DEPT, SEM, SEC) */
+.rankings-filter-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .rankings-filter-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .rankings-filter-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filter-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.filter-input-wrap .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.filter-text-input {
+  width: 100%;
+  height: 36px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 0.75rem 0 2.1rem;
+  font-size: 0.82rem;
+  color: #334155;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-text-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.filter-select-wrap {
+  width: 100%;
+}
+
+.filter-select {
+  width: 100%;
+  height: 36px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 1.8rem 0 0.75rem;
+  font-size: 0.82rem;
+  color: #334155;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.filter-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+/* 2. CRITERIA SELECTION ROW (SINGLE-SELECT RADIO CONTROLS) */
+.criteria-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  flex-wrap: wrap;
+}
+
+.criteria-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.criteria-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.criteria-radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.18rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.criteria-radio-label input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.criteria-radio-label.active {
+  color: #1e40af;
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  font-weight: 700;
+}
+
+/* 3. MAIN RANKINGS TABLE CARD WITH INTEGRATED MY RANKING PILL & SORT DROPDOWN */
+.rankings-table-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.card-header-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* INTEGRATED MY RANK PILL IN HEADER */
+.integrated-my-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.my-rank-label {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.my-rank-num {
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.my-rank-divider {
+  color: #93c5fd;
+}
+
+.my-rank-info {
+  font-weight: 600;
+  color: #334155;
+}
+
+.my-rank-score {
+  font-weight: 700;
+}
+
+.card-header-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* RANK SORT ORDER DROPDOWN (LEFT OF EXPORT CSV) */
+.rank-sort-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rank-sort-dropdown-wrap svg {
+  position: absolute;
+  left: 0.6rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.rank-sort-select {
+  height: 32px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 0 1.8rem 0 2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%232563eb' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rank-sort-select:hover {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.export-excel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  height: 32px;
+}
+
+.export-excel-btn:hover {
+  background-color: #eff6ff;
+  border-color: #2563eb;
+}
+
+/* TABLE STYLING - MINIMALIST & 40PX ROW HEIGHT ABOVE 35PX */
+.table-responsive-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.rankings-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.rankings-table th {
+  background-color: #f8fafc;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1.5px solid #e2e8f0;
+  white-space: nowrap;
+  height: 40px;
+}
+
+.rankings-table th.col-highlight {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-bottom-color: #93c5fd;
+}
+
+.rankings-table tr {
+  height: 40px !important;
+}
+
+.rankings-table td {
+  display: table-cell !important;
+  padding: 0.45rem 0.75rem !important;
+  font-size: 0.83rem !important;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.rankings-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.my-rank-row {
+  background-color: #f0f7ff !important;
+}
+
+.rank-number-cell {
+  font-weight: 700;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.student-name-link {
+  background: none;
+  border: none;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.student-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.usn-cell {
+  font-family: monospace;
+  font-weight: 600;
+  color: #475569;
+}
+
+.dept-label {
+  cursor: help;
+  font-weight: 600;
+}
+
+.score-cell {
+  display: table-cell !important;
+  font-size: 0.83rem !important;
+  color: #334155;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+.score-cell.active-score {
+  background-color: #eff6ff;
+  font-weight: 700;
+}
+
+/* DYNAMIC PERFORMANCE BRACKET COLORS: Red <40%, Orange 40-59.99%, Blue 60-84.99%, Green >=85% */
+.score-green {
+  color: #16a34a !important;
+  font-weight: 700 !important;
+}
+
+.score-blue {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+}
+
+.score-orange {
+  color: #d97706 !important;
+  font-weight: 700 !important;
+}
+
+.score-red {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+}
+
+.pct-subtext {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.2rem;
+  display: inline !important;
+}
+
+.you-pill-tag {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 0.08rem 0.35rem;
+  border-radius: 3px;
+  margin-left: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.table-loading-state,
+.table-empty-state {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* PAGINATION FOOTER & 50 STUDENTS PER PAGE SELECTOR */
+.table-pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.pagination-left-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-text {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.page-size-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.page-size-label {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.page-size-select {
+  height: 28px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 0 1.5rem 0 0.5rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  cursor: pointer;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.page-num-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.page-num-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.page-num-btn.active {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.page-next-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.page-next-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}

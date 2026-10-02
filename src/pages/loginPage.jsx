@@ -109,11 +109,55 @@ function LoginPage() {
     }
   };
 
+// Helper function to format input value as DD-MM-YYYY
+const formatDOB = (val) => {
+  if (!val) return "";
+  const digits = val.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4, 8)}`;
+};
+
+// Strict DOB Validator: Must follow exactly DD-MM-YYYY, 10 chars, valid calendar date
+const isValidDOB = (dobStr) => {
+  if (!dobStr || dobStr.length !== 10) return false;
+  if (!/^\d{2}-\d{2}-\d{4}$/.test(dobStr)) return false;
+  const parts = dobStr.split('-');
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
+
+  if (month < 1 || month > 12) return false;
+  if (year < 1900 || year > 2030) return false;
+
+  const dateObj = new Date(year, month - 1, day);
+  return (
+    dateObj.getFullYear() === year &&
+    dateObj.getMonth() === month - 1 &&
+    dateObj.getDate() === day
+  );
+};
+
+// Standard Email Validator
+const isValidEmail = (emailStr) => {
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailStr);
+};
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let formattedVal = value;
+
+    if (role !== "admin" && (name === "password" || name === "confirmPassword" || name === "dob")) {
+      formattedVal = formatDOB(value);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: formattedVal,
       ...(name === "usn" || name === "userId" ? { usn: value, userId: value } : {})
     }));
 
@@ -121,6 +165,17 @@ function LoginPage() {
       ...prev,
       [name]: "",
       userId: name === "usn" || name === "userId" ? "" : prev.userId,
+    }));
+  };
+
+  const handleResetDataChange = (field, value) => {
+    let formattedVal = value;
+    if (role !== "admin" && (field === "newPassword" || field === "confirmPassword")) {
+      formattedVal = formatDOB(value);
+    }
+    setResetData((prev) => ({
+      ...prev,
+      [field]: formattedVal,
     }));
   };
 
@@ -150,9 +205,8 @@ function LoginPage() {
       return;
     }
     if (role !== "admin") {
-      const dobRegex = /^(\d{2}[-/\.]\d{2}[-/\.]\d{4}|\d{4}[-/\.]\d{2}[-/\.]\d{2})$/;
-      if (!dobRegex.test(resetData.newPassword.trim())) {
-        setResetError("Only Date of Birth (DOB) format passwords (DD-MM-YYYY, e.g. 28-02-2004) are allowed.");
+      if (!isValidDOB(resetData.newPassword.trim())) {
+        setResetError("Password must follow strict DD-MM-YYYY format (e.g. 15-08-2004) and represent a valid calendar date.");
         return;
       }
     } else if (resetData.newPassword.length < 6) {
@@ -222,34 +276,53 @@ function LoginPage() {
     setLocalError("");
     setSuccessMsg("");
     setFieldErrors({ userId: "", password: "", confirmPassword: "" });
-    setLoading(true);
 
     if (isSignup) {
       // SIGN UP - NEW USER REGISTRATION
-      if (!formData.name || !formData.email || (!formData.userId && !formData.usn)) {
-        setLocalError("Please fill in all required fields (Name, Email, User ID / USN).");
-        setLoading(false);
+      if (!formData.name || !formData.name.trim()) {
+        setLocalError("Please enter your Full Name.");
         return;
       }
 
-      if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          confirmPassword: "Passwords do not match. Please re-enter.",
-        }));
-        setLoading(false);
+      if (!formData.email || !isValidEmail(formData.email.trim())) {
+        setLocalError("Please enter a valid email address (e.g. email@gmail.com).");
         return;
       }
+
+      if (!formData.userId && !formData.usn) {
+        setLocalError("Please enter your USN / User ID.");
+        return;
+      }
+
+      if (role !== "admin") {
+        if (!isValidDOB(formData.password)) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            password: "Password must follow strict DD-MM-YYYY format (e.g. 15-08-2004) and represent a valid calendar date.",
+          }));
+          return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            confirmPassword: "Confirm Password must match Password exactly.",
+          }));
+          return;
+        }
+      }
+
+      setLoading(true);
 
       let regData = {
         role: role,
-        full_name: formData.name,
-        email: formData.email,
+        full_name: formData.name.trim(),
+        email: formData.email.trim(),
         password: formData.password || formData.dob,
         student_id: formData.usn || formData.userId,
         faculty_id: role === "faculty" ? (formData.userId || formData.usn) : "",
         phone: formData.phone || "",
-        dob: formData.dob || "",
+        dob: formData.dob || formData.password || "",
       };
 
       const res = await register(regData);
@@ -272,15 +345,14 @@ function LoginPage() {
       }
     } else {
       // LOGIN - EXISTING USER AUTHENTICATION
-      let identifier = formData.userId || formData.usn || formData.email;
-      let secret = formData.password || formData.dob;
+      let identifier = (formData.userId || formData.usn || formData.email).trim();
+      let secret = (formData.password || formData.dob).trim();
 
       if (!identifier) {
         setFieldErrors((prev) => ({
           ...prev,
           userId: `Please enter your User ID / USN.`,
         }));
-        setLoading(false);
         return;
       }
 
@@ -289,9 +361,18 @@ function LoginPage() {
           ...prev,
           password: "Please enter your password.",
         }));
-        setLoading(false);
         return;
       }
+
+      if (role !== "admin" && !isValidDOB(secret)) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          password: "Password must follow strict DD-MM-YYYY format (e.g. 15-08-2004) and represent a valid calendar date.",
+        }));
+        return;
+      }
+
+      setLoading(true);
 
       const res = await login(identifier, secret, role);
       setLoading(false);
@@ -328,7 +409,7 @@ function LoginPage() {
           } else {
             setFieldErrors({
               userId: "",
-              password: "Incorrect Password",
+              password: res.message || "Incorrect Password",
               confirmPassword: ""
             });
           }
@@ -438,7 +519,7 @@ function LoginPage() {
                     <input
                       type="text"
                       name="name"
-                      placeholder="Enter your full name"
+                      placeholder="Your full name"
                       value={formData.name}
                       onChange={handleChange}
                       required
@@ -517,7 +598,7 @@ function LoginPage() {
             {/* ROLE-SPECIFIC PASSWORD FIELD */}
             <div className="field-group">
               <label>
-                {role === "admin" ? "Admin Password" : "Password (DOB dd-mm-yyyy)"}
+                {role === "admin" ? "Admin Password" : "Password"}
               </label>
               <div className={`input-rel-box ${fieldErrors.password ? "has-error" : ""}`}>
                 <span className="icon-left">
@@ -533,12 +614,11 @@ function LoginPage() {
                   placeholder={
                     role === "admin"
                       ? "Enter Admin Password (e.g. Password@123)"
-                      : role === "student"
-                      ? "Enter Password (e.g. 28-02-2004)"
-                      : "Enter Password (e.g. 15-08-1985)"
+                      : "DD-MM-YYYY"
                   }
                   value={formData.password}
                   onChange={handleChange}
+                  maxLength={role !== "admin" ? 10 : 50}
                   required
                 />
                 <button
@@ -584,9 +664,14 @@ function LoginPage() {
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
-                    placeholder="Confirm your password"
+                    placeholder={
+                      role === "admin"
+                        ? "Confirm your password"
+                        : "DD-MM-YYYY"
+                    }
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    maxLength={role !== "admin" ? 10 : 50}
                     required
                   />
                   <button
@@ -734,8 +819,9 @@ function LoginPage() {
 
                 {/* 2. UPDATED PASSWORD FIELD */}
                 <div style={{ marginBottom: "1rem" }}>
-                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
-                    {role === "admin" ? "Updated Admin Password" : "Updated Password (DOB dd-mm-yyyy)"} <span style={{ color: "#dc2626" }}>*</span>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                    <span>{role === "admin" ? "Updated Admin Password" : "Updated Password (DOB Format)"} <span style={{ color: "#dc2626" }}>*</span></span>
+                    {role !== "admin" && <span className="dob-format-badge">DD-MM-YYYY</span>}
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -744,12 +830,11 @@ function LoginPage() {
                       placeholder={
                         role === "admin"
                           ? "Enter Admin password (e.g. Password@123)"
-                          : role === "student"
-                          ? "Enter new password (e.g. 28-02-2004)"
-                          : "Enter new password (e.g. 15-08-1985)"
+                          : "DD-MM-YYYY (e.g. 28-02-2004)"
                       }
                       value={resetData.newPassword}
-                      onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
+                      maxLength={role !== "admin" ? 10 : 50}
+                      onChange={(e) => handleResetDataChange("newPassword", e.target.value)}
                       style={{ width: "100%", padding: "10px 40px 10px 14px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.95rem", boxSizing: "border-box" }}
                     />
                     <button
@@ -777,8 +862,9 @@ function LoginPage() {
 
                 {/* 4. CONFIRM PASSWORD FIELD */}
                 <div style={{ marginBottom: "1.5rem" }}>
-                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
-                    Confirm Password <span style={{ color: "#dc2626" }}>*</span>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                    <span>Confirm Password <span style={{ color: "#dc2626" }}>*</span></span>
+                    {role !== "admin" && <span className="dob-format-badge">DD-MM-YYYY</span>}
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -787,12 +873,11 @@ function LoginPage() {
                       placeholder={
                         role === "admin"
                           ? "Confirm Admin password (e.g. Password@123)"
-                          : role === "student"
-                          ? "Confirm new password (e.g. 28-02-2004)"
-                          : "Confirm new password (e.g. 15-08-1985)"
+                          : "DD-MM-YYYY (e.g. 28-02-2004)"
                       }
                       value={resetData.confirmPassword}
-                      onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
+                      maxLength={role !== "admin" ? 10 : 50}
+                      onChange={(e) => handleResetDataChange("confirmPassword", e.target.value)}
                       style={{ width: "100%", padding: "10px 40px 10px 14px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.95rem", boxSizing: "border-box" }}
                     />
                     <button
