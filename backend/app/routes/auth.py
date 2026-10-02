@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, status, Header
 from typing import Optional
 from app.schemas.user import UserCreate, UserLogin, TokenResponse
@@ -50,10 +52,43 @@ def require_role(allowed_roles: list):
         return current_user
     return role_checker
 
+def is_valid_dob(dob_str: str) -> bool:
+    """Strictly validates if string matches DD-MM-YYYY format and represents a real calendar date."""
+    if not dob_str or len(dob_str) != 10:
+        return False
+    if not re.match(r"^\d{2}-\d{2}-\d{4}$", dob_str):
+        return False
+    try:
+        day, month, year = map(int, dob_str.split("-"))
+        if not (1900 <= year <= 2030):
+            return False
+        from datetime import datetime
+        datetime(year, month, day)
+        return True
+    except ValueError:
+        return False
+
 @router.post("/register", response_model=TokenResponse)
 async def register_student(user_in: UserCreate):
     users_col = get_db_collection("users")
+
+    # Role assignment
+    role = user_in.role if user_in.role in ["student", "faculty", "admin"] else "student"
     
+    # Strict DOB format validation for non-admin registration
+    if role != "admin":
+        if not is_valid_dob(user_in.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must follow strict DD-MM-YYYY format (e.g. 15-08-2004) and represent a valid calendar date."
+            )
+
+    if role == "student" and not (user_in.student_id and user_in.student_id.strip()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Student USN is required for registration."
+        )
+
     # Check existing email
     existing_email = await users_col.find_one({"email": {"$regex": f"^{user_in.email}$", "$options": "i"}})
     if existing_email:
@@ -85,9 +120,6 @@ async def register_student(user_in: UserCreate):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"An account with phone number '{user_in.phone}' already exists."
             )
-
-    # Role assignment
-    role = user_in.role if user_in.role in ["student", "faculty", "admin"] else "student"
     
     hashed_pwd = get_password_hash(user_in.password)
     
@@ -109,7 +141,7 @@ async def register_student(user_in: UserCreate):
         "course": user_in.course or "B.E. Computer Science & Engineering",
         "semester": user_in.semester or 6,
         "year": user_in.year or 3,
-        "dob": user_in.dob or "",
+        "dob": user_in.dob or user_in.password or "",
         "hashed_password": hashed_pwd,
         "password_plain": user_in.password or user_in.dob or "",
         "is_verified": is_verified,
@@ -167,29 +199,33 @@ async def login(credentials: UserLogin):
             headers={"X-Error-Type": "user_id"}
         )
 
+    user_role = user.get("role", "student")
+
+    # Strict DOB pattern enforcement for non-admin login
+    if user_role != "admin" and not is_valid_dob(secret):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"message": "Incorrect Password. DOB password must follow strict DD-MM-YYYY format.", "error_type": "password"},
+            headers={"X-Error-Type": "password"}
+        )
+
     # Validate against hashed password, plain password, explicit defaults, OR Date of Birth (DOB)
     password_valid = verify_password(secret, user.get("hashed_password", ""))
     if not password_valid and user.get("password_plain"):
         password_valid = (secret == str(user.get("password_plain")).strip())
 
-    # Fallback explicit default password matching by role
-    user_role = user.get("role", "student")
     if not password_valid:
         if user_role == "admin" and secret == "Password@123":
             password_valid = True
-        elif user_role == "student" and secret in ["28-02-2004", "28/02/2004", "28.02.2004"]:
+        elif user_role == "student" and secret == "28-02-2004":
             password_valid = True
-        elif user_role == "faculty" and secret in ["15-08-1985", "15/08/1985", "15.08.1985"]:
+        elif user_role == "faculty" and secret == "15-08-1985":
             password_valid = True
 
     dob_valid = False
-    
     user_dob = user.get("dob", "").strip()
-    if user_dob:
-        dob_norm = user_dob.replace("-", "").replace("/", "").replace(".", "")
-        secret_norm = secret.replace("-", "").replace("/", "").replace(".", "")
-        if secret_norm and (secret == user_dob or secret_norm == dob_norm):
-            dob_valid = True
+    if user_dob and secret == user_dob and is_valid_dob(secret):
+        dob_valid = True
 
     if not (password_valid or dob_valid):
         raise HTTPException(

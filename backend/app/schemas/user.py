@@ -57,6 +57,7 @@ class UserProfileUpdate(BaseModel):
     softSkills: Optional[List[str]] = None
     skills: Optional[List[dict]] = None
     academics: Optional[Any] = None
+    projects: Optional[List[dict]] = None
 
     @field_validator("objective", mode="before")
     @classmethod
