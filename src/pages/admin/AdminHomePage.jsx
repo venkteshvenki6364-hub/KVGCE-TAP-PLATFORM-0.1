@@ -223,11 +223,22 @@ function AdminHomePage() {
   const [pendingResets, setPendingResets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam) return tabParam;
     if (typeof window !== "undefined" && window.location.pathname.includes("/faculty")) {
       return "faculty";
     }
     return "pending";
-  }); // pending | analysis | faculty | users | departments | quizBuilder | analytics
+  }); // pending | broadcast | analysis | faculty | users | departments | quizBuilder | codingBuilder | analytics
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
 
   // Filter Modes: "all" | "class" | "single"
   const [filterMode, setFilterMode] = useState("all");
@@ -241,17 +252,162 @@ function AdminHomePage() {
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const [newUser, setNewUser] = useState({
-    email: "",
-    full_name: "",
-    password: "Password123!",
-    role: "student",
-    department: "Computer Science & Engineering",
-    student_id: "",
-    faculty_id: "",
-    phone: "",
-    dob: "",
+  // Broadcast Notifications & Active Banner Management
+  const [broadcastList, setBroadcastList] = useState(() => {
+    try {
+      const stored = localStorage.getItem("kvgce_broadcast_notifications");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      {
+        id: "notif-1",
+        title: "Welcome to KVGCE-TAP Platform 2026",
+        message: "Welcome all Students and Faculty! Explore our automated skill rankings, aptitude assessments, and interactive coding lab tools.",
+        sender: "Administrator",
+        targetRole: "all",
+        type: "announcement",
+        isBannerActive: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: "notif-2",
+        title: "Campus Placement Drive 2026 Scheduled",
+        message: "Top IT tech companies placement drive starts next week. Please complete your academic profile and aptitude mock tests.",
+        sender: "Training & Placement Officer",
+        targetRole: "student",
+        type: "placement",
+        isBannerActive: false,
+        createdAt: new Date(Date.now() - 86400000).toISOString()
+      }
+    ];
   });
+
+  const [activeBanner, setActiveBanner] = useState(() => {
+    try {
+      const stored = localStorage.getItem("kvgce_active_announcement");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.error(e);
+    }
+    return broadcastList.find((b) => b.isBannerActive) || null;
+  });
+
+  const [newBroadcast, setNewBroadcast] = useState({
+    title: "",
+    message: "",
+    targetRole: "all",
+    targetBranch: "all",
+    targetSection: "all",
+    targetBatchYear: "all",
+    targetSemester: "all",
+    type: "announcement",
+    isBannerActive: false,
+  });
+
+  const handlePublishBroadcast = (e) => {
+    e.preventDefault();
+    if (!newBroadcast.title.trim() || !newBroadcast.message.trim()) return;
+
+    const createdItem = {
+      id: `notif_${Date.now()}`,
+      title: newBroadcast.title.trim(),
+      message: newBroadcast.message.trim(),
+      targetRole: newBroadcast.targetRole,
+      targetBranch: newBroadcast.targetBranch,
+      targetSection: newBroadcast.targetSection,
+      targetBatchYear: newBroadcast.targetBatchYear,
+      targetSemester: newBroadcast.targetSemester,
+      type: newBroadcast.type,
+      sender: "Administrator",
+      isBannerActive: newBroadcast.isBannerActive,
+      createdAt: new Date().toISOString(),
+      formattedDate: new Date().toLocaleString(),
+    };
+
+    let updatedList = [createdItem, ...broadcastList];
+
+    if (newBroadcast.isBannerActive) {
+      updatedList = updatedList.map((item) => ({
+        ...item,
+        isBannerActive: item.id === createdItem.id,
+      }));
+      setActiveBanner(createdItem);
+      localStorage.setItem("kvgce_active_announcement", JSON.stringify(createdItem));
+    }
+
+    setBroadcastList(updatedList);
+    localStorage.setItem("kvgce_broadcast_notifications", JSON.stringify(updatedList));
+
+    window.dispatchEvent(new Event("kvgce_notif_updated"));
+
+    setNewBroadcast({
+      title: "",
+      message: "",
+      targetRole: "all",
+      targetBranch: "all",
+      targetSection: "all",
+      targetBatchYear: "all",
+      targetSemester: "all",
+      type: "announcement",
+      isBannerActive: false,
+    });
+
+    setMsg("📢 Broadcast notification published successfully with target filters!");
+    setTimeout(() => setMsg(""), 4500);
+  };
+
+  const handleToggleBannerActive = (item) => {
+    const isCurrentlyActive = item.isBannerActive;
+    const updatedList = broadcastList.map((b) => ({
+      ...b,
+      isBannerActive: b.id === item.id ? !isCurrentlyActive : false,
+    }));
+
+    setBroadcastList(updatedList);
+    localStorage.setItem("kvgce_broadcast_notifications", JSON.stringify(updatedList));
+
+    if (!isCurrentlyActive) {
+      const activeObj = { ...item, isBannerActive: true };
+      setActiveBanner(activeObj);
+      localStorage.setItem("kvgce_active_announcement", JSON.stringify(activeObj));
+    } else {
+      setActiveBanner(null);
+      localStorage.removeItem("kvgce_active_announcement");
+    }
+
+    window.dispatchEvent(new Event("kvgce_notif_updated"));
+    setMsg(isCurrentlyActive ? "Active banner deactivated." : `Set active announcement banner: "${item.title}"`);
+    setTimeout(() => setMsg(""), 4000);
+  };
+
+  const handleDeactivateBanner = () => {
+    const updatedList = broadcastList.map((b) => ({ ...b, isBannerActive: false }));
+    setBroadcastList(updatedList);
+    localStorage.setItem("kvgce_broadcast_notifications", JSON.stringify(updatedList));
+    setActiveBanner(null);
+    localStorage.removeItem("kvgce_active_announcement");
+    window.dispatchEvent(new Event("kvgce_notif_updated"));
+    setMsg("Active top banner deactivated.");
+    setTimeout(() => setMsg(""), 3000);
+  };
+
+  const handleDeleteBroadcast = (id) => {
+    if (!window.confirm("Are you sure you want to delete this broadcast notification?")) return;
+    const updatedList = broadcastList.filter((b) => b.id !== id);
+    setBroadcastList(updatedList);
+    localStorage.setItem("kvgce_broadcast_notifications", JSON.stringify(updatedList));
+
+    if (activeBanner && activeBanner.id === id) {
+      setActiveBanner(null);
+      localStorage.removeItem("kvgce_active_announcement");
+    }
+
+    window.dispatchEvent(new Event("kvgce_notif_updated"));
+    setMsg("Broadcast notification deleted.");
+    setTimeout(() => setMsg(""), 3000);
+  };
 
   const fetchAdminData = async () => {
     try {
@@ -584,57 +740,258 @@ function AdminHomePage() {
           </div>
         </div>
 
-        {/* 3. MAIN TAB NAVIGATION BAR */}
-        <div className="admin-main-tabs-bar">
-          <button
-            className={`admin-nav-tab ${activeTab === "pending" ? "active" : ""}`}
-            onClick={() => setActiveTab("pending")}
-          >
-            ⏳ Pending Approvals ({pendingUsers.length + pendingResets.length})
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "analysis" ? "active" : ""}`}
-            onClick={() => setActiveTab("analysis")}
-          >
-            📊 Overall Analysis
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "faculty" ? "active" : ""}`}
-            onClick={() => setActiveTab("faculty")}
-          >
-            👨‍🏫 Faculties
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "users" ? "active" : ""}`}
-            onClick={() => setActiveTab("users")}
-          >
-            👤 User Management
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "departments" ? "active" : ""}`}
-            onClick={() => setActiveTab("departments")}
-          >
-            🏢 Departments
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "quizBuilder" ? "active" : ""}`}
-            onClick={() => setActiveTab("quizBuilder")}
-          >
-            📝 Quiz & Aptitude Builder
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "codingBuilder" ? "active" : ""}`}
-            onClick={() => setActiveTab("codingBuilder")}
-          >
-            💻 Coding Lab Builder
-          </button>
-          <button
-            className={`admin-nav-tab ${activeTab === "analytics" ? "active" : ""}`}
-            onClick={() => setActiveTab("analytics")}
-          >
-            📈 System Health
-          </button>
-        </div>
+        {/* TAB CONTENTS CONTROLLED BY SIDEBAR NAVIGATION */}
+
+        {/* TAB: BROADCAST & NOTIFICATIONS CONTROL PANEL */}
+        {activeTab === "broadcast" && (
+          <div className="admin-broadcast-section">
+            <div className="broadcast-card-grid">
+              {/* FORM: PUBLISH NEW BROADCAST */}
+              <div className="broadcast-form-card">
+                <div className="broadcast-card-header">
+                  <span className="b-header-icon">📢</span>
+                  <div>
+                    <h3 className="b-header-title">Publish Broadcast Notification</h3>
+                    <p className="b-header-sub">Send a platform-wide message to students, faculty, or all users.</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handlePublishBroadcast} className="broadcast-form">
+                  <div className="b-form-group">
+                    <label className="b-label">Notification Title / Subject *</label>
+                    <input
+                      type="text"
+                      required
+                      className="b-input"
+                      placeholder="e.g., Important Campus Placement Drive Notice 2026"
+                      value={newBroadcast.title}
+                      onChange={(e) => setNewBroadcast({ ...newBroadcast, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="b-form-row">
+                    <div className="b-form-group">
+                      <label className="b-label">Target Audience *</label>
+                      <select
+                        className="b-select"
+                        value={newBroadcast.targetRole}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, targetRole: e.target.value })}
+                      >
+                        <option value="all">Everyone (All Students & Faculty)</option>
+                        <option value="student">Students Only</option>
+                        <option value="faculty">Faculty Only</option>
+                      </select>
+                    </div>
+
+                    <div className="b-form-group">
+                      <label className="b-label">Notification Type *</label>
+                      <select
+                        className="b-select"
+                        value={newBroadcast.type}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, type: e.target.value })}
+                      >
+                        <option value="announcement">📢 General Announcement</option>
+                        <option value="urgent">🚨 Urgent Alert</option>
+                        <option value="placement">🎓 Placement Drive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="b-form-row">
+                    <div className="b-form-group">
+                      <label className="b-label">Target Branch / Department *</label>
+                      <select
+                        className="b-select"
+                        value={newBroadcast.targetBranch}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, targetBranch: e.target.value })}
+                      >
+                        <option value="all">All Branches / Departments</option>
+                        <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                        <option value="Information Science & Engineering">Information Science & Engineering</option>
+                        <option value="Electronics & Communication">Electronics & Communication</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+                      </select>
+                    </div>
+
+                    <div className="b-form-group">
+                      <label className="b-label">Target Section *</label>
+                      <select
+                        className="b-select"
+                        value={newBroadcast.targetSection}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, targetSection: e.target.value })}
+                      >
+                        <option value="all">All Sections (A, B, C)</option>
+                        <option value="Section A">Section A</option>
+                        <option value="Section B">Section B</option>
+                        <option value="Section C">Section C</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="b-form-row">
+                    <div className="b-form-group">
+                      <label className="b-label">Target Batch Year *</label>
+                      <select
+                        className="b-select"
+                        value={newBroadcast.targetBatchYear}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, targetBatchYear: e.target.value })}
+                      >
+                        <option value="all">All Batch Years</option>
+                        <option value="2021-2025">2021 - 2025 (4th Year)</option>
+                        <option value="2022-2026">2022 - 2026 (3rd Year)</option>
+                        <option value="2023-2027">2023 - 2027 (2nd Year)</option>
+                        <option value="2024-2028">2024 - 2028 (1st Year)</option>
+                      </select>
+                    </div>
+
+                    <div className="b-form-group">
+                      <label className="b-label">Target Semester *</label>
+                      <select
+                        className="b-select"
+                        value={newBroadcast.targetSemester}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, targetSemester: e.target.value })}
+                      >
+                        <option value="all">All Semesters (1st to 8th)</option>
+                        <option value="1st Sem">1st Semester</option>
+                        <option value="2nd Sem">2nd Semester</option>
+                        <option value="3rd Sem">3rd Semester</option>
+                        <option value="4th Sem">4th Semester</option>
+                        <option value="5th Sem">5th Semester</option>
+                        <option value="6th Sem">6th Semester</option>
+                        <option value="7th Sem">7th Semester</option>
+                        <option value="8th Sem">8th Semester</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="b-form-group">
+                    <label className="b-label">Message Content / Body *</label>
+                    <textarea
+                      required
+                      rows="4"
+                      className="b-textarea"
+                      placeholder="Type your message details here..."
+                      value={newBroadcast.message}
+                      onChange={(e) => setNewBroadcast({ ...newBroadcast, message: e.target.value })}
+                    ></textarea>
+                  </div>
+
+                  <div className="b-checkbox-group">
+                    <label className="b-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={newBroadcast.isBannerActive}
+                        onChange={(e) => setNewBroadcast({ ...newBroadcast, isBannerActive: e.target.checked })}
+                      />
+                      <span>🚀 Activate as top Dark Blue Announcement Banner for all users</span>
+                    </label>
+                  </div>
+
+                  <button type="submit" className="b-submit-btn">
+                    📢 Publish & Broadcast Message
+                  </button>
+                </form>
+              </div>
+
+              {/* CURRENT ACTIVE ANNOUNCEMENT BANNER CARD */}
+              <div className="active-banner-preview-card">
+                <div className="broadcast-card-header">
+                  <span className="b-header-icon">✨</span>
+                  <div>
+                    <h3 className="b-header-title">Active Top Banner Status</h3>
+                    <p className="b-header-sub">Current active dark blue banner displayed to platform users.</p>
+                  </div>
+                </div>
+
+                {activeBanner ? (
+                  <div className="banner-preview-box">
+                    <div className="banner-preview-header">
+                      <span className="b-badge-active">● ACTIVE BANNER</span>
+                      <span className="b-meta-target">Target: {activeBanner.targetRole?.toUpperCase()}</span>
+                    </div>
+
+                    <h4 className="banner-preview-title">{activeBanner.title}</h4>
+                    <p className="banner-preview-text">{activeBanner.message}</p>
+
+                    <div className="banner-preview-footer">
+                      <span className="banner-sender-tag">By {activeBanner.sender || "Administrator"}</span>
+                      <button
+                        className="deactivate-banner-btn"
+                        onClick={handleDeactivateBanner}
+                      >
+                        Deactivate Banner
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="no-active-banner-box">
+                    <span className="no-banner-icon">ℹ️</span>
+                    <p className="no-banner-text">No banner currently activated. Publish a broadcast with "Set as Active Banner" option checked to show top banner.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* LIST OF SENT BROADCAST NOTIFICATIONS */}
+            <div className="sent-broadcasts-history-card">
+              <div className="history-card-header">
+                <h3 className="history-title">Sent Broadcast Notifications & History</h3>
+                <span className="history-count-badge">{broadcastList.length} Messages</span>
+              </div>
+
+              <div className="history-list">
+                {broadcastList.length > 0 ? (
+                  broadcastList.map((item) => (
+                    <div key={item.id} className="history-item-row">
+                      <div className="history-item-left">
+                        <span className={`history-type-tag type-${item.type}`}>
+                          {item.type === "urgent" ? "🚨 URGENT" : item.type === "placement" ? "🎓 PLACEMENT" : "📢 ANNOUNCEMENT"}
+                        </span>
+                        <div className="history-item-content">
+                          <h4 className="history-item-title">{item.title}</h4>
+                          <p className="history-item-msg">{item.message}</p>
+                          <div className="history-item-meta" style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px" }}>
+                            <span>Role: <strong>{item.targetRole?.toUpperCase() || "ALL"}</strong></span>
+                            <span>•</span>
+                            <span>Branch: <strong>{item.targetBranch && item.targetBranch !== "all" ? item.targetBranch : "All Branches"}</strong></span>
+                            <span>•</span>
+                            <span>Section: <strong>{item.targetSection && item.targetSection !== "all" ? item.targetSection : "All Sections"}</strong></span>
+                            <span>•</span>
+                            <span>Batch: <strong>{item.targetBatchYear && item.targetBatchYear !== "all" ? item.targetBatchYear : "All Batches"}</strong></span>
+                            <span>•</span>
+                            <span>Sem: <strong>{item.targetSemester && item.targetSemester !== "all" ? item.targetSemester : "All Semesters"}</strong></span>
+                            <span>•</span>
+                            <span>Uploaded: {item.formattedDate || new Date(item.createdAt).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="history-item-actions">
+                        <button
+                          className={`banner-toggle-btn ${item.isBannerActive ? "is-active" : ""}`}
+                          onClick={() => handleToggleBannerActive(item)}
+                        >
+                          {item.isBannerActive ? "★ Active Banner" : "Set as Banner"}
+                        </button>
+                        <button
+                          className="delete-broadcast-btn"
+                          onClick={() => handleDeleteBroadcast(item.id)}
+                          title="Delete notification"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-history-text">No broadcast messages sent yet.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TAB: QUIZ BUILDER */}
         {activeTab === "quizBuilder" && (
