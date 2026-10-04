@@ -442,10 +442,13 @@ async def submit_quiz_attempt(
         evaluated_q["is_correct"] = is_correct
         evaluated_questions.append(evaluated_q)
 
-    marks_per_q = assessment.get("questions", [{}])[0].get("marks", 2) if questions else 2
+    marks_per_q = assessment.get("questions", [{}])[0].get("marks", 1) if questions else 1
+    if not marks_per_q or marks_per_q <= 0:
+        marks_per_q = 1
+
     score = correct_count * marks_per_q
     total_marks = total_questions * marks_per_q
-    percentage = round((correct_count / total_questions) * 100, 1) if total_questions else 100.0
+    percentage = round((correct_count / total_questions) * 100, 2) if total_questions else 100.0
 
     student_id = current_user.get("student_id") or "4KV21CS042"
     student_name = current_user.get("full_name") or "Student"
@@ -467,6 +470,8 @@ async def submit_quiz_attempt(
         "total_marks": total_marks,
         "percentage": percentage,
         "time_taken_seconds": attempt_in.time_taken_seconds,
+        "camera_verified": attempt_in.camera_verified if attempt_in.camera_verified is not None else True,
+        "malpractice_strikes": attempt_in.malpractice_strikes or 0,
         "submitted_at": datetime.utcnow().isoformat(),
         "questions": evaluated_questions
     }

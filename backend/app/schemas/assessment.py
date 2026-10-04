@@ -39,9 +39,11 @@ class CodingProblemCreate(BaseModel):
     is_published: bool = True
 
 class QuizAttemptSubmit(BaseModel):
-    assessment_id: str
+    assessment_id: Optional[str] = None
     answers: dict # {question_index: chosen_option_index}
     time_taken_seconds: int = 0
+    camera_verified: Optional[bool] = True
+    malpractice_strikes: Optional[int] = 0
 
 class CodingSubmissionSubmit(BaseModel):
     problem_title: str
