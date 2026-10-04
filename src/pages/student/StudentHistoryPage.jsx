@@ -79,6 +79,14 @@ const DEFAULT_APTITUDE_TESTS = [
   }
 ];
 
+const getScoreColorClass = (pct) => {
+  const num = parseFloat(pct || 0);
+  if (num >= 85) return "pct-green";
+  if (num >= 70) return "pct-blue";
+  if (num >= 50) return "pct-orange";
+  return "pct-red";
+};
+
 function StudentHistoryPage() {
   const navigate = useNavigate();
   const [historyItems, setHistoryItems] = useState([]);
@@ -123,6 +131,12 @@ function StudentHistoryPage() {
           .map((test) => {
             const attempt = attemptMap[test._id];
             const isCompleted = Boolean(attempt);
+            const scoreVal = attempt?.score !== undefined ? attempt.score : null;
+            const totalVal = attempt?.total_marks || test.total_marks || 8;
+            let pctVal = attempt?.percentage !== undefined ? attempt.percentage : null;
+            if (pctVal === null && scoreVal !== null) {
+              pctVal = (scoreVal / totalVal) * 100;
+            }
 
             return {
               id: test._id,
@@ -133,9 +147,9 @@ function StudentHistoryPage() {
               type: test.type || "aptitude",
               isCompleted: isCompleted,
               attempt: attempt || null,
-              score: attempt?.score !== undefined ? attempt.score : null,
-              totalMarks: attempt?.total_marks || test.total_marks || 8,
-              percentage: attempt?.percentage !== undefined ? attempt.percentage : null,
+              score: scoreVal,
+              totalMarks: totalVal,
+              percentage: pctVal !== null ? parseFloat(pctVal).toFixed(2) : "0.00",
               submittedAt: attempt?.submitted_at || null
             };
           })
@@ -168,43 +182,46 @@ function StudentHistoryPage() {
         ) : (
           <div className="history-rows-list">
             {historyItems.length > 0 ? (
-              historyItems.map((item) => (
-                <div key={item.id} className="history-row-card">
-                  {/* LEFT SIDE: TEST TITLE & META */}
-                  <div className="history-left-col">
-                    <span className="history-category-tag">{item.category}</span>
-                    <h3 className="history-row-title">{item.title}</h3>
-                    <p className="history-row-desc">{item.description}</p>
-                    {item.submittedAt && (
-                      <span className="history-date-text">
-                        Completed on: {new Date(item.submittedAt).toLocaleString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        })}
-                      </span>
-                    )}
-                  </div>
+              historyItems.map((item) => {
+                const colorClass = getScoreColorClass(item.percentage);
+                return (
+                  <div key={item.id} className="history-row-card">
+                    {/* LEFT SIDE: TEST TITLE & META */}
+                    <div className="history-left-col">
+                      <span className="history-category-tag">{item.category}</span>
+                      <h3 className="history-row-title">{item.title}</h3>
+                      <p className="history-row-desc">{item.description}</p>
+                      {item.submittedAt && (
+                        <span className="history-date-text">
+                          Completed on: {new Date(item.submittedAt).toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })}
+                        </span>
+                      )}
+                    </div>
 
-                  {/* RIGHT SIDE: MARKS & VIEW RESULT BUTTON */}
-                  <div className="history-right-col">
-                    <div className="history-completed-box">
-                      <div className="history-marks-display">
-                        <span className="marks-val">{item.score} / {item.totalMarks}</span>
-                        <span className="marks-pct">({item.percentage}%)</span>
+                    {/* RIGHT SIDE: MARKS & VIEW RESULT BUTTON */}
+                    <div className="history-right-col">
+                      <div className="history-completed-box">
+                        <div className="history-marks-display">
+                          <span className={`marks-val ${colorClass}`}>{item.score} / {item.totalMarks}</span>
+                          <span className={`marks-pct ${colorClass}`}>({item.percentage}%)</span>
+                        </div>
+                        <button
+                          className="btn-view-answersheet"
+                          onClick={() => handleViewAnswerSheet(item)}
+                        >
+                          View Result
+                        </button>
                       </div>
-                      <button
-                        className="btn-view-answersheet"
-                        onClick={() => handleViewAnswerSheet(item)}
-                      >
-                        View Result
-                      </button>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="history-empty">
                 <p style={{ margin: "0 0 1rem 0", fontSize: "1rem", color: "#475569" }}>

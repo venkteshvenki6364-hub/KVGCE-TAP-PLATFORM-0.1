@@ -5,11 +5,11 @@ import api from "../../services/api";
 import "./AptitudeModule.css";
 
 const getScoreColorClass = (pct) => {
-  const num = Number(pct);
-  if (num < 40) return "red";
-  if (num < 60) return "orange";
-  if (num < 85) return "blue";
-  return "green";
+  const num = parseFloat(pct || 0);
+  if (num >= 85) return "green";
+  if (num >= 70) return "blue";
+  if (num >= 50) return "orange";
+  return "red";
 };
 
 const formatDateText = (dateStr) => {
@@ -98,29 +98,49 @@ const normalizeQuestion = (q, idx = 0) => {
   };
 };
 
-// Helper function to build 25 questions per test assessment
-const ensure25Questions = (baseQuestions, categoryName) => {
+// Helper function to build 26 questions per test assessment (including a 150-word Question #26)
+const ensure26Questions = (baseQuestions, categoryName) => {
   let source = Array.isArray(baseQuestions) && baseQuestions.length > 0
     ? baseQuestions.map((q, i) => normalizeQuestion(q, i))
     : DEFAULT_APTITUDE_TESTS[0].questions.map((q, i) => normalizeQuestion(q, i));
   if (!source || source.length === 0) return [];
-  if (source.length >= 25) return source;
 
-  const result = [...source];
-  let i = 0;
+  const result = [];
   while (result.length < 25) {
-    const template = source[i % source.length];
-    const qNum = result.length + 1;
-    result.push(
-      normalizeQuestion({
-        ...template,
-        question: `Q${qNum}: [${categoryName || "Aptitude"} Practice] ${template.question}`,
-        formula: template.formula || "Apply standard formula & logical principles step by step.",
-        explanation: template.explanation || "Detailed mathematical and analytical problem calculation."
-      }, result.length)
-    );
-    i++;
+    if (result.length < source.length) {
+      result.push(source[result.length]);
+    } else {
+      const template = source[result.length % source.length];
+      const qNum = result.length + 1;
+      result.push(
+        normalizeQuestion({
+          ...template,
+          question: `Q${qNum}: [${categoryName || "Aptitude"} Practice] ${template.question}`,
+          formula: template.formula || "Apply standard formula & logical principles step by step.",
+          explanation: template.explanation || "Detailed mathematical and analytical problem calculation."
+        }, result.length)
+      );
+    }
   }
+
+  // QUESTION 26: LONG 150-WORD COMPREHENSIVE CASE STUDY STATEMENT
+  result.push(
+    normalizeQuestion({
+      id: 26,
+      question: "Q26: [Comprehensive Case Study] In a large-scale campus placement drive conducted for final-year engineering students across three major departments—Computer Science, Information Technology, and Electronics Communication—a total of 1,200 candidates participated in a multi-stage technical screening process. During the preliminary evaluation phase, exactly 45% of the total candidates successfully qualified in core algorithms and programming logic, 35% qualified in system architecture design, and 20% qualified in modern database management systems. If 15% of the total candidates cleared both the algorithms and system architecture modules, while 10% cleared both system architecture and database management modules, and 5% cleared all three technical domains simultaneously, calculate the exact net percentage and overall count of candidates who successfully qualified in at least one technical screening domain during the evaluation. Furthermore, determine the remaining number of candidates who failed to clear any of the three screening criteria and must register for mandatory remedial training.",
+      options: [
+        "70% qualified (840 candidates) & 360 candidates in remedial training",
+        "65% qualified (780 candidates) & 420 candidates in remedial training",
+        "75% qualified (900 candidates) & 300 candidates in remedial training",
+        "80% qualified (960 candidates) & 240 candidates in remedial training"
+      ],
+      correct_answer: 0,
+      formula: "Inclusion-Exclusion Principle: P(A ∪ B ∪ C) = P(A) + P(B) + P(C) - P(A ∩ B) - P(B ∩ C) - P(A ∩ C) + P(A ∩ B ∩ C)",
+      explanation: "1) Net qualified % = 45% + 35% + 20% - 15% - 10% - 5% + 5% = 70%.\n2) Qualified candidates = 70% of 1,200 = 840 candidates.\n3) Remedial candidates = 1,200 - 840 = 360 candidates.",
+      category: categoryName || "Comprehensive Aptitude"
+    }, 25)
+  );
+
   return result;
 };
 
@@ -555,6 +575,7 @@ function AptitudeModule() {
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(1800);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [viewingAnswerSheet, setViewingAnswerSheet] = useState(false);
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -578,6 +599,9 @@ function AptitudeModule() {
   // Live mid-screen camera preview modal state
   const [showLiveCamModal, setShowLiveCamModal] = useState(false);
   const liveCamVideoRef = useRef(null);
+
+  // Debouncing ref to prevent double strikes on single tab switch
+  const lastStrikeTimestampRef = useRef(0);
 
   // Request browser camera stream cleanly using navigator.mediaDevices.getUserMedia
   const requestCameraPermission = async () => {
@@ -775,10 +799,17 @@ function AptitudeModule() {
     if (!activeTest || isSubmitted) return;
 
     const triggerMalpracticeWarning = () => {
+      const now = Date.now();
+      // Debounce: prevent duplicate strikes within 2.5s when both visibilitychange and blur fire together
+      if (now - lastStrikeTimestampRef.current < 2500) {
+        return;
+      }
+      lastStrikeTimestampRef.current = now;
+
       setMalpracticeCount((prev) => {
         const nextCount = prev + 1;
         if (nextCount >= 3) {
-          alert("🚨 MALPRACTICE VIOLATION: 3 strikes exceeded! Your test is automatically submitted immediately.");
+          alert("Malpractice Limit Reached: 3 strikes recorded. Your test is now submitted.");
           handleSubmitTest();
         } else {
           setShowMalpracticeModal(true);
@@ -799,7 +830,7 @@ function AptitudeModule() {
 
     const handleBeforeUnload = (e) => {
       e.preventDefault();
-      e.returnValue = "Warning: Navigating away during a proctored assessment is counted as a malpractice violation!";
+      e.returnValue = "Leaving this test page will record a malpractice strike. Are you sure?";
       return e.returnValue;
     };
 
@@ -843,11 +874,31 @@ function AptitudeModule() {
 
   // Confirm camera & launch test logic (Camera Authorized)
   const handleConfirmStartTest = (optTest) => {
-    let test = (optTest && optTest.title) ? optTest : (pendingTest || availableTests[0] || DEFAULT_APTITUDE_TESTS[0]);
+    let test = (optTest && optTest.title) ? optTest : (pendingTest || activeTest || availableTests[0] || DEFAULT_APTITUDE_TESTS[0]);
     if (!test) return;
 
+    // If test is already active, re-enable camera without resetting test progress!
+    if (activeTest && activeTest._id === test._id && !isSubmitted) {
+      setCameraAllowed(true);
+      setShowCamModal(false);
+      setPendingTest(null);
+      if (navigator?.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+          .then((stream) => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+              setCameraActive(true);
+            }
+          })
+          .catch((err) => {
+            console.warn("Re-enabling camera failed:", err);
+          });
+      }
+      return;
+    }
+
     try {
-      const testQs = ensure25Questions(test.questions || [], test.title);
+      const testQs = ensure26Questions(test.questions || [], test.title);
       setQuestions(testQs);
       setCurrentIdx(0);
       setAnswers({});
@@ -863,7 +914,7 @@ function AptitudeModule() {
     } catch (err) {
       console.error("Error launching test:", err);
       const fallbackTest = DEFAULT_APTITUDE_TESTS[0];
-      const safeQs = ensure25Questions(fallbackTest.questions, fallbackTest.title);
+      const safeQs = ensure26Questions(fallbackTest.questions, fallbackTest.title);
       setQuestions(safeQs);
       setCurrentIdx(0);
       setAnswers({});
@@ -880,7 +931,7 @@ function AptitudeModule() {
   const handleViewResultSheet = (test) => {
     const prevAttempt = getAttemptForTest(test._id);
     setActiveTest(test);
-    const testQs = ensure25Questions(test.questions || [], test.title);
+    const testQs = ensure26Questions(test.questions || [], test.title);
     setQuestions(testQs);
     setIsSubmitted(true);
 
@@ -927,9 +978,11 @@ function AptitudeModule() {
       });
     });
 
-    const totalMarks = activeTest.total_marks || (questions.length * 2);
-    const score = correct * 2;
-    const pct = Math.round((correct / (questions.length || 1)) * 100);
+    const totalQuestionsCount = questions.length || 1;
+    const totalMarks = totalQuestionsCount;
+    const score = correct;
+    const rawPct = (correct / totalQuestionsCount) * 100;
+    const pct = parseFloat(rawPct.toFixed(2));
 
     const resultPayload = {
       assessment_title: activeTest.title,
@@ -974,12 +1027,20 @@ function AptitudeModule() {
     setMyAttempts(prev => [...prev.filter(a => a.assessment_id !== activeTest._id), newAttemptRecord]);
 
     try {
-      await api.post(`/assessments/${activeTest._id}/attempt`, {
+      const apiRes = await api.post(`/assessments/${activeTest._id}/attempt`, {
+        assessment_id: activeTest._id,
         answers: answers,
         time_taken_seconds: timeTaken,
         camera_verified: cameraAllowed,
         malpractice_strikes: malpracticeCount
       });
+      if (apiRes?.data?.data?.percentage !== undefined) {
+        const backendPct = parseFloat(apiRes.data.data.percentage);
+        setResult(prev => ({
+          ...prev,
+          percentage: backendPct
+        }));
+      }
     } catch (e) {
       console.warn("Backend attempt sync warning:", e);
     }
@@ -1012,15 +1073,23 @@ function AptitudeModule() {
             <div className="cam-setup-overlay">
               <div className="cam-setup-modal">
                 <div className="cam-setup-header">
-                  <h3>📷 Camera & Proctoring Verification</h3>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#003896" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  <h3>Camera Verification</h3>
                 </div>
-                <p className="cam-setup-subtitle">
-                  Please verify your camera position. Live proctoring will be active during <strong>{pendingTest?.title}</strong>.
+
+                <p className="cam-bold-info">
+                  Webcam Access Required for Test
+                </p>
+                <p className="cam-normal-sub">
+                  Position your face clearly in front of the camera before starting <strong>{pendingTest?.title}</strong>.
                 </p>
 
                 {camErrorMsg ? (
                   <div className="cam-error-box">
-                    <strong>⚠️ Camera Access Notice:</strong>
+                    <strong>Camera Access Notice:</strong>
                     {camErrorMsg}
                   </div>
                 ) : (
@@ -1028,7 +1097,7 @@ function AptitudeModule() {
                     <video ref={modalVideoRef} autoPlay playsInline muted className="cam-modal-video" />
                     <div className="cam-modal-badge">
                       <span className={`cam-dot ${camStatus === "granted" ? "active" : camStatus === "denied" ? "denied" : ""}`}></span>
-                      {camStatus === "granted" ? "Camera On & Positioned" : camStatus === "requesting" ? "Connecting Camera..." : "Camera Verification"}
+                      {camStatus === "granted" ? "Camera Ready" : camStatus === "requesting" ? "Connecting Camera..." : "Camera Verification"}
                     </div>
                   </div>
                 )}
@@ -1041,15 +1110,15 @@ function AptitudeModule() {
                   {camStatus === "denied" || camStatus === "unavailable" || camStatus === "error" ? (
                     <>
                       <button className="btn-modal-retry" onClick={requestCameraPermission}>
-                        🎥 Retry Camera Access
+                        Retry Camera Access
                       </button>
                       <button className="btn-modal-proceed" onClick={() => handleConfirmStartTest(pendingTest)}>
-                        🚀 Start Test
+                        Allow Camera & Start Test
                       </button>
                     </>
                   ) : (
                     <button className="btn-modal-confirm" onClick={() => handleConfirmStartTest(pendingTest)}>
-                      Allow & Start Test
+                      Allow Camera & Start Test
                     </button>
                   )}
                 </div>
@@ -1063,7 +1132,7 @@ function AptitudeModule() {
               <p>Proctored talent and placement evaluations. Live face camera active during tests.</p>
             </div>
             <button className="btn-reset-all" onClick={handleResetAllAttempts} title="Reset all test history to retake tests">
-              🔄 Reset Attempts & Start Fresh
+              Reset Attempts & Start Fresh
             </button>
           </div>
 
@@ -1125,7 +1194,9 @@ function AptitudeModule() {
   const safeIdx = Math.min(Math.max(0, currentIdx), safeQuestions.length - 1);
   const currentQ = normalizeQuestion(safeQuestions[safeIdx], safeIdx);
 
-  const scoreColor = getScoreColorClass(result?.percentage || 0);
+  const rawPct = result?.percentage !== undefined ? parseFloat(result.percentage) : 0;
+  const formattedPct = rawPct.toFixed(2);
+  const scoreColor = getScoreColorClass(rawPct);
 
   return (
     <DashboardLayout title={`Aptitude Test: ${activeTest?.title || "Assessment"}`}>
@@ -1138,19 +1209,24 @@ function AptitudeModule() {
           <div className="malpractice-overlay">
             <div className="malpractice-modal">
               <div className="malpractice-header">
-                ⚠️ MALPRACTICE STRIKE WARNING ({malpracticeCount} / 3)
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="malpractice-header-icon">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>Malpractice Warning (Strike {malpracticeCount} of 3)</span>
               </div>
               <p className="malpractice-text">
-                Switching tabs, minimizing the browser, or leaving the active test area is strictly prohibited.
+                Do not switch tabs or leave this window during the test.
               </p>
-              <p className="malpractice-warning-note">
-                You have <strong>{3 - malpracticeCount}</strong> warning strike(s) remaining. On your 3rd strike, the test will be automatically submitted immediately!
-              </p>
+              <div className="malpractice-warning-note">
+                <strong>{3 - malpracticeCount} strike{3 - malpracticeCount > 1 ? "s" : ""} remaining.</strong> Strike 3 will automatically submit your test.
+              </div>
               <button
                 className="malpractice-acknowledge-btn"
                 onClick={() => setShowMalpracticeModal(false)}
               >
-                I Understand & Continue Test
+                Understand & Continue
               </button>
             </div>
           </div>
@@ -1160,7 +1236,13 @@ function AptitudeModule() {
         {showLiveCamModal && (
           <div className="small-floating-cam-box">
             <div className="floating-cam-header">
-              <span>📷 Live Proctoring Cam</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Live Proctoring Cam</span>
+              </div>
               <button
                 type="button"
                 className="floating-cam-close-btn"
@@ -1185,49 +1267,53 @@ function AptitudeModule() {
           </div>
         )}
 
-        <button
-          className="btn-back-link"
-          onClick={() => {
-            if (!isSubmitted) {
-              if (window.confirm("⚠️ Leaving will count as a malpractice warning! Are you sure?")) {
-                setActiveTest(null);
-              }
-            } else {
-              setActiveTest(null);
-            }
-          }}
-        >
-          ← Back to Assessments List
-        </button>
-
-        {!isSubmitted ? (
+        {!isSubmitted || viewingAnswerSheet ? (
           <div className="active-test-container">
             {/* FULL ROW TOP TITLE BAR */}
             <div className="test-top-bar full-width-bar">
               <div className="test-top-left">
-                <h2 className="active-test-heading">{activeTest?.title || "Proctored Aptitude Assessment"}</h2>
-                <span className="q-count-sub text-muted">Proctored Assessment Mode</span>
+                <h2 className="active-test-heading">
+                  {!isSubmitted
+                    ? (activeTest?.title || "Proctored Aptitude Assessment")
+                    : `${activeTest?.title || "Assessment"} (Answer Review)`}
+                </h2>
+                <p className="active-test-desc">
+                  {!isSubmitted
+                    ? "Proctored assessment mode. Complete all questions within the allocated time."
+                    : "Answer Key & Formula Breakdown Review Mode. Use the Question Palette to switch questions."}
+                </p>
               </div>
 
               <div className="top-bar-right-group">
-                {/* ALL-RED MALPRACTICE STRIKES TEXT */}
-                <div className="malpractice-inline-right all-red-strike">
-                  <span className="strike-icon">🚨</span>
-                  <span>Malpractice Strikes: </span>
-                  <strong className="strike-red-count">{malpracticeCount}/3</strong>
-                </div>
+                {!isSubmitted ? (
+                  <div className="malpractice-inline-right clean-strike-normal">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span>Malpractice Strikes: {malpracticeCount}/3</span>
+                  </div>
+                ) : (
+                  <div className="malpractice-inline-right review-badge-mode">
+                    <span>Review Mode: Test Submitted ✓</span>
+                  </div>
+                )}
 
-                {/* GREEN CAMERA ON BADGE (CLICKABLE TO VIEW MID-SCREEN POPUP) */}
-                <div
-                  className="cam-on-badge green-cam-badge clickable-cam-badge"
-                  onClick={() => setShowLiveCamModal(true)}
-                  title="Click to view live camera feed in mid-screen"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                    <circle cx="12" cy="13" r="4"/>
+                {/* TIMER BLOCK (SHOWS REMAINING TIME IF IN TEST, OR TIME TAKEN IF IN VIEW ANSWERS) */}
+                <div className="top-bar-timer-black">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  <span>Camera On 🔍</span>
+                  <div className="timer-black-text">
+                    <span className="timer-black-label">{!isSubmitted ? "Remaining Time" : "Time Taken"}</span>
+                    <span className="timer-black-val">
+                      {!isSubmitted
+                        ? formatTime(timeLeft)
+                        : formatTime(result?.time_taken_seconds || (30 * 60 - timeLeft))}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1240,12 +1326,17 @@ function AptitudeModule() {
                   {/* SEGMENTED PROGRESS BAR & STEP COUNTER */}
                   <div className="q-progress-segmented-header">
                     <div className="segmented-bar">
-                      {questions.map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`segment-bar-item ${idx <= currentIdx ? "active" : ""}`}
-                        />
-                      ))}
+                      {questions.map((_, idx) => {
+                        let segClass = idx <= currentIdx ? "active" : "";
+                        if (isSubmitted) {
+                          const uAns = answers[idx];
+                          const cIdx = questions[idx]?.correct_answer !== undefined ? questions[idx].correct_answer : 0;
+                          if (uAns === undefined) segClass = "unanswered-seg";
+                          else if (uAns === cIdx) segClass = "correct-seg";
+                          else segClass = "wrong-seg";
+                        }
+                        return <div key={idx} className={`segment-bar-item ${segClass}`} />;
+                      })}
                     </div>
                     <div className="segment-step-count">
                       {currentIdx + 1} / {questions.length}
@@ -1254,40 +1345,121 @@ function AptitudeModule() {
 
                   {/* BOLD QUESTION TEXT */}
                   <h3 className="q-text screenshot-bold-q">
-                    {currentQ.question}
+                    Q{currentIdx + 1}: {currentQ.question}
                   </h3>
 
                   {/* OPTION BLOCKS (A., B., C., D.) */}
                   <div className="screenshot-options-list">
                     {(currentQ.options || []).map((opt, optIdx) => {
-                      const isSelected = answers[currentIdx] === optIdx;
+                      const userAns = answers[currentIdx];
+                      const correctIdx = currentQ.correct_answer !== undefined ? currentQ.correct_answer : 0;
                       const letter = String.fromCharCode(65 + optIdx);
+
+                      let optionStyleClass = "";
+                      let badgeTag = null;
+
+                      if (isSubmitted) {
+                        if (optIdx === correctIdx) {
+                          optionStyleClass = "option-correct-highlight";
+                          badgeTag = <span className="opt-badge-tag green-tag">✓ Correct Answer</span>;
+                        } else if (userAns === optIdx && userAns !== correctIdx) {
+                          optionStyleClass = "option-wrong-highlight";
+                          badgeTag = <span className="opt-badge-tag red-tag">✗ Your Choice (Wrong)</span>;
+                        } else {
+                          optionStyleClass = "option-disabled-neutral";
+                        }
+                      } else {
+                        if (userAns === optIdx) {
+                          optionStyleClass = "selected";
+                        }
+                      }
+
                       return (
-                        <button
+                        <div
                           key={optIdx}
-                          type="button"
-                          className={`screenshot-option-block ${isSelected ? "selected" : ""}`}
-                          onClick={() => handleSelectOption(currentIdx, optIdx)}
+                          className={`screenshot-option-block ${optionStyleClass}`}
+                          onClick={() => {
+                            if (!isSubmitted) handleSelectOption(currentIdx, optIdx);
+                          }}
                         >
                           <span className="opt-letter-prefix">{letter}.</span>
                           <span className="opt-text-val">{opt}</span>
-                        </button>
+                          {badgeTag}
+                        </div>
                       );
                     })}
                   </div>
 
+                  {/* NEW DEDICATED DIV BELOW OPTIONS: FORMULA & STEP-BY-STEP SOLUTION */}
+                  {isSubmitted && (
+                    <div className="review-solution-container">
+                      <div className="review-solution-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#003896" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="16" x2="12" y2="12"/>
+                          <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <span>Formula & Step-by-Step Solution</span>
+                      </div>
+
+                      {currentQ.formula && (
+                        <div className="formula-item-box">
+                          <strong>💡 Key Formula / Rule: </strong>
+                          <code>{currentQ.formula}</code>
+                        </div>
+                      )}
+
+                      <div className="explanation-item-box">
+                        <strong>📝 How to Solve (Step-by-Step Solution):</strong>
+                        <p className="solution-explanation-text">
+                          {currentQ.explanation || "Apply standard mathematical formula and logical rules step by step."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* BOTTOM ACTION BAR WITH ARROW MARKS (← PREVIOUS & NEXT →) */}
                   <div className="screenshot-card-footer">
-                    <button
-                      onClick={() => setCurrentIdx(currentIdx - 1)}
-                      className="screenshot-pill-btn prev-gray-pill"
-                      disabled={currentIdx === 0}
-                    >
-                      ← Previous
-                    </button>
+                    {isSubmitted ? (
+                      <button
+                        type="button"
+                        className="screenshot-pill-btn prev-gray-pill"
+                        onClick={() => setViewingAnswerSheet(false)}
+                      >
+                        ← Back to Result Summary
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setCurrentIdx(currentIdx - 1)}
+                        className="screenshot-pill-btn prev-gray-pill"
+                        disabled={currentIdx === 0}
+                      >
+                        ← Previous
+                      </button>
+                    )}
 
                     <div className="footer-right-nav">
-                      {currentIdx < questions.length - 1 ? (
+                      {isSubmitted ? (
+                        <>
+                          <button
+                            type="button"
+                            className="screenshot-pill-btn prev-gray-pill"
+                            onClick={() => setCurrentIdx((prev) => Math.max(0, prev - 1))}
+                            disabled={currentIdx === 0}
+                            style={{ marginRight: "0.5rem" }}
+                          >
+                            ← Prev Q
+                          </button>
+                          <button
+                            type="button"
+                            className="screenshot-pill-btn next-blue-pill"
+                            onClick={() => setCurrentIdx((prev) => Math.min(questions.length - 1, prev + 1))}
+                            disabled={currentIdx === questions.length - 1}
+                          >
+                            Next Q →
+                          </button>
+                        </>
+                      ) : currentIdx < questions.length - 1 ? (
                         <button
                           onClick={() => setCurrentIdx(currentIdx + 1)}
                           className="screenshot-pill-btn next-blue-pill"
@@ -1308,56 +1480,64 @@ function AptitudeModule() {
                 </div>
               </div>
 
-              {/* RIGHT TEST AREA: 50% BLACK TIMER & 50% CLICKABLE CAMERA CARD */}
+              {/* RIGHT TEST AREA: QUESTION PALETTE (SAME HEIGHT AS QUESTION CARD) */}
               <div className="right-test-area flex-fill">
-                {/* 50% BLACK TIMER & 50% LIVE CAMERA STATUS CARD WITH DIVIDER BORDER */}
-                <div className="split-timer-cam-card">
-                  {/* LEFT 50%: BLACK TIMER */}
-                  <div className="timer-split-50 black-bg">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    <div className="timer-split-text">
-                      <span className="split-lbl">Time Left</span>
-                      <span className="split-val">{formatTime(timeLeft)}</span>
-                    </div>
-                  </div>
-
-                  {/* BORDER DIVIDER LINE BETWEEN TIMER AND CAMERA */}
-                  <div className="timer-split-divider"></div>
-
-                  {/* RIGHT 50%: CLICKABLE CAMERA STATUS */}
-                  <div
-                    className="timer-split-50 cam-bg clickable-split-cam"
-                    onClick={() => setShowLiveCamModal(true)}
-                    title="Click to view mid-screen live camera feed"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.2">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                      <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                    <div className="timer-split-text">
-                      <span className="split-lbl-cam">Proctoring</span>
-                      <span className="split-val-cam">Camera On 🔍</span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* QUESTION NAVIGATION PALETTE (5x5 GRID WITH CLEAN TEXT NAVIGATION AT BOTTOM) */}
                 <div className="palette-card compact-palette flex-fill-card">
-                  <h4 className="palette-title">Question Palette</h4>
+                  {/* QUESTION PALETTE TOP HEADER WITH ARROW NAVIGATION */}
+                  <div className="palette-header-row">
+                    <h4 className="palette-title">Question Palette</h4>
+                    <div className="palette-arrow-nav">
+                      <button
+                        type="button"
+                        className="arrow-nav-btn"
+                        disabled={palettePage === 0}
+                        onClick={() => setPalettePage((prev) => Math.max(0, prev - 1))}
+                        title="Previous Questions"
+                      >
+                        ←
+                      </button>
+                      <span className="arrow-nav-text">
+                        {palettePage + 1}/{Math.ceil(questions.length / 25)}
+                      </span>
+                      <button
+                        type="button"
+                        className="arrow-nav-btn"
+                        disabled={(palettePage + 1) * 25 >= questions.length}
+                        onClick={() => setPalettePage((prev) => prev + 1)}
+                        title="Next Questions"
+                      >
+                        →
+                      </button>
+                    </div>
+                  </div>
 
                   {/* 5x5 GRID */}
                   <div className="palette-grid grid-5x5">
                     {visibleQuestions.map((_, pIdx) => {
                       const globalIdx = pageStart + pIdx;
-                      const isAnswered = answers[globalIdx] !== undefined;
+                      const userAns = answers[globalIdx];
+                      const qObj = safeQuestions[globalIdx];
+                      const correctIdx = qObj?.correct_answer !== undefined ? qObj.correct_answer : 0;
                       const isCurrent = globalIdx === currentIdx;
+
+                      let statusClass = "";
+                      if (isSubmitted) {
+                        if (userAns === undefined) {
+                          statusClass = "review-unanswered";
+                        } else if (userAns === correctIdx) {
+                          statusClass = "review-correct";
+                        } else {
+                          statusClass = "review-wrong";
+                        }
+                      } else {
+                        statusClass = `${isCurrent ? "current" : ""} ${userAns !== undefined ? "answered" : ""}`;
+                      }
+
                       return (
                         <button
                           key={globalIdx}
-                          className={`palette-num tight-num ${isCurrent ? "current" : ""} ${isAnswered ? "answered" : ""}`}
+                          className={`palette-num tight-num ${statusClass} ${isCurrent ? "current-ring" : ""}`}
                           onClick={() => setCurrentIdx(globalIdx)}
                         >
                           {globalIdx + 1}
@@ -1366,128 +1546,136 @@ function AptitudeModule() {
                     })}
                   </div>
 
-                  <div className="palette-legend tight-legend">
-                    <span><span className="legend-box answered"></span> Answered</span>
-                    <span><span className="legend-box"></span> Unanswered</span>
-                  </div>
+                  {isSubmitted ? (
+                    <div className="palette-legend tight-legend">
+                      <span><span className="legend-box review-correct-box"></span> Correct</span>
+                      <span><span className="legend-box review-wrong-box"></span> Wrong</span>
+                      <span><span className="legend-box review-unanswered-box"></span> Unanswered</span>
+                    </div>
+                  ) : (
+                    <div className="palette-legend tight-legend">
+                      <span><span className="legend-box answered"></span> Answered</span>
+                      <span><span className="legend-box"></span> Unanswered</span>
+                    </div>
+                  )}
 
-                  {/* CLEAN TEXT NAVIGATION ON RIGHT SIDE WITH ARROW MARK (NO HEAVY BOX) */}
-                  <div className="palette-clean-text-nav">
-                    {palettePage > 0 && (
-                      <button
-                        type="button"
-                        className="btn-page-text-link"
-                        onClick={() => setPalettePage((prev) => prev - 1)}
-                      >
-                        ← 1-25
-                      </button>
-                    )}
-
-                    {pageEnd < questions.length && (
-                      <button
-                        type="button"
-                        className="btn-page-text-link link-right-align"
-                        onClick={() => setPalettePage((prev) => prev + 1)}
-                      >
-                        Questions {pageEnd + 1}-{Math.min(pageEnd + 25, questions.length)} →
-                      </button>
-                    )}
+                  {/* PROCTORING CAMERA STATUS BOX AT BOTTOM OF PALETTE */}
+                  <div
+                    className={`palette-bottom-cam-status static-cam-box ${!isSubmitted && cameraActive !== false ? "cam-active-box" : "cam-inactive-box"}`}
+                    onClick={() => {
+                      if (!isSubmitted) {
+                        if (!cameraActive) {
+                          setPendingTest(activeTest);
+                          setShowCamModal(true);
+                        } else {
+                          setShowLiveCamModal((prev) => !prev);
+                        }
+                      }
+                    }}
+                    title={!isSubmitted ? (!cameraActive ? "Camera is OFF. Click to allow camera" : "Click to view live webcam preview popup") : "Test Submitted"}
+                  >
+                    <div className="cam-status-top-line">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isSubmitted ? "#16a34a" : (cameraActive !== false ? "#16a34a" : "#dc2626")} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        {isSubmitted ? (
+                          <polyline points="20 6 9 17 4 12" />
+                        ) : (
+                          <>
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                          </>
+                        )}
+                      </svg>
+                      <span className={`cam-status-label ${isSubmitted || cameraActive !== false ? "cam-green-text" : "cam-red-text"}`}>
+                        {isSubmitted ? "Test Completed & Submitted" : (cameraActive !== false ? "Camera On" : "Camera Off (Click to Allow)")}
+                      </span>
+                    </div>
+                    <p className="cam-status-bottom-text">
+                      {!isSubmitted ? (
+                        <>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="cam-warning-icon">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                          </svg>
+                          Keep your eyes on the test to avoid flagging the camera tracker.
+                        </>
+                      ) : (
+                        "Answers, scores, and formulas evaluated successfully."
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          /* RESULT SHEET & DETAILED ANSWER KEY BREAKDOWN VIEW */
-          <div className="result-card">
-            <h2>Result & Answer Sheet: {activeTest.title}</h2>
-            <p className="result-subtitle">
-              Detailed performance score and step-by-step solution formulas for each question.
-            </p>
-
-            <div className={`score-summary-circle ${scoreColor}`}>
-              <div className="big-score">{result?.percentage}%</div>
-              <span style={{ fontSize: "0.85rem" }}>Score: {result?.score} / {result?.total_marks}</span>
+          /* RESULT SUMMARY CARD (SHOWN RIGHT AFTER SUBMISSION) */
+          <div className="result-card clean-result-summary-card text-center">
+            <div className="result-header-text">
+              <h2 className="result-card-title">Result & Performance Score: {activeTest?.title}</h2>
+              <p className="result-card-subtitle">
+                Evaluation complete. Review your overall test statistics below or click "View Answers" to inspect step-by-step solutions.
+              </p>
             </div>
 
-            <div className="result-stats-grid">
-              <div className="res-stat-item green">
-                <span className="res-val">{result?.correct_answers}</span>
-                <span className="res-lbl">Correct</span>
+            <div className="result-center-content">
+              <div className={`score-summary-circle ${scoreColor}`}>
+                <div className="big-score">{formattedPct}%</div>
+                <span className="score-total-sub">Score: {result?.score} / {result?.total_marks}</span>
               </div>
-              <div className="res-stat-item red">
-                <span className="res-val">{result?.wrong_answers || 0}</span>
-                <span className="res-lbl">Wrong</span>
-              </div>
-              <div className="res-stat-item gray">
-                <span className="res-val">{result?.unanswered || 0}</span>
-                <span className="res-lbl">Unanswered</span>
-              </div>
-              <div className="res-stat-item blue">
-                <span className="res-val">{result?.time_taken_seconds || 120}s</span>
-                <span className="res-lbl">Time Taken</span>
+
+              <div className="result-stats-grid">
+                <div className="res-stat-item green">
+                  <span className="res-val">{result?.correct_answers}</span>
+                  <span className="res-lbl">Correct Answers</span>
+                </div>
+                <div className="res-stat-item red">
+                  <span className="res-val">{result?.wrong_answers || 0}</span>
+                  <span className="res-lbl">Wrong Answers</span>
+                </div>
+                <div className="res-stat-item gray">
+                  <span className="res-val">{result?.unanswered || 0}</span>
+                  <span className="res-lbl">Unanswered</span>
+                </div>
+                <div className="res-stat-item blue">
+                  <span className="res-val">{formatTime(result?.time_taken_seconds || 120)}</span>
+                  <span className="res-lbl">Time Taken</span>
+                </div>
               </div>
             </div>
 
-            {/* DETAILED QUESTION & SOLUTION SHEET */}
-            <div className="explanations-section">
-              <h3 style={{ borderBottom: "2px solid #e2e8f0", paddingBottom: "0.5rem", color: "#003896" }}>
-                Detailed Question Answer Sheet & Formulas
-              </h3>
-              {(result?.evaluated_questions || questions).map((q, idx) => {
-                const userAns = answers[idx] !== undefined ? answers[idx] : q.user_choice;
-                const isCorrect = q.is_correct !== undefined ? q.is_correct : (userAns === q.correct_answer);
-                const correctIdx = q.correct_answer !== undefined ? q.correct_answer : 0;
-
-                return (
-                  <div key={idx} className={`exp-card ${isCorrect ? "correct" : "incorrect"}`}>
-                    <h4 style={{ margin: "0 0 0.6rem 0", color: "#0f172a", fontWeight: "700" }}>
-                      Q{idx + 1}: {q.question}
-                    </h4>
-
-                    {/* CHOICE SELECTED BY STUDENT */}
-                    <div style={{ marginBottom: "0.5rem", fontSize: "0.92rem" }}>
-                      <strong>Option You Selected: </strong>
-                      <span className={isCorrect ? "user-ans-correct" : "user-ans-wrong"}>
-                        {userAns !== undefined && q.options && q.options[userAns] ? q.options[userAns] : "Not Answered"}
-                        {isCorrect ? " ✓ (Correct)" : " ✗ (Incorrect)"}
-                      </span>
-                    </div>
-
-                    {/* CORRECT ANSWER */}
-                    <div style={{ marginBottom: "0.75rem", fontSize: "0.92rem", color: "#166534" }}>
-                      <strong>Correct Option: </strong>
-                      <span style={{ fontWeight: "700" }}>
-                        {q.options && q.options[correctIdx] ? q.options[correctIdx] : "Option " + String.fromCharCode(65 + correctIdx)}
-                      </span>
-                    </div>
-
-                    {/* FORMULA & STEP-BY-STEP SOLUTION */}
-                    <div className="solution-formula-box">
-                      {q.formula && (
-                        <div className="formula-line">
-                          <strong>💡 Key Formula / Rule: </strong>
-                          <code>{q.formula}</code>
-                        </div>
-                      )}
-                      <div className="step-solution-line">
-                        <strong>📝 How to Solve (Step-by-Step Solution):</strong>
-                        <p style={{ margin: "0.35rem 0 0 0", whiteSpace: "pre-line", lineHeight: "1.5" }}>
-                          {q.explanation || "Apply standard aptitude formula calculation step by step."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div style={{ marginTop: "1.5rem" }}>
-              <button onClick={() => navigate("/student/history")} className="btn-secondary-action">
-                ← Go to Test History
+            {/* CLEAN 3-BUTTON ACTION ROW AT BOTTOM OF CARD */}
+            <div className="result-three-actions-row">
+              <button
+                type="button"
+                className="result-btn-action btn-back-assessments"
+                onClick={() => {
+                  setActiveTest(null);
+                  setIsSubmitted(false);
+                  setViewingAnswerSheet(false);
+                }}
+              >
+                ← Back to Assessments
               </button>
-              <button onClick={() => setActiveTest(null)} className="btn-secondary-action" style={{ marginLeft: "0.5rem" }}>
-                ← Back to Assessments List
+
+              <button
+                type="button"
+                className="result-btn-action btn-view-answers"
+                onClick={() => {
+                  setViewingAnswerSheet(true);
+                  setCurrentIdx(0);
+                  setPalettePage(0);
+                }}
+              >
+                View Answers & Formulas →
+              </button>
+
+              <button
+                type="button"
+                className="result-btn-action btn-view-history"
+                onClick={() => navigate("/student/history")}
+              >
+                View History →
               </button>
             </div>
           </div>
