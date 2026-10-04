@@ -301,6 +301,17 @@ const SEARCH_INDEX = [
     path: "/student/profile",
     keywords: ["profile", "github", "linkedin", "contact", "edit profile"],
   },
+  {
+    id: "g5",
+    category: "pages",
+    categoryLabel: "🚀 Platform Pages & Navigation",
+    title: "Test & Assessment History",
+    subtitle: "View completed test scores and continue pending assessments",
+    tag: "Page",
+    badgeColor: "#ea580c",
+    path: "/student/history",
+    keywords: ["history", "test history", "scores", "my attempts", "continue test"],
+  },
 ];
 
 const DashboardLayout = ({ children, title }) => {
@@ -757,8 +768,10 @@ const DashboardLayout = ({ children, title }) => {
           path: "/student/aptitude",
           label: "Aptitude Test",
           icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19.439 7.85c-.049-.322-.059-.647-.03-.97.054-.6.28-1.2.7-1.63a2.43 2.43 0 0 0 .58-.87c.22-.52.26-1.1.1-1.66a2.4 2.4 0 0 0-1.07-1.42 2.43 2.43 0 0 0-1.74-.29c-.58.11-1.14.36-1.63.73a2.44 2.44 0 0 1-1.6.47c-.32-.02-.65-.01-.97.04a2.43 2.43 0 0 0-1.63.7c-.43.42-1.03.65-1.63.7a2.45 2.45 0 0 1-.97-.03c-.6-.05-1.2-.28-1.63-.7a2.43 2.43 0 0 0-.87-.58 2.44 2.44 0 0 0-1.66-.1 2.4 2.4 0 0 0-1.42 1.07 2.43 2.43 0 0 0-.29 1.74c.11.58.36 1.14.73 1.63.37.49.53 1.08.47 1.6a2.5 2.5 0 0 1-.04.97c-.05.6-.28 1.2-.7 1.63a2.43 2.43 0 0 0-.58.87 2.44 2.44 0 0 0-.1 1.66c.14.56.52 1.06 1.07 1.42.54.36 1.16.46 1.74.29.58-.11 1.14-.36 1.63-.73.49-.37 1.08-.53 1.6-.47.32.02.65.01.97-.04.6.05 1.2.28 1.63.7.43.42 1.03.65 1.63.7.32.03.65.02.97-.03.6-.05 1.2-.28 1.63-.7.42-.43.65-1.03.7-1.63.03-.32.02-.65-.03-.97z" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+              <path d="m9 14 2 2 4-4" />
             </svg>
           ),
         },
@@ -805,22 +818,12 @@ const DashboardLayout = ({ children, title }) => {
           ),
         },
         {
-          path: "/student/ai",
-          label: "AI Career Coach",
+          path: "/student/history",
+          label: "History",
           icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-          ),
-        },
-        {
-          path: "/student/overview",
-          label: "Student Overview",
-          icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="8.5" cy="7" r="4" />
-              <polyline points="17 11 19 13 23 9" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
           ),
         },
@@ -1081,9 +1084,9 @@ const DashboardLayout = ({ children, title }) => {
             })}
           </nav>
 
-          {/* SIDEBAR BOTTOM EXIT BUTTON */}
+          {/* SIDEBAR BOTTOM LOGOUT BUTTON */}
           <div className="sidebar-footer">
-            <button className="sidebar-exit-btn" onClick={handleLogout} title="Exit Platform">
+            <button className="sidebar-exit-btn" onClick={handleLogout} title="Logout">
               <span className="exit-btn-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -1091,7 +1094,7 @@ const DashboardLayout = ({ children, title }) => {
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </span>
-              <span className="exit-btn-label">Exit</span>
+              <span className="exit-btn-label">Logout</span>
             </button>
           </div>
 

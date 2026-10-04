@@ -271,26 +271,24 @@
   border-right: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  position: relative;
-  min-height: calc(100vh - 58px);
+  position: fixed;
+  top: 58px;
+  bottom: 0;
+  left: 0;
   flex-shrink: 0;
-  padding: 0.85rem 0.65rem;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.85rem 0.65rem 0.5rem 0.65rem;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
   z-index: 90;
+  box-sizing: border-box;
 }
 
 /* Desktop Collapsed State */
 @media (min-width: 993px) {
   .dashboard-left-sidebar.closed {
-    width: 0;
-    padding-left: 0;
-    padding-right: 0;
-    margin-left: 0;
-    border-right: none;
+    transform: translateX(-100%);
     opacity: 0;
-    visibility: hidden;
-    overflow: hidden;
     pointer-events: none;
+    visibility: hidden;
   }
 }
 
@@ -300,6 +298,17 @@
   gap: 0.45rem;
   flex: 1;
   z-index: 2;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.sidebar-card-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-card-nav::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .sidebar-nav-card-item {
@@ -341,13 +350,15 @@
   color: #003896;
 }
 
-/* SIDEBAR BOTTOM FOOTER & EXIT BUTTON */
+/* SIDEBAR BOTTOM FOOTER & LOGOUT BUTTON */
 .sidebar-footer {
   margin-top: auto;
   padding-top: 0.75rem;
-  padding-bottom: 0.25rem;
-  z-index: 5;
+  padding-bottom: 0.5rem;
+  z-index: 10;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar-exit-btn {
@@ -387,6 +398,23 @@
   color: #dc2626;
 }
 
+.sidebar-bottom-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.sidebar-bottom-wave svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* MAIN VIEW CONTAINER */
 .dashboard-main-view {
   flex: 1;
@@ -394,6 +422,12 @@
   background-color: var(--bg-page);
   overflow-y: auto;
   min-width: 0;
+  margin-left: 230px;
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-left-sidebar.closed ~ .dashboard-main-view {
+  margin-left: 0;
 }
 
 /* RESPONSIVE DESIGN */
@@ -422,6 +456,10 @@
     transform: translateX(0);
     opacity: 1;
     visibility: visible;
+  }
+
+  .dashboard-main-view {
+    margin-left: 0 !important;
   }
 
   .mobile-sidebar-overlay {
