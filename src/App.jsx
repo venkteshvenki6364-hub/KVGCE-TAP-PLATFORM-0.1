@@ -14,7 +14,6 @@ import TechnicalQuizModule from "./pages/student/TechnicalQuizModule";
 import CodingPracticeModule from "./pages/student/CodingPracticeModule";
 import ActivitiesModule from "./pages/student/ActivitiesModule";
 import StudentProjectsPage from "./pages/student/StudentProjectsPage";
-import AICareerAssistant from "./pages/student/AICareerAssistant";
 import HRInterviewPage from "./pages/student/HRInterviewPage";
 import StudentRankingsPage from "./pages/student/StudentRankingsPage";
 import StudentHistoryPage from "./pages/student/StudentHistoryPage";
@@ -162,7 +161,7 @@ function App() {
             path="/student/ai"
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
-                <AICareerAssistant />
+                <HRInterviewPage />
               </ProtectedRoute>
             }
           />

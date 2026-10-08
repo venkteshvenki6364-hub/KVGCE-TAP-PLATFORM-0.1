@@ -12,11 +12,12 @@
   padding: 1.75rem 2rem;
   border-radius: 14px;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 25px rgba(0, 56, 150, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 56, 150, 0.25);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  border-left: 5px solid #2563eb;
 }
 
 .aptitude-header-banner h2 {
@@ -627,9 +628,9 @@
 }
 
 .screenshot-pill-btn.next-blue-pill:hover {
-  background: linear-gradient(135deg, #001d52, #002b77);
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 56, 150, 0.45);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
 }
 
 .screenshot-pill-btn.submit-green-pill {
@@ -643,19 +644,24 @@
   box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
 }
 
-/* EQUAL HEIGHT GRID LAYOUT */
+/* FLEXIBLE GRID LAYOUT WITH FULL-WIDTH SOLUTIONS & FLEXIBLE PALETTE HEIGHT */
 .test-interface-grid.equal-height-grid {
   display: grid;
   grid-template-columns: 1fr 280px;
   gap: 1.25rem;
-  align-items: stretch;
+  align-items: start;
 }
 
-.left-test-area.flex-fill,
-.right-test-area.flex-fill {
+.left-test-area.flex-fill {
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.right-test-area.flex-fill {
+  display: flex;
+  flex-direction: column;
+  height: auto;
 }
 
 /* 50% BLACK TIMER & 50% CAMERA STATUS SPLIT CARD WITH DIVIDER BORDER */
@@ -1026,7 +1032,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100%;
+  height: auto;
+  min-height: fit-content;
 }
 
 .palette-title {
@@ -1225,58 +1232,79 @@
   font-weight: 700;
 }
 
-/* FORMULA & STEP-BY-STEP SOLUTION CONTAINER (LIGHT BLACK / DARK SLATE DIV) */
+/* FORMULA & STEP-BY-STEP SOLUTION CONTAINER (100% SOLID BLACK DIV) */
 .review-solution-container {
-  background: #1e293b;
-  color: #f8fafc;
-  border: 1px solid #0f172a;
-  border-radius: 10px;
-  padding: 1.1rem 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 12px;
+  padding: 1.35rem 1.5rem;
   margin-top: 1.25rem;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .review-solution-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #38bdf8;
-  margin-bottom: 0.85rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #334155;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #38bdf8 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #1e293b !important;
 }
 
 .formula-item-box {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  padding: 0.65rem 0.85rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.88rem;
-  color: #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  margin-bottom: 0.85rem;
+  font-size: 0.9rem;
+  color: #f8fafc !important;
+}
+
+.formula-item-box strong {
+  color: #ffffff !important;
 }
 
 .formula-item-box code {
-  background: #003896;
-  color: #ffffff;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-family: monospace;
+  background: transparent !important;
+  color: #f8fafc !important;
+  padding: 0;
+  border: none !important;
+  font-family: Consolas, Monaco, monospace;
   font-weight: 700;
   margin-left: 0.4rem;
+  display: inline-block;
 }
 
 .explanation-item-box {
-  font-size: 0.88rem;
-  color: #cbd5e1;
-  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  color: #f1f5f9 !important;
+  background: transparent !important;
+  padding: 0;
+  border: none !important;
+  line-height: 1.6;
+}
+
+.explanation-item-box strong {
+  color: #ffffff !important;
 }
 
 .solution-explanation-text {
   margin: 0.35rem 0 0 0;
-  color: #e2e8f0;
+  color: #cbd5e1 !important;
+  white-space: pre-line;
 }
 
 .btn-secondary-action {
@@ -1406,58 +1434,7 @@
   border: 1px solid #fca5a5;
 }
 
-/* FORMULA & STEP-BY-STEP SOLUTION CONTAINER BELOW OPTIONS */
-.review-solution-container {
-  margin-top: 1.25rem;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 1.1rem 1.25rem;
-}
-
-.review-solution-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #003896;
-  padding-bottom: 0.65rem;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.formula-item-box {
-  background: #eff6ff;
-  border: 1px dashed #93c5fd;
-  border-radius: 6px;
-  padding: 0.6rem 0.85rem;
-  margin-bottom: 0.85rem;
-  font-size: 0.88rem;
-  color: #1e3a8a;
-}
-
-.formula-item-box code {
-  background: #ffffff;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-family: monospace;
-  font-weight: 700;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
-}
-
-.explanation-item-box {
-  font-size: 0.88rem;
-  color: #334155;
-  line-height: 1.55;
-}
-
-.solution-explanation-text {
-  margin: 0.4rem 0 0 0;
-  white-space: pre-line;
-  color: #475569;
-}
+/* Formula & Step-by-Step Solution container styles defined above with rgba(0, 0, 0, 0.5) black 50% background */
 
 /* REVIEW MODE PALETTE BUTTON COLORS */
 .palette-num.tight-num.review-correct {
@@ -1648,6 +1625,36 @@
   height: auto;
 }
 
+@media (max-width: 992px) {
+  .test-interface-grid.equal-height-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .question-card.clean-question-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .test-top-bar.full-width-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1.15rem;
+  }
+
+  .top-bar-right-group {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+  }
+
+  .active-test-heading {
+    font-size: 1.15rem;
+  }
+}
+
 @media (max-width: 640px) {
   .result-three-actions-row {
     flex-direction: column;
@@ -1655,6 +1662,35 @@
   }
   .result-btn-action {
     width: 100%;
+  }
+
+  .screenshot-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .footer-right-nav {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .screenshot-pill-btn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.88rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .small-floating-cam-box {
+    width: 160px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .floating-cam-video-wrap {
+    height: 105px;
   }
 }
 

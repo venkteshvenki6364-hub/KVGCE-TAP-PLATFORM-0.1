@@ -715,15 +715,6 @@ function AptitudeModule() {
     fetchTestsAndAttempts();
   }, []);
 
-  // Reset all test attempts to allow retaking tests fresh
-  const handleResetAllAttempts = () => {
-    if (window.confirm("🔄 Are you sure you want to reset all assessment attempts and start fresh?")) {
-      localStorage.removeItem("kvgce_aptitude_attempts");
-      setMyAttempts([]);
-      alert("All test attempts reset! You can now start fresh.");
-    }
-  };
-
   // Handle URL params
   useEffect(() => {
     if (availableTests.length > 0 && !activeTest) {
@@ -1131,9 +1122,6 @@ function AptitudeModule() {
               <h2>Aptitude Assessments</h2>
               <p>Proctored talent and placement evaluations. Live face camera active during tests.</p>
             </div>
-            <button className="btn-reset-all" onClick={handleResetAllAttempts} title="Reset all test history to retake tests">
-              Reset Attempts & Start Fresh
-            </button>
           </div>
 
           {loadingTests ? (
@@ -1154,6 +1142,7 @@ function AptitudeModule() {
                     </div>
 
                     <div className="test-card-meta-simple">
+                      <div className="meta-text-item">Prepared by: {test.prepared_by || test.faculty_name || test.created_by || "KVGCE Faculty"}</div>
                       <div className="meta-text-item">Timing: {duration} Minutes</div>
                       <div className="meta-text-item">Total Questions: {qCount} Questions</div>
                       <div className="meta-text-item">Date & Time: {formatDateText(test.created_at)}</div>
@@ -1390,27 +1379,22 @@ function AptitudeModule() {
                     })}
                   </div>
 
-                  {/* NEW DEDICATED DIV BELOW OPTIONS: FORMULA & STEP-BY-STEP SOLUTION */}
+                  {/* FORMULA & STEP-BY-STEP SOLUTION CONTAINER (BLACK 50% BACKGROUND, NO ICONS) */}
                   {isSubmitted && (
                     <div className="review-solution-container">
                       <div className="review-solution-header">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#003896" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"/>
-                          <line x1="12" y1="16" x2="12" y2="12"/>
-                          <line x1="12" y1="8" x2="12.01" y2="8"/>
-                        </svg>
                         <span>Formula & Step-by-Step Solution</span>
                       </div>
 
                       {currentQ.formula && (
                         <div className="formula-item-box">
-                          <strong>💡 Key Formula / Rule: </strong>
+                          <strong>Key Formula / Rule: </strong>
                           <code>{currentQ.formula}</code>
                         </div>
                       )}
 
                       <div className="explanation-item-box">
-                        <strong>📝 How to Solve (Step-by-Step Solution):</strong>
+                        <strong>How to Solve (Step-by-Step Solution):</strong>
                         <p className="solution-explanation-text">
                           {currentQ.explanation || "Apply standard mathematical formula and logical rules step by step."}
                         </p>

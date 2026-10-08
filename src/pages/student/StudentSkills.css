@@ -10,30 +10,31 @@
   color: #0f172a;
 }
 
-/* PAGE HEADER */
+/* PAGE HEADER (THEME BLUE) */
 .academics-page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.75rem;
-  background: #ffffff;
-  padding: 1.25rem 1.75rem;
+  background: linear-gradient(135deg, #003896 0%, #001f5c 100%);
+  padding: 1.35rem 1.85rem;
   border-radius: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 56, 150, 0.15);
+  border-left: 5px solid #2563eb;
+  color: #ffffff;
 }
 
 .academics-heading {
   font-size: 1.65rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #ffffff;
   margin: 0 0 0.25rem 0;
   letter-spacing: -0.02em;
 }
 
 .academics-subheading {
   font-size: 0.88rem;
-  color: #64748b;
+  color: #bfdbfe;
   margin: 0;
 }
 
@@ -82,6 +83,12 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.academic-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* CARD TITLES & BADGES */
@@ -311,12 +318,12 @@
 }
 
 .semester-table th {
-  background: #f8fafc;
-  color: #475569;
+  background: #f0f7ff;
+  color: #003896;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 2px solid #bfdbfe;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -501,4 +508,31 @@
 
 .add-sem-btn:hover {
   background: #faf5ff;
+}
+
+@media (max-width: 768px) {
+  .academics-page-container {
+    padding: 0.85rem;
+  }
+
+  .academics-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem;
+  }
+
+  .edit-academics-main-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .be-summary-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Component } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import api from "../../services/api";
@@ -464,24 +464,24 @@ startxref
   // Dynamic Profile Completion Percentage Calculation
   const calculateProfileCompletion = (p) => {
     let score = 0;
-    if (p?.full_name?.trim()) score += 10;
-    if (p?.student_id?.trim()) score += 10;
-    if (p?.department?.trim()) score += 10;
-    if (p?.semester?.trim()) score += 10;
-    if (p?.section?.trim()) score += 5;
-    if (p?.email?.trim()) score += 10;
-    if (p?.phone?.trim()) score += 5;
-    if (p?.dob?.trim()) score += 5;
-    if (p?.gender?.trim()) score += 5;
-    if (p?.objective?.trim() && p.objective.length > 10) score += 5;
-    if (p?.technicalSkills && p.technicalSkills.length > 0) score += 5;
-    if (p?.softSkills && p.softSkills.length > 0) score += 5;
-    if (p?.academics && (p.academics.sslc || p.academics.length > 0)) score += 5;
-    if (p?.projects && p.projects.length > 0) score += 5;
-    if (p?.avatarUrl && p.avatarUrl.trim() !== "") score += 5;
-    if (p?.githubUrl && p.githubUrl.trim() !== "") score += 2;
-    if (p?.linkedinUrl && p.linkedinUrl.trim() !== "") score += 2;
-    if (p?.portfolioUrl && p.portfolioUrl.trim() !== "") score += 1;
+    if (p?.full_name && String(p.full_name).trim()) score += 10;
+    if (p?.student_id && String(p.student_id).trim()) score += 10;
+    if (p?.department && String(p.department).trim()) score += 10;
+    if (p?.semester && String(p.semester).trim()) score += 10;
+    if (p?.section && String(p.section).trim()) score += 5;
+    if (p?.email && String(p.email).trim()) score += 10;
+    if (p?.phone && String(p.phone).trim()) score += 5;
+    if (p?.dob && String(p.dob).trim()) score += 5;
+    if (p?.gender && String(p.gender).trim()) score += 5;
+    if (p?.objective && String(p.objective).trim() && String(p.objective).length > 10) score += 5;
+    if (Array.isArray(p?.technicalSkills) && p.technicalSkills.length > 0) score += 5;
+    if (Array.isArray(p?.softSkills) && p.softSkills.length > 0) score += 5;
+    if (p?.academics && (p.academics.sslc || (Array.isArray(p.academics) && p.academics.length > 0))) score += 5;
+    if (Array.isArray(p?.projects) && p.projects.length > 0) score += 5;
+    if (p?.avatarUrl && String(p.avatarUrl).trim() !== "") score += 5;
+    if (p?.githubUrl && String(p.githubUrl).trim() !== "") score += 2;
+    if (p?.linkedinUrl && String(p.linkedinUrl).trim() !== "") score += 2;
+    if (p?.portfolioUrl && String(p.portfolioUrl).trim() !== "") score += 1;
     return Math.min(100, score);
   };
 
@@ -635,6 +635,10 @@ startxref
             githubUrl: apiData.githubUrl || apiData.github_url || user?.githubUrl || prev.githubUrl,
             linkedinUrl: apiData.linkedinUrl || apiData.linkedin_url || user?.linkedinUrl || prev.linkedinUrl,
             portfolioUrl: apiData.portfolioUrl || apiData.portfolio_url || user?.portfolioUrl || prev.portfolioUrl,
+            technicalSkills: Array.isArray(apiData.technicalSkills) ? apiData.technicalSkills : (Array.isArray(apiData.technical_skills) ? apiData.technical_skills : (prev.technicalSkills && prev.technicalSkills.length > 0 ? prev.technicalSkills : ["C", "C++", "Java", "Python", "HTML", "CSS", "JavaScript", "SQL"])),
+            softSkills: Array.isArray(apiData.softSkills) ? apiData.softSkills : (Array.isArray(apiData.soft_skills) ? apiData.soft_skills : (prev.softSkills && prev.softSkills.length > 0 ? prev.softSkills : ["Communication", "Teamwork", "Problem Solving", "Adaptability"])),
+            projects: Array.isArray(apiData.projects) ? apiData.projects : (prev.projects && prev.projects.length > 0 ? prev.projects : DEFAULT_STUDENT_PROJECTS),
+            academics: normalizeAcademics(apiData.academics || prev.academics)
           }));
         }
       } catch (err) {
@@ -1655,7 +1659,7 @@ KVGCE Training & Placement Cell (TAP)
               )}
             </div>
             <div className="skills-pill-wrap">
-              {profile.technicalSkills.map((skill, i) => (
+              {(profile?.technicalSkills || []).map((skill, i) => (
                 <span key={i} className="skill-pill tech-pill">
                   {skill}
                 </span>
@@ -1688,7 +1692,7 @@ KVGCE Training & Placement Cell (TAP)
               )}
             </div>
             <div className="skills-pill-wrap">
-              {profile.softSkills.map((skill, i) => (
+              {(profile?.softSkills || []).map((skill, i) => (
                 <span key={i} className="skill-pill soft-pill">
                   {skill}
                 </span>
@@ -2699,4 +2703,54 @@ KVGCE Training & Placement Cell (TAP)
   );
 }
 
-export default StudentProfile;
+class ProfileErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("StudentProfile caught an error:", error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <DashboardLayout title="Student Profile">
+          <div style={{ padding: "2rem", background: "#fef2f2", border: "2px solid #ef4444", borderRadius: "12px", margin: "2rem auto", maxWidth: "800px" }}>
+            <h2 style={{ color: "#991b1b", marginTop: 0 }}>⚠️ Profile Page Error Detected</h2>
+            <p style={{ color: "#7f1d1d", fontWeight: "600" }}>The profile page encountered a rendering issue. Error details:</p>
+            <pre style={{ background: "#ffffff", padding: "1rem", borderRadius: "8px", border: "1px solid #fca5a5", color: "#b91c1c", overflowX: "auto", fontSize: "0.85rem", whiteSpace: "pre-wrap" }}>
+              {this.state.error && this.state.error.toString()}
+              {"\n\n"}
+              {this.state.errorInfo && this.state.errorInfo.componentStack}
+            </pre>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.reload();
+              }}
+              style={{ padding: "0.6rem 1.2rem", background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", marginTop: "1rem" }}
+            >
+              Reset Local Storage & Reload Page
+            </button>
+          </div>
+        </DashboardLayout>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function StudentProfileWithErrorBoundary(props) {
+  return (
+    <ProfileErrorBoundary>
+      <StudentProfile {...props} />
+    </ProfileErrorBoundary>
+  );
+}

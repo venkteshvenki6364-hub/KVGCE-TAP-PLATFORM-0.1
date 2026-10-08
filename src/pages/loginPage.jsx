@@ -38,14 +38,14 @@ function LoginPage() {
   });
 
   const [formData, setFormData] = useState({
-    usn: "4KV23CE033",
-    phone: "8904320976",
-    userId: "4KV23CE033",
+    usn: "4KV21CS042",
+    phone: "9741234567",
+    userId: "4KV21CS042",
     dob: "28-02-2004",
     password: "28-02-2004",
     confirmPassword: "",
     name: "",
-    email: "",
+    email: "student@kvgce.edu.in",
   });
 
   const handleRoleChange = (selectedRole) => {
@@ -57,9 +57,9 @@ function LoginPage() {
 
     if (selectedRole === "student") {
       setFormData({
-        usn: "4KV23CE033",
+        usn: "4KV21CS042",
         phone: "9741234567",
-        userId: "4KV23CE033",
+        userId: "4KV21CS042",
         dob: "28-02-2004",
         password: "28-02-2004",
         confirmPassword: "",
@@ -68,9 +68,9 @@ function LoginPage() {
       });
     } else if (selectedRole === "faculty") {
       setFormData({
-        usn: "8904320976",
-        phone: "8904320976",
-        userId: "8904320976",
+        usn: "KVG-FAC-102",
+        phone: "9448123456",
+        userId: "KVG-FAC-102",
         dob: "15-08-1985",
         password: "15-08-1985",
         confirmPassword: "",
@@ -81,7 +81,7 @@ function LoginPage() {
       setFormData({
         usn: "ADMIN-001",
         phone: "9845012345",
-        userId: "ADMIN-001",
+        userId: "admin@kvgce.edu.in",
         dob: "10-01-1980",
         password: "Password@123",
         confirmPassword: "",

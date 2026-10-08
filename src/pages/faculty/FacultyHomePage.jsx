@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import SingleStudentOverview from "../../components/SingleStudentOverview";
+import DashboardOverview from "../../components/DashboardOverview";
 import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
 import CodingProblemBuilder from "../../components/quiz/CodingProblemBuilder";
 import api from "../../services/api";
@@ -554,55 +555,8 @@ Date: ${new Date().toLocaleDateString()}`;
 
         {/* OVERVIEW TAB */}
         {activeTab === "overview" && (
-          <div className="tab-content">
-            <div className="stats-row">
-              <div className="f-stat-card">
-                <h3>Total Assigned Students</h3>
-                <p className="f-num">{stats.totalStudents}</p>
-                <span>Computer Science & Engineering</span>
-              </div>
-              <div className="f-stat-card">
-                <h3>Active Tests & Quizzes</h3>
-                <p className="f-num">{stats.activeAssessments}</p>
-                <span>Published on TAP</span>
-              </div>
-              <div className="f-stat-card">
-                <h3>Pending Approvals</h3>
-                <p className="f-num gold">{stats.pendingVerifications}</p>
-                <span>Student Activity Submissions</span>
-              </div>
-              <div className="f-stat-card">
-                <h3>Batch Average Score</h3>
-                <p className="f-num green">{stats.avgBatchScore}%</p>
-                <span>Class Performance</span>
-              </div>
-            </div>
-
-            <div className="fac-sec-card">
-              <h3>Recent Student Performance Overview</h3>
-              <table className="faculty-table">
-                <thead>
-                  <tr>
-                    <th>Student Name & USN</th>
-                    <th>Department</th>
-                    <th>Semester</th>
-                    <th>Skills Score</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.slice(0, 5).map((s) => (
-                    <tr key={s._id}>
-                      <td><strong>{s.full_name}</strong><br /><small>{s.student_id || s.email}</small></td>
-                      <td>{s.department || "CSE"}</td>
-                      <td>Semester {s.semester || 6}</td>
-                      <td><span className="score-tag font-bold">82.5%</span></td>
-                      <td><span className="active-badge">Active</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="tab-content" style={{ padding: 0 }}>
+            <DashboardOverview role="faculty" />
           </div>
         )}
 

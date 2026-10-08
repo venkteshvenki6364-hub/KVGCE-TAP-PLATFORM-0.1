@@ -1439,4 +1439,31 @@
   border-color: #d8b4fe;
 }
 
+@media (max-width: 640px) {
+  .academic-row-edit-box {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .hero-social-links-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-social-pill {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .project-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .project-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 

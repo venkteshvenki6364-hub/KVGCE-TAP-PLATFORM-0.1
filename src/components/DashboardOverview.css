@@ -1,0 +1,652 @@
+/* ==========================================================================
+   DASHBOARD OVERVIEW - EXACT UI / UX SPECIFICATION MATCH
+   ========================================================================== */
+
+.dashboard-overview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+}
+
+/* HEADER ROW */
+.overview-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.overview-header-titles h2 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.overview-header-titles p {
+  font-size: 0.86rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.overview-date-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.overview-date-picker-btn:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.overview-date-select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+/* 6 KPI STAT CARDS ROW */
+.overview-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 1400px) {
+  .overview-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .overview-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ov-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ov-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.ov-stat-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ov-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ov-icon-wrapper.blue { background: #eff6ff; color: #2563eb; }
+.ov-icon-wrapper.green { background: #f0fdf4; color: #16a34a; }
+.ov-icon-wrapper.orange { background: #fff7ed; color: #ea580c; }
+.ov-icon-wrapper.purple { background: #faf5ff; color: #9333ea; }
+.ov-icon-wrapper.red { background: #fef2f2; color: #dc2626; }
+
+.ov-stat-label-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.ov-stat-lbl {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.ov-stat-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.ov-stat-footer {
+  font-size: 0.73rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ov-trend-green { color: #16a34a; }
+.ov-trend-red { color: #dc2626; }
+.ov-sub-gray { color: #64748b; }
+
+/* MIDDLE 3-CHART GRID SECTION */
+.overview-middle-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .overview-middle-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ov-chart-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.ov-chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.ov-chart-card-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.ov-mini-select {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #475569;
+  outline: none;
+  cursor: pointer;
+}
+
+/* CHART 1: VERTICAL BAR CHART */
+.ov-vbars-wrapper {
+  display: flex;
+  height: 210px;
+  width: 100%;
+  position: relative;
+}
+
+.ov-yaxis-scale {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 0.75rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+  height: 170px;
+}
+
+.ov-vbars-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.4rem;
+  height: 170px;
+}
+
+.ov-vbar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  width: 38px;
+}
+
+.ov-vbar-val {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.35rem;
+}
+
+.ov-vbar-track {
+  width: 100%;
+  max-width: 28px;
+  background: #f1f5f9;
+  border-radius: 6px 6px 0 0;
+  height: 130px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.ov-vbar-fill {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ov-vbar-fill.academics { background: #2563eb; }
+.ov-vbar-fill.aptitude { background: #22c55e; }
+.ov-vbar-fill.technical { background: #f59e0b; }
+.ov-vbar-fill.coding { background: #3b82f6; }
+.ov-vbar-fill.hrcomm { background: #8b5cf6; }
+.ov-vbar-fill.overall { background: #14b8a6; }
+
+.ov-vbar-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 0.5rem;
+  white-space: nowrap;
+}
+
+/* CHART 2: HORIZONTAL BAR CHART */
+.ov-hbars-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.ov-hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ov-hbar-name {
+  width: 42px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.ov-hbar-track {
+  flex: 1;
+  height: 14px;
+  background: #f1f5f9;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.ov-hbar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 7px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ov-hbar-val {
+  width: 45px;
+  text-align: right;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.ov-xaxis-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.85rem;
+  padding-left: 50px;
+  padding-right: 50px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* CHART 3: DONUT CHART */
+.ov-donut-flex {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-around;
+  margin-top: 0.5rem;
+}
+
+.ov-donut-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.ov-donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ov-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ov-donut-num {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.ov-donut-sub {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.ov-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ov-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.74rem;
+}
+
+.ov-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ov-legend-dot.green { background: #22c55e; }
+.ov-legend-dot.blue { background: #2563eb; }
+.ov-legend-dot.orange { background: #f97316; }
+.ov-legend-dot.purple { background: #a855f7; }
+.ov-legend-dot.red { background: #ef4444; }
+
+.ov-legend-txt {
+  color: #475569;
+  flex: 1;
+}
+
+.ov-legend-val {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* LOWER SECTION (2 COLUMNS GRID) */
+.overview-lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .overview-lower-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ov-card-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  margin-bottom: 1.25rem;
+}
+
+.ov-card-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.ov-card-box-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.ov-view-all-link {
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ov-view-all-link:hover {
+  text-decoration: underline;
+}
+
+/* TABLES */
+.ov-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.ov-data-table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.76rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.ov-data-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.ov-rank-medal {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.ov-rank-medal.r1 { background: #fef3c7; color: #d97706; }
+.ov-rank-medal.r2 { background: #f1f5f9; color: #64748b; }
+.ov-rank-medal.r3 { background: #ffedd5; color: #c2410c; }
+.ov-rank-medal.rn { background: #ffffff; color: #94a3b8; border: 1px solid #cbd5e1; }
+
+.ov-usn-cell {
+  font-family: monospace;
+  font-weight: 700;
+  color: #475569;
+}
+
+.ov-score-highlight {
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.ov-risk-score-text {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.ov-dots-row {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.ov-dot-orange {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f97316;
+}
+
+.ov-dot-gray {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e2e8f0;
+}
+
+/* RECENT ACTIVITY LIST */
+.ov-activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ov-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+
+.ov-act-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ov-act-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ov-act-icon.green { background: #dcfce7; color: #16a34a; }
+.ov-act-icon.blue { background: #dbeafe; color: #2563eb; }
+.ov-act-icon.user { background: #eff6ff; color: #3b82f6; }
+.ov-act-icon.purple { background: #f3e8ff; color: #9333ea; }
+
+.ov-act-title {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ov-act-time {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* PLACEMENT GAUGE CHART */
+.ov-placement-gauge-box {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  justify-content: space-around;
+  padding: 0.5rem 0;
+}
+
+.ov-arc-wrapper {
+  position: relative;
+  width: 170px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.ov-arc-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ov-arc-center-meta {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.ov-arc-score-num {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.ov-arc-score-lbl {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}

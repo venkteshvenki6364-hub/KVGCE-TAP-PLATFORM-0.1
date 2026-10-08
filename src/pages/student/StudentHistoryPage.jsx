@@ -105,8 +105,10 @@ function StudentHistoryPage() {
         let apiTests = testsRes.data?.data || [];
 
         const localAptAttempts = JSON.parse(localStorage.getItem("kvgce_aptitude_attempts") || "[]");
+        const localTechAttempts = JSON.parse(localStorage.getItem("kvgce_technical_attempts") || "[]");
         const localQuizAttempts = JSON.parse(localStorage.getItem("kvgce_quiz_attempts") || "[]");
-        const allLocalAttempts = [...localAptAttempts, ...localQuizAttempts];
+        const localHRAttempts = JSON.parse(localStorage.getItem("kvgce_hr_attempts") || "[]");
+        const allLocalAttempts = [...localAptAttempts, ...localTechAttempts, ...localQuizAttempts, ...localHRAttempts];
 
         const attemptMap = {};
         apiAttempts.forEach((att) => {
@@ -124,6 +126,21 @@ function StudentHistoryPage() {
         DEFAULT_APTITUDE_TESTS.forEach((dt) => {
           if (!combinedTests.some((t) => t._id === dt._id || t.title === dt.title)) {
             combinedTests.push(dt);
+          }
+        });
+
+        // Add completed HR attempts into combined test rows if not present
+        localHRAttempts.forEach((hr) => {
+          if (!combinedTests.some((t) => t._id === hr.assessment_id)) {
+            combinedTests.unshift({
+              _id: hr.assessment_id,
+              title: hr.title || "AI HR Specialist Interview",
+              description: hr.feedback || "8-Round HR Behavioral & Technical Voice Interview.",
+              category: "HR Interview",
+              duration_minutes: 25,
+              total_marks: hr.total_marks || 100,
+              type: "hr_interview"
+            });
           }
         });
 
@@ -167,7 +184,17 @@ function StudentHistoryPage() {
   }, []);
 
   const handleViewAnswerSheet = (item) => {
-    navigate(`/student/aptitude?testId=${item.id}&viewResult=true`);
+    const isTech = item.category && (
+      item.category.toLowerCase().includes("technical") ||
+      item.category.toLowerCase().includes("programming") ||
+      item.category.toLowerCase().includes("database") ||
+      item.category.toLowerCase().includes("core cs")
+    );
+    if (isTech) {
+      navigate(`/student/quiz?testId=${item.id}&viewResult=true`);
+    } else {
+      navigate(`/student/aptitude?testId=${item.id}&viewResult=true`);
+    }
   };
 
   return (

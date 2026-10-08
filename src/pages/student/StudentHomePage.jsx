@@ -430,7 +430,7 @@ function StudentHomePage() {
           </div>
 
           {/* 6. HR Interview */}
-          <div className="module-card" onClick={() => navigate("/student/ai")}>
+          <div className="module-card" onClick={() => navigate("/student/hr-interview")}>
             <div className="module-card-left">
               <div className="icon-circle icon-teal">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
@@ -442,11 +442,11 @@ function StudentHomePage() {
               </div>
               <div className="module-details">
                 <h4 className="module-name">HR Interview</h4>
-                <div className="module-score-val color-teal">1%</div>
+                <div className="module-score-val color-teal">78%</div>
                 <div className="progress-mini-wrapper">
                   <span className="progress-lbl">Progress</span>
                   <div className="progress-mini-track">
-                    <div className="progress-mini-dot" style={{ left: "1%" }} />
+                    <div className="progress-mini-dot" style={{ left: "78%" }} />
                   </div>
                 </div>
               </div>
@@ -469,17 +469,17 @@ function StudentHomePage() {
               <h4 className="bottom-hr-title">HR Interview Preparation Progress</h4>
               <p className="bottom-hr-subtitle">Keep practicing to improve your readiness.</p>
               <div className="bottom-hr-progress-row">
-                <span className="bottom-hr-score">1%</span>
+                <span className="bottom-hr-score">78%</span>
                 <span className="bottom-hr-progress-lbl">Overall Progress</span>
                 <div className="bottom-hr-track">
-                  <div className="bottom-hr-dot" style={{ left: "1%" }} />
+                  <div className="bottom-hr-dot" style={{ left: "78%" }} />
                 </div>
               </div>
             </div>
           </div>
 
           <div className="bottom-hr-right">
-            <button className="continue-practice-btn" onClick={() => navigate("/student/ai")}>
+            <button className="continue-practice-btn" onClick={() => navigate("/student/hr-interview")}>
               Continue Practice
             </button>
           </div>

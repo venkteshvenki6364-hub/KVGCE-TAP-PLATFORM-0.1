@@ -217,7 +217,7 @@ const SEARCH_INDEX = [
     subtitle: "Skill gap analysis & placement recommendations",
     tag: "AI Coach",
     badgeColor: "#003896",
-    path: "/student/ai",
+    path: "/student/hr-interview",
     keywords: ["ai career coach", "resume", "coach", "skills", "placement bot"],
   },
 

@@ -430,14 +430,14 @@
   margin-left: 0;
 }
 
-/* RESPONSIVE DESIGN */
+/* RESPONSIVE DESIGN FOR LAPTOPS, TABLETS & PHONES */
 @media (max-width: 992px) {
   .app-top-header {
     padding: 0 0.85rem;
   }
 
   .header-search-container {
-    max-width: 200px;
+    max-width: 220px;
     margin: 0 0.5rem;
   }
 
@@ -446,7 +446,7 @@
     top: 58px;
     bottom: 0;
     left: 0;
-    width: 230px;
+    width: 240px;
     transform: translateX(-100%);
     box-shadow: 4px 0 16px rgba(0, 0, 0, 0.12);
     z-index: 100;
@@ -460,6 +460,7 @@
 
   .dashboard-main-view {
     margin-left: 0 !important;
+    padding: 1rem;
   }
 
   .mobile-sidebar-overlay {
@@ -471,6 +472,48 @@
     background-color: rgba(15, 23, 42, 0.35);
     backdrop-filter: blur(2px);
     z-index: 95;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-search-container {
+    max-width: 140px;
+    margin: 0 0.25rem;
+  }
+
+  .search-pill-input {
+    font-size: 0.76rem;
+    padding: 0 28px 0 12px;
+  }
+
+  .brand-sub-tag {
+    display: none;
+  }
+
+  .ranking-pill-badge {
+    padding: 1px 4px;
+  }
+
+  .ranking-num {
+    font-size: 0.92rem;
+  }
+
+  .dashboard-main-view {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 440px) {
+  .brand-title-meta {
+    display: none;
+  }
+
+  .header-search-container {
+    max-width: 110px;
+  }
+
+  .header-right-actions {
+    gap: 0.45rem;
   }
 }
 
@@ -691,6 +734,7 @@
   top: calc(100% + 12px);
   right: 0;
   width: 340px;
+  max-width: calc(100vw - 20px);
   background: #ffffff;
   border: 1.5px solid #003896;
   border-radius: 18px;
