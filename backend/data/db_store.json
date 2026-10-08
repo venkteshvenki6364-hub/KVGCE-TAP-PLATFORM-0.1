@@ -25,7 +25,77 @@
       "is_active": true,
       "is_verified": true,
       "status": "approved",
-      "created_at": "2026-01-12T10:00:00"
+      "created_at": "2026-01-12T10:00:00",
+      "activity_dates": [
+        "2026-01-12",
+        "2026-10-05"
+      ],
+      "signup_date": "2026-01-12",
+      "score_history": [
+        {
+          "date": "15 Jan",
+          "day": "Thu",
+          "score": 48.0,
+          "change": "-4.0%",
+          "trend": "down"
+        },
+        {
+          "date": "10 Feb",
+          "day": "Tue",
+          "score": 56.5,
+          "change": "+8.5%",
+          "trend": "up"
+        },
+        {
+          "date": "05 Mar",
+          "day": "Thu",
+          "score": 51.0,
+          "change": "-5.5%",
+          "trend": "down"
+        },
+        {
+          "date": "22 Apr",
+          "day": "Wed",
+          "score": 67.0,
+          "change": "+16.0%",
+          "trend": "up"
+        },
+        {
+          "date": "18 May",
+          "day": "Mon",
+          "score": 63.5,
+          "change": "-3.5%",
+          "trend": "down"
+        },
+        {
+          "date": "12 Jun",
+          "day": "Fri",
+          "score": 75.0,
+          "change": "+11.5%",
+          "trend": "up"
+        },
+        {
+          "date": "25 Jul",
+          "day": "Sat",
+          "score": 71.8,
+          "change": "-3.2%",
+          "trend": "down"
+        },
+        {
+          "date": "14 Aug",
+          "day": "Fri",
+          "score": 79.5,
+          "change": "+7.7%",
+          "trend": "up"
+        },
+        {
+          "date": "23 Sep",
+          "day": "Wed",
+          "score": 82.5,
+          "change": "+3.0%",
+          "trend": "up"
+        }
+      ]
     },
     {
       "_id": "user-faculty-1",
@@ -250,5 +320,538 @@
       "date": "2026-08-13T10:15:00",
       "created_at": "2026-08-13T05:01:13.601338"
     }
-  ]
+  ],
+  "quiz_attempts": [
+    {
+      "_id": "20d03e56-6414-4166-805d-5634b07f78b2",
+      "assessment_id": "assess-1",
+      "assessment_title": "National Aptitude & Logical Reasoning Benchmark",
+      "category": "Aptitude",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV23CE033",
+      "student_name": "Student User",
+      "total_questions": 2,
+      "correct_answers": 0,
+      "wrong_answers": 0,
+      "unanswered": 2,
+      "score": 0,
+      "total_marks": 2,
+      "percentage": 0.0,
+      "time_taken_seconds": 0,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-05T16:18:25.263665",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "65 sec",
+            "89 sec",
+            "100 sec",
+            "150 sec"
+          ],
+          "correct_answer": 1,
+          "explanation": "Speed = 240/24 = 10 m/s. Total distance = 240 + 650 = 890 m. Time = 890 / 10 = 89 seconds.",
+          "difficulty": "Medium",
+          "category": "Aptitude",
+          "topic": "Quantitative Aptitude",
+          "marks": 1,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": "q2",
+          "question": "If CAT is coded as 3120, how is DOG coded in the same pattern?",
+          "options": [
+            "4157",
+            "41514",
+            "41520",
+            "3157"
+          ],
+          "correct_answer": 0,
+          "explanation": "Alphabet positions: C=3, A=1, T=20 -> 3120. D=4, O=15, G=7 -> 4157.",
+          "difficulty": "Easy",
+          "category": "Aptitude",
+          "topic": "Logical Reasoning",
+          "marks": 1,
+          "user_choice": null,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-05T16:18:25.263665"
+    },
+    {
+      "_id": "19c3f579-e77f-47f6-bb44-407f711db092",
+      "assessment_id": "assess-1",
+      "assessment_title": "National Aptitude & Logical Reasoning Benchmark",
+      "category": "Aptitude",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV23CE033",
+      "student_name": "Student User",
+      "total_questions": 2,
+      "correct_answers": 0,
+      "wrong_answers": 0,
+      "unanswered": 2,
+      "score": 0,
+      "total_marks": 2,
+      "percentage": 0.0,
+      "time_taken_seconds": 0,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-05T16:18:25.269067",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "65 sec",
+            "89 sec",
+            "100 sec",
+            "150 sec"
+          ],
+          "correct_answer": 1,
+          "explanation": "Speed = 240/24 = 10 m/s. Total distance = 240 + 650 = 890 m. Time = 890 / 10 = 89 seconds.",
+          "difficulty": "Medium",
+          "category": "Aptitude",
+          "topic": "Quantitative Aptitude",
+          "marks": 1,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": "q2",
+          "question": "If CAT is coded as 3120, how is DOG coded in the same pattern?",
+          "options": [
+            "4157",
+            "41514",
+            "41520",
+            "3157"
+          ],
+          "correct_answer": 0,
+          "explanation": "Alphabet positions: C=3, A=1, T=20 -> 3120. D=4, O=15, G=7 -> 4157.",
+          "difficulty": "Easy",
+          "category": "Aptitude",
+          "topic": "Logical Reasoning",
+          "marks": 1,
+          "user_choice": null,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-05T16:18:25.269067"
+    },
+    {
+      "_id": "082403d3-2ab1-4d46-a821-f3e4a92d2245",
+      "assessment_id": "default-quant-1",
+      "assessment_title": "Quantitative Aptitude Test",
+      "category": "Aptitude",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV23CE033",
+      "student_name": "Student User",
+      "total_questions": 5,
+      "correct_answers": 0,
+      "wrong_answers": 0,
+      "unanswered": 5,
+      "score": 0,
+      "total_marks": 10,
+      "percentage": 0.0,
+      "time_taken_seconds": 0,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-05T16:20:53.221986",
+      "questions": [
+        {
+          "id": 1,
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "65 sec",
+            "89 sec",
+            "100 sec",
+            "150 sec"
+          ],
+          "correct_answer": 1,
+          "explanation": "Speed = 240 / 24 = 10 m/s. Total distance = 240 + 650 = 890 m. Time = 890 / 10 = 89 seconds.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 2,
+          "question": "What is 25% of 200?",
+          "options": [
+            "25",
+            "40",
+            "50",
+            "75"
+          ],
+          "correct_answer": 2,
+          "explanation": "25% of 200 = (25 / 100) * 200 = 50.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 3,
+          "question": "A father is twice as old as his son. 20 years ago, the father was 12 times as old as the son. What is the current age of the father?",
+          "options": [
+            "44 years",
+            "22 years",
+            "48 years",
+            "52 years"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let son = x, father = 2x. (2x - 20) = 12(x - 20) => 10x = 220 => x = 22. Father = 44 years.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 4,
+          "question": "If a man walks at 14 km/hr instead of 10 km/hr, he would have walked 20 km more. What is the actual distance travelled by him?",
+          "options": [
+            "50 km",
+            "56 km",
+            "70 km",
+            "80 km"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let distance = x km. Time = x/10 = (x+20)/14 => 14x = 10x + 200 => 4x = 200 => x = 50 km.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 5,
+          "question": "Two pipes A and B can fill a tank in 20 and 30 minutes respectively. If both pipes are opened together, how long will it take to fill the tank?",
+          "options": [
+            "12 minutes",
+            "15 minutes",
+            "25 minutes",
+            "10 minutes"
+          ],
+          "correct_answer": 0,
+          "explanation": "Combined rate = 1/20 + 1/30 = (3+2)/60 = 5/60 = 1/12. Time taken = 12 minutes.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-05T16:20:53.221986"
+    },
+    {
+      "_id": "95f95483-d8e5-4ec7-968d-b866aed413f1",
+      "assessment_id": "default-quant-1",
+      "assessment_title": "Quantitative Aptitude Test",
+      "category": "Aptitude",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV23CE033",
+      "student_name": "Student User",
+      "total_questions": 5,
+      "correct_answers": 0,
+      "wrong_answers": 0,
+      "unanswered": 5,
+      "score": 0,
+      "total_marks": 10,
+      "percentage": 0.0,
+      "time_taken_seconds": 0,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-05T16:20:53.228213",
+      "questions": [
+        {
+          "id": 1,
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "65 sec",
+            "89 sec",
+            "100 sec",
+            "150 sec"
+          ],
+          "correct_answer": 1,
+          "explanation": "Speed = 240 / 24 = 10 m/s. Total distance = 240 + 650 = 890 m. Time = 890 / 10 = 89 seconds.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 2,
+          "question": "What is 25% of 200?",
+          "options": [
+            "25",
+            "40",
+            "50",
+            "75"
+          ],
+          "correct_answer": 2,
+          "explanation": "25% of 200 = (25 / 100) * 200 = 50.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 3,
+          "question": "A father is twice as old as his son. 20 years ago, the father was 12 times as old as the son. What is the current age of the father?",
+          "options": [
+            "44 years",
+            "22 years",
+            "48 years",
+            "52 years"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let son = x, father = 2x. (2x - 20) = 12(x - 20) => 10x = 220 => x = 22. Father = 44 years.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 4,
+          "question": "If a man walks at 14 km/hr instead of 10 km/hr, he would have walked 20 km more. What is the actual distance travelled by him?",
+          "options": [
+            "50 km",
+            "56 km",
+            "70 km",
+            "80 km"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let distance = x km. Time = x/10 = (x+20)/14 => 14x = 10x + 200 => 4x = 200 => x = 50 km.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 5,
+          "question": "Two pipes A and B can fill a tank in 20 and 30 minutes respectively. If both pipes are opened together, how long will it take to fill the tank?",
+          "options": [
+            "12 minutes",
+            "15 minutes",
+            "25 minutes",
+            "10 minutes"
+          ],
+          "correct_answer": 0,
+          "explanation": "Combined rate = 1/20 + 1/30 = (3+2)/60 = 5/60 = 1/12. Time taken = 12 minutes.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-05T16:20:53.228213"
+    },
+    {
+      "_id": "3da3d284-0e15-4984-8af5-6315c64cce71",
+      "assessment_id": "default-logical-1",
+      "assessment_title": "Quantitative Aptitude Test",
+      "category": "Aptitude",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV23CE033",
+      "student_name": "Student User",
+      "total_questions": 5,
+      "correct_answers": 0,
+      "wrong_answers": 0,
+      "unanswered": 5,
+      "score": 0,
+      "total_marks": 10,
+      "percentage": 0.0,
+      "time_taken_seconds": 0,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-05T16:25:38.229979",
+      "questions": [
+        {
+          "id": 1,
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "65 sec",
+            "89 sec",
+            "100 sec",
+            "150 sec"
+          ],
+          "correct_answer": 1,
+          "explanation": "Speed = 240 / 24 = 10 m/s. Total distance = 240 + 650 = 890 m. Time = 890 / 10 = 89 seconds.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 2,
+          "question": "What is 25% of 200?",
+          "options": [
+            "25",
+            "40",
+            "50",
+            "75"
+          ],
+          "correct_answer": 2,
+          "explanation": "25% of 200 = (25 / 100) * 200 = 50.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 3,
+          "question": "A father is twice as old as his son. 20 years ago, the father was 12 times as old as the son. What is the current age of the father?",
+          "options": [
+            "44 years",
+            "22 years",
+            "48 years",
+            "52 years"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let son = x, father = 2x. (2x - 20) = 12(x - 20) => 10x = 220 => x = 22. Father = 44 years.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 4,
+          "question": "If a man walks at 14 km/hr instead of 10 km/hr, he would have walked 20 km more. What is the actual distance travelled by him?",
+          "options": [
+            "50 km",
+            "56 km",
+            "70 km",
+            "80 km"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let distance = x km. Time = x/10 = (x+20)/14 => 14x = 10x + 200 => 4x = 200 => x = 50 km.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 5,
+          "question": "Two pipes A and B can fill a tank in 20 and 30 minutes respectively. If both pipes are opened together, how long will it take to fill the tank?",
+          "options": [
+            "12 minutes",
+            "15 minutes",
+            "25 minutes",
+            "10 minutes"
+          ],
+          "correct_answer": 0,
+          "explanation": "Combined rate = 1/20 + 1/30 = (3+2)/60 = 5/60 = 1/12. Time taken = 12 minutes.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-05T16:25:38.229979"
+    },
+    {
+      "_id": "8f81280f-4a1d-4c11-ae01-e4a8be40048f",
+      "assessment_id": "default-logical-1",
+      "assessment_title": "Quantitative Aptitude Test",
+      "category": "Aptitude",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV23CE033",
+      "student_name": "Student User",
+      "total_questions": 5,
+      "correct_answers": 0,
+      "wrong_answers": 0,
+      "unanswered": 5,
+      "score": 0,
+      "total_marks": 10,
+      "percentage": 0.0,
+      "time_taken_seconds": 0,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-05T16:25:38.236568",
+      "questions": [
+        {
+          "id": 1,
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "65 sec",
+            "89 sec",
+            "100 sec",
+            "150 sec"
+          ],
+          "correct_answer": 1,
+          "explanation": "Speed = 240 / 24 = 10 m/s. Total distance = 240 + 650 = 890 m. Time = 890 / 10 = 89 seconds.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 2,
+          "question": "What is 25% of 200?",
+          "options": [
+            "25",
+            "40",
+            "50",
+            "75"
+          ],
+          "correct_answer": 2,
+          "explanation": "25% of 200 = (25 / 100) * 200 = 50.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 3,
+          "question": "A father is twice as old as his son. 20 years ago, the father was 12 times as old as the son. What is the current age of the father?",
+          "options": [
+            "44 years",
+            "22 years",
+            "48 years",
+            "52 years"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let son = x, father = 2x. (2x - 20) = 12(x - 20) => 10x = 220 => x = 22. Father = 44 years.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 4,
+          "question": "If a man walks at 14 km/hr instead of 10 km/hr, he would have walked 20 km more. What is the actual distance travelled by him?",
+          "options": [
+            "50 km",
+            "56 km",
+            "70 km",
+            "80 km"
+          ],
+          "correct_answer": 0,
+          "explanation": "Let distance = x km. Time = x/10 = (x+20)/14 => 14x = 10x + 200 => 4x = 200 => x = 50 km.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        },
+        {
+          "id": 5,
+          "question": "Two pipes A and B can fill a tank in 20 and 30 minutes respectively. If both pipes are opened together, how long will it take to fill the tank?",
+          "options": [
+            "12 minutes",
+            "15 minutes",
+            "25 minutes",
+            "10 minutes"
+          ],
+          "correct_answer": 0,
+          "explanation": "Combined rate = 1/20 + 1/30 = (3+2)/60 = 5/60 = 1/12. Time taken = 12 minutes.",
+          "category": "Quantitative Aptitude",
+          "marks": 2,
+          "user_choice": null,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-05T16:25:38.236568"
+    }
+  ],
+  "coding_problems": []
 }
