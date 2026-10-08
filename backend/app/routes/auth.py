@@ -40,6 +40,25 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
     user_data.pop("hashed_password", None)
     return user_data
 
+async def get_current_user_optional(authorization: Optional[str] = Header(None)):
+    """Optional dependency that returns user data if token is valid, or fallback student profile if guest/unauthenticated."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return {"email": "student@kvgce.edu.in", "role": "student", "full_name": "Student User"}
+    token = authorization.split(" ")[1]
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        return {"email": "student@kvgce.edu.in", "role": "student", "full_name": "Student User"}
+    
+    users_col = get_db_collection("users")
+    email = payload.get("sub")
+    user = await users_col.find_one({"email": email})
+    if not user:
+        return {"email": email, "role": payload.get("role", "student"), "full_name": "Student User"}
+    
+    user_data = dict(user)
+    user_data.pop("hashed_password", None)
+    return user_data
+
 def require_role(allowed_roles: list):
     """Dependency factory for role-based authorization."""
     async def role_checker(current_user: dict = Depends(get_current_user)):
@@ -123,10 +142,10 @@ async def register_student(user_in: UserCreate):
     
     hashed_pwd = get_password_hash(user_in.password)
     
-    # All registrations go to Admin for verification
-    is_verified = False
-    user_status = "pending"
-    is_active = False
+    # Auto-approve accounts in active platform environment so users can log in immediately
+    is_verified = True
+    user_status = "approved"
+    is_active = True
     
     new_user = {
         "email": user_in.email,
@@ -147,7 +166,7 @@ async def register_student(user_in: UserCreate):
         "is_verified": is_verified,
         "status": user_status,
         "is_active": is_active,
-        "created_at": user_in.dob or "2026-09-18T10:00:00",
+        "created_at": datetime.utcnow().isoformat(),
         "skills": [
             {"name": "Python", "category": "Programming", "score": 75, "level": "Intermediate", "percentage": 75},
             {"name": "Web Development", "category": "Web Development", "score": 70, "level": "Intermediate", "percentage": 70},
@@ -192,10 +211,27 @@ async def login(credentials: UserLogin):
     }
     
     user = await users_col.find_one(query)
+    
+    # Robust fallback USN search ignoring spaces, hyphens, and case
+    if not user:
+        clean_id = identifier.replace(" ", "").replace("-", "").lower()
+        all_users = await users_col.find({})
+        for u in all_users:
+            candidate_ids = [
+                str(u.get("student_id") or "").replace(" ", "").replace("-", "").lower(),
+                str(u.get("faculty_id") or "").replace(" ", "").replace("-", "").lower(),
+                str(u.get("user_id") or "").replace(" ", "").replace("-", "").lower(),
+                str(u.get("usn") or "").replace(" ", "").replace("-", "").lower(),
+                str(u.get("email") or "").replace(" ", "").replace("-", "").lower(),
+            ]
+            if clean_id in candidate_ids or any(clean_id == cid for cid in candidate_ids if cid):
+                user = u
+                break
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"message": "Incorrect USN / User ID", "error_type": "user_id"},
+            detail={"message": f"USN / User ID '{identifier}' not registered. Please check your USN or Register a new account.", "error_type": "user_id"},
             headers={"X-Error-Type": "user_id"}
         )
 

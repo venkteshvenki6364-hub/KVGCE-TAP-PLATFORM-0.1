@@ -16,6 +16,11 @@ async def seed_database():
     for col in [users_col, dept_col, skills_col, assessments_col, activities_col, notifications_col]:
         if hasattr(col, "data"):
             col.data.clear()
+        else:
+            try:
+                await col.delete_many({})
+            except Exception as e:
+                print(f"Error clearing collection: {e}")
 
     dev_password_hash = get_password_hash("Password123!")
 

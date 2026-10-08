@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import db_manager
-from app.routes import auth, student, faculty, admin, assessments, activities, ai, notifications
+from app.routes import auth, student, faculty, admin, assessments, activities, ai, notifications, coding, hr_interview
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -24,9 +24,18 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     await db_manager.connect_to_database()
-    # Auto-seed if fallback in-memory db is empty
+    # Auto-seed if database is empty (supports both MongoDB and embedded store)
     users_col = db_manager.get_collection("users")
-    if hasattr(users_col, "data") and len(users_col.data) == 0:
+    should_seed = False
+    if hasattr(users_col, "data"):
+        should_seed = (len(users_col.data) == 0)
+    else:
+        try:
+            count = await users_col.count_documents({})
+            should_seed = (count == 0)
+        except Exception:
+            should_seed = False
+    if should_seed:
         from seed import seed_database
         await seed_database()
 
@@ -54,6 +63,8 @@ app.include_router(assessments.router, prefix=settings.API_PREFIX)
 app.include_router(activities.router, prefix=settings.API_PREFIX)
 app.include_router(ai.router, prefix=settings.API_PREFIX)
 app.include_router(notifications.router, prefix=settings.API_PREFIX)
+app.include_router(coding.router, prefix=settings.API_PREFIX)
+app.include_router(hr_interview.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
