@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     AI_API_KEY: str = os.getenv("AI_API_KEY", "")
     AI_MODEL: str = os.getenv("AI_MODEL", "gemini-1.5-flash")
     
+    JUDGE0_BASE_URL: str = os.getenv("JUDGE0_BASE_URL", "https://ce.judge0.com")
+    JUDGE0_AUTH_TOKEN: str = os.getenv("JUDGE0_AUTH_TOKEN", "")
+
     CORS_ORIGINS: list = parse_cors_origins()
 
 settings = Settings()

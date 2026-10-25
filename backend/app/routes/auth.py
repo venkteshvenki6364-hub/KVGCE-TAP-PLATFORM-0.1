@@ -212,19 +212,24 @@ async def login(credentials: UserLogin):
     
     user = await users_col.find_one(query)
     
-    # Robust fallback USN search ignoring spaces, hyphens, and case
+    # Robust fallback also handles phone numbers stored with a country prefix.
     if not user:
-        clean_id = identifier.replace(" ", "").replace("-", "").lower()
+        clean_id = re.sub(r"[^a-z0-9]", "", identifier.lower())
         all_users = await users_col.find({})
         for u in all_users:
             candidate_ids = [
-                str(u.get("student_id") or "").replace(" ", "").replace("-", "").lower(),
-                str(u.get("faculty_id") or "").replace(" ", "").replace("-", "").lower(),
-                str(u.get("user_id") or "").replace(" ", "").replace("-", "").lower(),
-                str(u.get("usn") or "").replace(" ", "").replace("-", "").lower(),
-                str(u.get("email") or "").replace(" ", "").replace("-", "").lower(),
+                re.sub(r"[^a-z0-9]", "", str(u.get("student_id") or "").lower()),
+                re.sub(r"[^a-z0-9]", "", str(u.get("faculty_id") or "").lower()),
+                re.sub(r"[^a-z0-9]", "", str(u.get("user_id") or "").lower()),
+                re.sub(r"[^a-z0-9]", "", str(u.get("usn") or "").lower()),
+                re.sub(r"[^a-z0-9]", "", str(u.get("email") or "").lower()),
+                re.sub(r"[^0-9]", "", str(u.get("phone") or "")),
             ]
-            if clean_id in candidate_ids or any(clean_id == cid for cid in candidate_ids if cid):
+            if clean_id in candidate_ids or (
+                clean_id.isdigit() and clean_id.lstrip("0") in {
+                    cid.lstrip("0") for cid in candidate_ids if cid.isdigit()
+                }
+            ):
                 user = u
                 break
 
@@ -460,5 +465,4 @@ async def request_password_reset(req: dict):
         "requires_admin_approval": True,
         "message": f"🎉 Password reset request submitted for {display_name}! Sent update to Admin for confirmation."
     }
-
 

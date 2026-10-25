@@ -5,7 +5,7 @@ services:
     image: judge0/judge0:latest
     container_name: judge0-server
     volumes:
-      - ./judge0.conf:/etc/judge0.conf:ro
+      - ./judge0.conf:/judge0.conf:ro
     ports:
       - "2358:2358"
     privileged: true
@@ -19,9 +19,9 @@ services:
   judge0-worker:
     image: judge0/judge0:latest
     container_name: judge0-worker
-    command: ["./scripts/start-workers"]
+    command: ["./scripts/workers"]
     volumes:
-      - ./judge0.conf:/etc/judge0.conf:ro
+      - ./judge0.conf:/judge0.conf:ro
     privileged: true
     restart: always
     depends_on:

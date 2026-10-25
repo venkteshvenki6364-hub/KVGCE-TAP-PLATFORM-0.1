@@ -499,15 +499,24 @@ def resolve_judge0_lang_id(lang_input: Any) -> int:
         "c": 50,
         "cpp": 54,
         "c++": 54,
+        "c++ 17": 54,
+        "c++17": 54,
         "java": 62,
         "python": 71,
         "python3": 71,
         "javascript": 63,
+        "js": 63,
         "typescript": 74,
+        "ts": 74,
         "csharp": 51,
         "c#": 51,
+        "php": 68,
         "go": 60,
+        "kotlin": 78,
+        "swift": 83,
         "rust": 73,
+        "ruby": 72,
+        "r": 80,
         "sql": 82
     }
     return mapping.get(l_str, 62)
@@ -527,11 +536,12 @@ async def get_coding_languages():
     return {"success": True, "count": len(langs), "data": langs}
 
 @router.post("/run")
+@router.post("/compiler/run")
 async def run_code_endpoint(
     req: Dict[str, Any], current_user: dict = Depends(get_current_user_optional)
 ):
-    code = req.get("sourceCode") or req.get("code") or ""
-    lang_id = req.get("languageId") or req.get("language_id") or resolve_judge0_lang_id(req.get("language"))
+    code = req.get("source_code") or req.get("sourceCode") or req.get("code") or ""
+    lang_id = req.get("language_id") or req.get("languageId") or resolve_judge0_lang_id(req.get("language"))
     stdin = req.get("stdin") if req.get("stdin") is not None else (req.get("stdinInput") or "")
 
     res = judge0_service.execute_code(
@@ -591,12 +601,14 @@ async def submit_code_endpoint(
 
     for idx, res in enumerate(results):
         last_res = res
-        expected = normalize_text(test_cases[idx].get("expectedOutput", ""))
-        actual = normalize_text(res.get("stdout", ""))
+        tc_dict = test_cases[idx]
+        exp_raw = tc_dict.get("expectedOutput") if tc_dict.get("expectedOutput") is not None else tc_dict.get("output", "")
+        expected = normalize_text(str(exp_raw))
+        actual = normalize_text(str(res.get("stdout") or ""))
 
-        if res.get("status") == "Accepted" or (res.get("success") and actual == expected):
+        if res.get("success") and (actual == expected if expected else True):
             passed_tests += 1
-        elif actual and expected and actual == expected:
+        elif expected and actual == expected and not res.get("compileOutput") and not res.get("stderr"):
             passed_tests += 1
 
     overall_status = "Accepted" if passed_tests == total_tests else ("Wrong Answer" if passed_tests > 0 else (last_res.get("status") or "Wrong Answer"))

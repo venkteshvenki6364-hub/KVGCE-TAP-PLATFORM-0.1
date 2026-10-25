@@ -30,7 +30,7 @@
       "role": "student",
       "student_id": "4KV23CE033",
       "usn": "4KV23CE033",
-      "hashed_password": "$2b$12$9BK410nQvnRkJlAPQJPpQOGa0mxWS2BYQ4Fl17x53cBcHM4mPGBsu",
+      "hashed_password": "$2b$12$.AymokvqA1RNgR0PGC29X.8VyISkNpOqmZgkip1bDbXEJY5qU3ON6",
       "department": "Civil Engineering",
       "course": "B.E. Civil Engineering",
       "semester": 4,
@@ -116,7 +116,8 @@
       "portfolioUrl": "",
       "github": "",
       "linkedin": "",
-      "portfolio": ""
+      "portfolio": "",
+      "password_plain": "28-02-2004"
     },
     {
       "_id": "user-student-1",
@@ -182,7 +183,8 @@
       ],
       "activity_dates": [
         "2026-01-12",
-        "2026-10-08"
+        "2026-10-08",
+        "2026-10-09"
       ],
       "signup_date": "2026-01-12",
       "score_history": [
@@ -255,7 +257,56 @@
       "portfolioUrl": "https://aditya.kvgce.dev",
       "github": "https://github.com/aditya-kvgce",
       "linkedin": "https://linkedin.com/in/aditya-kvgce",
-      "portfolio": "https://aditya.kvgce.dev"
+      "portfolio": "https://aditya.kvgce.dev",
+      "projects": [
+        {
+          "id": "38472615",
+          "project_id": "38472615",
+          "title": "Project",
+          "githubUrl": "https://github.com/venkatesh-r/kvgce-tap-platform",
+          "hostedUrl": "https://kvgce-tap.vercel.app",
+          "description": "An end-to-end talent assessment and campus placement management web application built for KVGCE students and training officers. Features automated student rankings, aptitude tests, and real-time dashboard analytics.",
+          "techStack": [
+            "React.js",
+            "FastAPI",
+            "MongoDB",
+            "Python"
+          ],
+          "pptUrl": null,
+          "pptName": "KVGCE_TAP_Presentation.pptx",
+          "pdfUrl": null,
+          "pdfName": "KVGCE_TAP_Project_Report.pdf",
+          "documentUrl": null,
+          "documentName": "KVGCE_TAP_Project_Report.pdf",
+          "documentType": "ppt",
+          "status": "Pending",
+          "marks": null,
+          "faculty_name": null,
+          "student_id": "4KV21CS042",
+          "student_name": "Aditya Hegde",
+          "student_email": "student@kvgce.edu.in",
+          "student_department": "Computer Science & Engineering",
+          "faculty_id": null
+        },
+        {
+          "id": "72910463",
+          "project_id": "72910463",
+          "title": "AI-Powered Skill Assessment & Career Assistant",
+          "description": "An interactive AI platform that conducts mock HR & Technical interviews, analyzes coding submissions, and delivers personalized career learning roadmaps for engineering graduates.",
+          "githubUrl": "https://github.com/venkatesh-r/ai-career-assistant",
+          "hostedUrl": "https://ai-career-assistant.demo.dev",
+          "techStack": [
+            "Python",
+            "PyTorch",
+            "React",
+            "Node.js"
+          ],
+          "pptUrl": null,
+          "pptName": "AI_Career_Assistant_Presentation.pptx",
+          "pdfUrl": null,
+          "pdfName": "AI_Career_Assistant_Report.pdf"
+        }
+      ]
     }
   ],
   "departments": [
@@ -1430,6 +1481,54 @@
           }
         ]
       }
+    },
+    {
+      "_id": "aa89d77a-5ec8-4c78-85d7-0dc758c53f4a",
+      "student_email": "student@kvgce.edu.in",
+      "student_name": "Aditya Hegde",
+      "title": "8-Round AI HR Mock Interview (Medium)",
+      "category": "HR Interview",
+      "type": "hr_interview",
+      "difficulty": "Medium",
+      "score": 78,
+      "overallScore": "78/100",
+      "points": 39,
+      "status": "Completed",
+      "organizer": "KVGCE TAP AI Engine",
+      "date": "09 Oct 2026",
+      "created_at": "2026-10-09T06:33:59.953765",
+      "metadata": {
+        "interview_id": "HR-INT-662FF5AF",
+        "difficulty": "Medium",
+        "final_score": 78,
+        "feedback": "Solid performance across 8 adaptive HR rounds (Medium). Good technical foundation. Focus on refining system design trade-offs and concise STAR behavioral pitches.",
+        "total_questions": 10,
+        "transcripts": []
+      }
+    },
+    {
+      "_id": "f55284e2-3531-4dcb-b119-7f916e6b8e0c",
+      "student_email": "student@kvgce.edu.in",
+      "student_name": "Aditya Hegde",
+      "title": "8-Round AI HR Mock Interview (Medium)",
+      "category": "HR Interview",
+      "type": "hr_interview",
+      "difficulty": "Medium",
+      "score": 78,
+      "overallScore": "78/100",
+      "points": 39,
+      "status": "Completed",
+      "organizer": "KVGCE TAP AI Engine",
+      "date": "09 Oct 2026",
+      "created_at": "2026-10-09T06:45:34.364299",
+      "metadata": {
+        "interview_id": "HR-INT-A701C299",
+        "difficulty": "Medium",
+        "final_score": 78,
+        "feedback": "Solid performance across 8 adaptive HR rounds (Medium). Good technical foundation. Focus on refining system design trade-offs and concise STAR behavioral pitches.",
+        "total_questions": 10,
+        "transcripts": []
+      }
     }
   ],
   "notifications": [
@@ -2249,6 +2348,65 @@
         }
       ],
       "created_at": "2026-10-08T13:36:54.141535"
+    },
+    {
+      "_id": "1199d10b-8c8c-496e-ac65-bbd3e3d2dee7",
+      "assessment_id": "assess-2",
+      "assessment_title": "Core Technical Computer Science Assessment",
+      "category": "Technical Quiz",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV21CS042",
+      "student_name": "Aditya Hegde",
+      "total_questions": 2,
+      "correct_answers": 0,
+      "wrong_answers": 2,
+      "unanswered": 0,
+      "score": 0,
+      "total_marks": 2,
+      "percentage": 0.0,
+      "time_taken_seconds": 10,
+      "camera_verified": true,
+      "malpractice_strikes": 0,
+      "submitted_at": "2026-10-09T06:43:52.656610",
+      "questions": [
+        {
+          "id": "q3",
+          "question": "What is the worst-case time complexity of QuickSort?",
+          "options": [
+            "O(N log N)",
+            "O(N^2)",
+            "O(N)",
+            "O(1)"
+          ],
+          "correct_answer": 1,
+          "explanation": "QuickSort worst-case time complexity is O(N^2) when the pivot selected is consistently the smallest or largest element.",
+          "difficulty": "Medium",
+          "category": "Technical",
+          "topic": "Data Structures",
+          "marks": 1,
+          "user_choice": 2,
+          "is_correct": false
+        },
+        {
+          "id": "q4",
+          "question": "Which HTTP method is idempotent and used for resource updates?",
+          "options": [
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH"
+          ],
+          "correct_answer": 1,
+          "explanation": "PUT is idempotent, meaning multiple identical requests have the same effect as a single request.",
+          "difficulty": "Easy",
+          "category": "Technical",
+          "topic": "Web Architecture",
+          "marks": 1,
+          "user_choice": 3,
+          "is_correct": false
+        }
+      ],
+      "created_at": "2026-10-09T06:43:52.656610"
     }
   ],
   "coding_problems": [],
@@ -2261,12 +2419,41 @@
       "role": "student",
       "new_password_hash": "$2b$12$.AymokvqA1RNgR0PGC29X.8VyISkNpOqmZgkip1bDbXEJY5qU3ON6",
       "new_password_plain": "28-02-2004",
-      "status": "pending",
+      "status": "approved",
       "created_at": "2026-10-08T13:34:07.394671",
       "_id": "589e5be3-147d-4372-b621-6e48ad48a446"
     }
   ],
-  "projects": [],
+  "projects": [
+    {
+      "title": "Project",
+      "description": "An end-to-end talent assessment and campus placement management web application built for KVGCE students and training officers. Features automated student rankings, aptitude tests, and real-time dashboard analytics.",
+      "techStack": [
+        "React.js",
+        "FastAPI",
+        "MongoDB",
+        "Python"
+      ],
+      "githubUrl": "https://github.com/venkatesh-r/kvgce-tap-platform",
+      "hostedUrl": "https://kvgce-tap.vercel.app",
+      "pptUrl": null,
+      "pptName": "KVGCE_TAP_Presentation.pptx",
+      "pdfUrl": null,
+      "pdfName": "KVGCE_TAP_Project_Report.pdf",
+      "project_id": "38472615",
+      "id": "38472615",
+      "student_id": "4KV21CS042",
+      "student_name": "Aditya Hegde",
+      "student_email": "student@kvgce.edu.in",
+      "student_department": "Computer Science & Engineering",
+      "status": "Pending",
+      "marks": null,
+      "faculty_id": null,
+      "faculty_name": null,
+      "_id": "5ab49379-d76a-400a-a6ec-8ca6851f0db8",
+      "created_at": "2026-10-09T06:45:07.769642"
+    }
+  ],
   "hr_interviews": [
     {
       "interview_id": "HR-INT-0E4235D9",
@@ -6284,6 +6471,142 @@
       "created_at": "2026-10-08T19:08:03.507599",
       "_id": "fa64f366-c980-4784-8fc6-29d0a31e8c2a",
       "completed_at": "2026-10-08T19:09:28.746486"
+    },
+    {
+      "interview_id": "HR-INT-662FF5AF",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV21CS042",
+      "student_name": "Aditya Hegde",
+      "difficulty": "Medium",
+      "questions": [
+        {
+          "id": 1,
+          "category": "Question 1 of 10 \u2014 Introduction & Background",
+          "question": "Hello Aditya Hegde! Tell me about yourself, your background, and key academic interests in Computer Science & Engineering."
+        },
+        {
+          "id": 2,
+          "category": "Question 2 of 10 \u2014 Education & Skills",
+          "question": "Walk me through your academic background at KVGCE and your core technical skills (Python, React.js, SQL & DBMS, Data Structures). How have you applied them?"
+        },
+        {
+          "id": 3,
+          "category": "Question 3 of 10 \u2014 Project Overview",
+          "question": "Explain a major project you have worked on, such as 'KVGCE TAP Platform'. What specific problem does it solve and what was your exact role?"
+        },
+        {
+          "id": 4,
+          "category": "Question 4 of 10 \u2014 Project Deep-Dive & Architecture",
+          "question": "In 'KVGCE TAP Platform', why did you select those specific technologies and frameworks over alternative options? What was your biggest technical challenge?"
+        },
+        {
+          "id": 5,
+          "category": "Question 5 of 10 \u2014 Strengths & Weaknesses",
+          "question": "What are your top technical strengths in Python, and what is one area or weakness you are actively working to improve?"
+        },
+        {
+          "id": 6,
+          "category": "Question 6 of 10 \u2014 Teamwork & Challenges",
+          "question": "Tell me about a time you worked in a team or faced a major technical challenge under tight deadlines. How did you resolve conflict or pressure?"
+        },
+        {
+          "id": 7,
+          "category": "Question 7 of 10 \u2014 Problem-Solving & Technical HR",
+          "question": "How do you approach debugging a complex issue in production, or what would you do if asked a technical question you don't know the answer to?"
+        },
+        {
+          "id": 8,
+          "category": "Question 8 of 10 \u2014 Value Proposition & Why Hire You",
+          "question": "Why should our hiring panel select you for this software engineering role, and what unique value will you bring to our team from day one?"
+        },
+        {
+          "id": 9,
+          "category": "Question 9 of 10 \u2014 Career Goals & Expectations",
+          "question": "What are your short-term and 3-year career goals, and what are your job and salary expectations for an entry-level engineering position?"
+        },
+        {
+          "id": 10,
+          "category": "Question 10 of 10 \u2014 Interview Wrap-Up & Student Q&A",
+          "question": "We have covered all primary evaluation topics. Do you have any questions for me regarding our organization or team culture?"
+        }
+      ],
+      "transcripts": [],
+      "evaluations": [],
+      "final_score": 78,
+      "feedback": "Solid performance across 8 adaptive HR rounds (Medium). Good technical foundation. Focus on refining system design trade-offs and concise STAR behavioral pitches.",
+      "status": "completed",
+      "started_at": "2026-10-09T06:33:58.782171",
+      "created_at": "2026-10-09T06:33:58.782171",
+      "_id": "220fbff4-6fad-455b-9ea2-f5694d5af384",
+      "completed_at": "2026-10-09T06:33:59.953765"
+    },
+    {
+      "interview_id": "HR-INT-A701C299",
+      "student_email": "student@kvgce.edu.in",
+      "student_id": "4KV21CS042",
+      "student_name": "Aditya Hegde",
+      "difficulty": "Medium",
+      "questions": [
+        {
+          "id": 1,
+          "category": "Question 1 of 10 \u2014 Introduction & Background",
+          "question": "Hello Aditya Hegde! Tell me about yourself, your background, and key academic interests in Computer Science & Engineering."
+        },
+        {
+          "id": 2,
+          "category": "Question 2 of 10 \u2014 Education & Skills",
+          "question": "Walk me through your academic background at KVGCE and your core technical skills (Python, React.js, SQL & DBMS, Data Structures). How have you applied them?"
+        },
+        {
+          "id": 3,
+          "category": "Question 3 of 10 \u2014 Project Overview",
+          "question": "Explain a major project you have worked on, such as 'Project'. What specific problem does it solve and what was your exact role?"
+        },
+        {
+          "id": 4,
+          "category": "Question 4 of 10 \u2014 Project Deep-Dive & Architecture",
+          "question": "In 'Project', why did you select those specific technologies and frameworks over alternative options? What was your biggest technical challenge?"
+        },
+        {
+          "id": 5,
+          "category": "Question 5 of 10 \u2014 Strengths & Weaknesses",
+          "question": "What are your top technical strengths in Python, and what is one area or weakness you are actively working to improve?"
+        },
+        {
+          "id": 6,
+          "category": "Question 6 of 10 \u2014 Teamwork & Challenges",
+          "question": "Tell me about a time you worked in a team or faced a major technical challenge under tight deadlines. How did you resolve conflict or pressure?"
+        },
+        {
+          "id": 7,
+          "category": "Question 7 of 10 \u2014 Problem-Solving & Technical HR",
+          "question": "How do you approach debugging a complex issue in production, or what would you do if asked a technical question you don't know the answer to?"
+        },
+        {
+          "id": 8,
+          "category": "Question 8 of 10 \u2014 Value Proposition & Why Hire You",
+          "question": "Why should our hiring panel select you for this software engineering role, and what unique value will you bring to our team from day one?"
+        },
+        {
+          "id": 9,
+          "category": "Question 9 of 10 \u2014 Career Goals & Expectations",
+          "question": "What are your short-term and 3-year career goals, and what are your job and salary expectations for an entry-level engineering position?"
+        },
+        {
+          "id": 10,
+          "category": "Question 10 of 10 \u2014 Interview Wrap-Up & Student Q&A",
+          "question": "We have covered all primary evaluation topics. Do you have any questions for me regarding our organization or team culture?"
+        }
+      ],
+      "transcripts": [],
+      "evaluations": [],
+      "final_score": 78,
+      "feedback": "Solid performance across 8 adaptive HR rounds (Medium). Good technical foundation. Focus on refining system design trade-offs and concise STAR behavioral pitches.",
+      "status": "completed",
+      "started_at": "2026-10-09T06:45:19.526840",
+      "created_at": "2026-10-09T06:45:19.526840",
+      "_id": "ff03e54c-6139-4861-b37f-a10807640f6e",
+      "completed_at": "2026-10-09T06:45:34.364299"
     }
   ]
 }

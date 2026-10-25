@@ -27,18 +27,7 @@ async def record_user_daily_activity(email: str) -> dict:
     if today_str not in activity_dates:
         activity_dates.append(today_str)
         
-    # Provide structured historical overall score points (0 to 100 with ups and downs)
-    score_history = user_doc.get("score_history") or [
-        {"date": "15 Jan", "day": "Thu", "score": 48.0, "change": "-4.0%", "trend": "down"},
-        {"date": "10 Feb", "day": "Tue", "score": 56.5, "change": "+8.5%", "trend": "up"},
-        {"date": "05 Mar", "day": "Thu", "score": 51.0, "change": "-5.5%", "trend": "down"},
-        {"date": "22 Apr", "day": "Wed", "score": 67.0, "change": "+16.0%", "trend": "up"},
-        {"date": "18 May", "day": "Mon", "score": 63.5, "change": "-3.5%", "trend": "down"},
-        {"date": "12 Jun", "day": "Fri", "score": 75.0, "change": "+11.5%", "trend": "up"},
-        {"date": "25 Jul", "day": "Sat", "score": 71.8, "change": "-3.2%", "trend": "down"},
-        {"date": "14 Aug", "day": "Fri", "score": 79.5, "change": "+7.7%", "trend": "up"},
-        {"date": "23 Sep", "day": "Wed", "score": 82.5, "change": "+3.0%", "trend": "up"}
-    ]
+    score_history = user_doc.get("score_history") or []
 
     await users_col.update_one(
         {"email": email},
@@ -93,20 +82,37 @@ async def get_student_dashboard(current_user: dict = Depends(require_role(["stud
     # Fetch notifications
     notifications = await notifs_col.find({"user_email": user_email})
 
-    skills = user_profile.get("skills", [
-        {"name": "Python", "category": "Programming", "score": 85, "level": "Advanced", "percentage": 85},
-        {"name": "React.js", "category": "Web Development", "score": 80, "level": "Advanced", "percentage": 80},
-        {"name": "SQL & DBMS", "category": "Database", "score": 70, "level": "Intermediate", "percentage": 70},
-        {"name": "Quantitative Aptitude", "category": "Aptitude", "score": 82, "level": "Advanced", "percentage": 82}
-    ])
+    skills = user_profile.get("skills") or []
 
     # Calculate average scores
-    aptitude_scores = [a.get("percentage", 80) for a in attempts if a.get("category") == "Aptitude"]
-    tech_scores = [a.get("percentage", 85) for a in attempts if a.get("category") == "Technical Quiz"]
+    def attempt_percentage(attempt):
+        if attempt.get("percentage") is not None:
+            return float(attempt["percentage"])
+        total = float(attempt.get("total_marks") or attempt.get("total") or 0)
+        score = float(attempt.get("score") or attempt.get("obtained_marks") or 0)
+        return round(score / total * 100, 2) if total > 0 else None
+
+    aptitude_scores = [
+        value for attempt in attempts
+        if "aptitude" in str(attempt.get("category") or "").lower()
+        if (value := attempt_percentage(attempt)) is not None
+    ]
+    tech_scores = [
+        value for attempt in attempts
+        if "technical" in str(attempt.get("category") or "").lower()
+        if (value := attempt_percentage(attempt)) is not None
+    ]
+    coding_scores = [
+        value for attempt in attempts
+        if "coding" in str(attempt.get("category") or "").lower()
+        if (value := attempt_percentage(attempt)) is not None
+    ]
     
-    aptitude_avg = round(sum(aptitude_scores)/len(aptitude_scores), 1) if aptitude_scores else 82.0
-    tech_avg = round(sum(tech_scores)/len(tech_scores), 1) if tech_scores else 85.0
-    overall_score = round((aptitude_avg + tech_avg + 84) / 3, 1)
+    aptitude_avg = round(sum(aptitude_scores)/len(aptitude_scores), 1) if aptitude_scores else 0
+    tech_avg = round(sum(tech_scores)/len(tech_scores), 1) if tech_scores else 0
+    coding_avg = round(sum(coding_scores)/len(coding_scores), 1) if coding_scores else 0
+    score_values = aptitude_scores + tech_scores + coding_scores
+    overall_score = round(sum(score_values) / len(score_values), 1) if score_values else 0
 
     ai_recommendations = [
         "Your Logical Reasoning score is strong (88%). Keep practicing high-level puzzles.",
@@ -123,7 +129,7 @@ async def get_student_dashboard(current_user: dict = Depends(require_role(["stud
                 "overallScore": overall_score,
                 "aptitudeScore": aptitude_avg,
                 "technicalScore": tech_avg,
-                "codingScore": 78.5,
+                "codingScore": coding_avg,
                 "activitiesCompleted": completed_activities_count,
                 "certificates": len([a for a in activities if a.get("category") == "Certification"]),
                 "achievements": len([a for a in activities if a.get("category") == "Hackathon"])
@@ -512,15 +518,15 @@ async def get_student_academic_rankings(current_user: dict = Depends(get_current
         for u in db_users:
             acad = u.get("academics", {})
             be_sum = acad.get("beSummary", {}) if isinstance(acad, dict) else {}
-            cgpa_val = float(be_sum.get("cgpaTillNow") or u.get("cgpa") or 8.50)
-            credits_val = float(be_sum.get("totalCredits") or u.get("total_credits") or 160)
+            cgpa_val = float(be_sum.get("cgpaTillNow") or u.get("cgpa") or 0)
+            credits_val = float(be_sum.get("totalCredits") or u.get("total_credits") or 0)
             
             pct_raw = be_sum.get("overallPercentage") or u.get("percentage") or "85.00%"
             if isinstance(pct_raw, str):
                 pct_raw = pct_raw.replace("%", "").strip()
-            pct_val = float(pct_raw) if pct_raw else 85.00
+            pct_val = float(pct_raw) if pct_raw else 0
             
-            marks_val = float(be_sum.get("obtainedMarks") or u.get("total_marks") or 6800)
+            marks_val = float(be_sum.get("obtainedMarks") or u.get("total_marks") or 0)
 
             apt_val = float(u.get("aptitude_score") or u.get("aptitude") or 82.0)
             tech_val = float(u.get("technical_score") or u.get("technical") or 85.0)
@@ -781,5 +787,3 @@ async def delete_student_project(
         "success": True,
         "message": "Project deleted successfully"
     }
-
-

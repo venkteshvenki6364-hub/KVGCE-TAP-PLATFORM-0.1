@@ -244,6 +244,12 @@ async def create_assessment(
     assessment_in: AssessmentCreate,
     current_user: dict = Depends(require_role(["faculty", "admin"]))
 ):
+    calculated_marks = sum(max(0, int(question.marks or 0)) for question in assessment_in.questions)
+    if assessment_in.questions and calculated_marks != assessment_in.total_marks:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Question marks ({calculated_marks}) must match total marks ({assessment_in.total_marks}).",
+        )
     assessments_col = get_db_collection("assessments")
     doc = assessment_in.model_dump()
     doc["_id"] = str(uuid.uuid4())
@@ -315,6 +321,8 @@ async def get_assessment_by_id(
     if not item:
         raise HTTPException(status_code=404, detail="Assessment not found.")
     
+    if current_user.get("role") == "student" and not item.get("is_published", False):
+        raise HTTPException(status_code=403, detail="This assessment is not currently available.")
     if current_user.get("role") == "student":
         item = strip_answers_for_student(item)
 
@@ -335,6 +343,20 @@ async def update_assessment(
         raise HTTPException(status_code=404, detail="Assessment not found.")
 
     update_doc = assessment_in.model_dump()
+    calculated_marks = sum(max(0, int(question.marks or 0)) for question in assessment_in.questions)
+    if assessment_in.questions and calculated_marks != assessment_in.total_marks:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Question marks ({calculated_marks}) must match total marks ({assessment_in.total_marks}).",
+        )
+    attempts_col = get_db_collection("quiz_attempts")
+    if item.get("is_published") and await attempts_col.count_documents({"assessment_id": id}) > 0:
+        original_questions = item.get("questions", [])
+        if update_doc.get("questions") != original_questions or update_doc.get("total_marks") != item.get("total_marks"):
+            raise HTTPException(
+                status_code=409,
+                detail="Published assessments with attempts cannot change questions or marks.",
+            )
     await assessments_col.update_one({"_id": id}, {"$set": update_doc})
     return {
         "success": True,
@@ -357,7 +379,7 @@ async def delete_assessment(
 async def submit_quiz_attempt(
     id: str,
     attempt_in: QuizAttemptSubmit,
-    current_user: dict = Depends(get_optional_user)
+    current_user: dict = Depends(get_current_user)
 ):
     await ensure_default_assessments()
     assessments_col = get_db_collection("assessments")
@@ -365,13 +387,17 @@ async def submit_quiz_attempt(
     
     assessment = await assessments_col.find_one({"_id": id})
     if not assessment:
-        # Fallback default assessment
-        for default_test in DEFAULT_APTITUDE_TESTS:
-            if default_test["_id"] == id:
-                assessment = default_test
-                break
-        if not assessment:
-            assessment = DEFAULT_APTITUDE_TESTS[0]
+        raise HTTPException(status_code=404, detail="Assessment not found.")
+    if current_user.get("role") == "student" and not assessment.get("is_published", False):
+        raise HTTPException(status_code=403, detail="This assessment is not currently available.")
+
+    existing_attempt = await attempts_col.find_one({
+        "assessment_id": id,
+        "student_email": current_user.get("email"),
+        "status": "submitted",
+    })
+    if existing_attempt:
+        raise HTTPException(status_code=409, detail="You have already submitted this assessment.")
 
     questions = assessment.get("questions", [])
     total_questions = len(questions) or 5
@@ -387,13 +413,13 @@ async def submit_quiz_attempt(
         if user_choice is None:
             user_choice = attempt_in.answers.get(idx)
 
-        q_correct = q.get("correct_answer", 0)
+        q_correct = q.get("correct_answer")
 
         # Convert option text or string indices to int if necessary
         try:
             q_correct_int = int(q_correct)
         except Exception:
-            q_correct_int = 0
+            q_correct_int = None
 
         try:
             user_choice_int = int(user_choice) if user_choice is not None else None
@@ -415,15 +441,15 @@ async def submit_quiz_attempt(
         evaluated_q["is_correct"] = is_correct
         evaluated_questions.append(evaluated_q)
 
-    marks_per_q = assessment.get("questions", [{}])[0].get("marks", 1) if questions else 1
-    if not marks_per_q or marks_per_q <= 0:
-        marks_per_q = 1
+    question_marks = [
+        max(0, int(q.get("marks", 1) or 1))
+        for q in questions
+    ]
+    score = sum(question_marks[idx] for idx, q in enumerate(evaluated_questions) if q["is_correct"])
+    total_marks = sum(question_marks)
+    percentage = round((score / total_marks) * 100, 2) if total_marks else 0.0
 
-    score = correct_count * marks_per_q
-    total_marks = total_questions * marks_per_q
-    percentage = round((correct_count / total_questions) * 100, 2) if total_questions else 100.0
-
-    student_id = current_user.get("student_id") or "4KV21CS042"
+    student_id = current_user.get("student_id") or current_user.get("user_id") or ""
     student_name = current_user.get("full_name") or "Student"
     student_email = current_user.get("email")
 
@@ -446,7 +472,8 @@ async def submit_quiz_attempt(
         "camera_verified": attempt_in.camera_verified if attempt_in.camera_verified is not None else True,
         "malpractice_strikes": attempt_in.malpractice_strikes or 0,
         "submitted_at": datetime.utcnow().isoformat(),
-        "questions": evaluated_questions
+        "questions": evaluated_questions,
+        "status": "submitted"
     }
 
     await attempts_col.insert_one(attempt_doc)
@@ -491,5 +518,3 @@ async def submit_coding_solution(
         "message": f"Coding submission evaluated: {status_str}",
         "data": submission
     }
-
-

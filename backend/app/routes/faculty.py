@@ -1,9 +1,245 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+import base64
+from datetime import datetime
+from typing import Optional
 from app.routes.auth import require_role
+from app.utils.security import get_password_hash, verify_password
 from app.database import get_db_collection
 from app.schemas.activity import FeedbackSubmit
+from app.services.analytics import build_analytics, legacy_analysis
 
 router = APIRouter(prefix="/faculty", tags=["Faculty"])
+
+
+def _public_faculty_profile(user: dict) -> dict:
+    profile = dict(user)
+    profile.pop("hashed_password", None)
+    profile.pop("password_plain", None)
+    return profile
+
+
+async def _faculty_assignments(faculty: dict) -> tuple[list, list]:
+    assignments_col = get_db_collection("faculty_assignments")
+    subjects_col = get_db_collection("subjects")
+    students_col = get_db_collection("users")
+    faculty_id = faculty.get("faculty_id") or faculty.get("user_id") or faculty.get("email")
+    assignments = await assignments_col.find({"faculty_id": faculty_id})
+    subjects, classes = [], []
+    for assignment in assignments:
+        assignment_type = str(assignment.get("type") or assignment.get("assignment_type") or "subject").lower()
+        if assignment_type == "class":
+            item = dict(assignment)
+            query = {"role": "student"}
+            for field in ("department", "year", "semester", "section"):
+                if item.get(field) is not None:
+                    query[field] = item[field]
+            item["student_count"] = await students_col.count_documents(query)
+            classes.append(item)
+        else:
+            subject = await subjects_col.find_one({"_id": assignment.get("subject_id")})
+            subjects.append({**(subject or {}), **assignment})
+    return subjects, classes
+
+
+@router.get("/profile")
+async def get_faculty_profile(current_user: dict = Depends(require_role(["faculty"]))):
+    subjects, classes = await _faculty_assignments(current_user)
+    return {
+        "success": True,
+        "data": {
+            **_public_faculty_profile(current_user),
+            "subjects": subjects,
+            "classes": classes,
+        },
+    }
+
+
+@router.put("/profile")
+async def update_faculty_profile(
+    payload: dict,
+    current_user: dict = Depends(require_role(["faculty"]))
+):
+    allowed = {}
+    if "full_name" in payload:
+        name = str(payload["full_name"]).strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Full name is required.")
+        allowed["full_name"] = name
+    if "phone" in payload:
+        phone = str(payload["phone"]).strip()
+        phone_digits = "".join(char for char in phone if char.isdigit())
+        if phone_digits.startswith("91") and len(phone_digits) == 12:
+            phone_digits = phone_digits[2:]
+        if phone and len(phone_digits) != 10:
+            raise HTTPException(status_code=400, detail="Phone number must contain exactly 10 digits.")
+        allowed["phone"] = phone
+    if "summary" in payload:
+        summary = str(payload["summary"]).strip()
+        if len(summary) > 1000:
+            raise HTTPException(status_code=400, detail="Summary must be 1000 characters or fewer.")
+        allowed["summary"] = summary
+    allowed["updated_at"] = datetime.utcnow().isoformat()
+    users_col = get_db_collection("users")
+    await users_col.update_one({"email": current_user["email"]}, {"$set": allowed})
+    updated = await users_col.find_one({"email": current_user["email"]})
+    subjects, classes = await _faculty_assignments(updated or current_user)
+    return {"success": True, "data": {**_public_faculty_profile(updated or current_user), "subjects": subjects, "classes": classes}}
+
+
+@router.put("/profile/password")
+async def change_faculty_password(
+    payload: dict,
+    current_user: dict = Depends(require_role(["faculty"]))
+):
+    current_password = str(payload.get("current_password") or "")
+    new_password = str(payload.get("new_password") or "")
+    confirm_password = str(payload.get("confirm_password") or "")
+    if not current_password or not new_password or not confirm_password:
+        raise HTTPException(status_code=400, detail="Current password, new password, and confirmation are required.")
+    if new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="New password and confirmation do not match.")
+    users_col = get_db_collection("users")
+    stored_user = await users_col.find_one({"email": current_user["email"]})
+    if not stored_user or not verify_password(current_password, stored_user.get("hashed_password", "")):
+        raise HTTPException(status_code=400, detail="Current password is incorrect.")
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters.")
+    await users_col.update_one(
+        {"email": current_user["email"]},
+        {"$set": {"hashed_password": get_password_hash(new_password), "password_plain": "", "updated_at": datetime.utcnow().isoformat()}}
+    )
+    return {"success": True, "message": "Password updated successfully."}
+
+
+@router.post("/profile/avatar")
+async def upload_faculty_avatar(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_role(["faculty"]))
+):
+    if not (file.content_type or "").startswith("image/"):
+        raise HTTPException(status_code=400, detail="Profile image must be an image file.")
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Profile image must be 5 MB or smaller.")
+    avatar_url = f"data:{file.content_type};base64,{base64.b64encode(content).decode('utf-8')}"
+    users_col = get_db_collection("users")
+    await users_col.update_one({"email": current_user["email"]}, {"$set": {"avatarUrl": avatar_url, "updated_at": datetime.utcnow().isoformat()}})
+    updated = await users_col.find_one({"email": current_user["email"]})
+    subjects, classes = await _faculty_assignments(updated or current_user)
+    return {"success": True, "data": {**_public_faculty_profile(updated or current_user), "subjects": subjects, "classes": classes}}
+
+
+@router.get("/subjects")
+async def get_faculty_subjects(current_user: dict = Depends(require_role(["faculty"]))):
+    subjects, _ = await _faculty_assignments(current_user)
+    return {"success": True, "data": subjects}
+
+
+@router.get("/classes")
+async def get_faculty_classes(current_user: dict = Depends(require_role(["faculty"]))):
+    _, classes = await _faculty_assignments(current_user)
+    return {"success": True, "data": classes}
+
+# ─── Helpers (mirrors admin.py) ───────────────────────────────────────────────
+
+def _dept_key_fac(dept_raw: str) -> str:
+    d = (dept_raw or "").strip()
+    if "Computer" in d or "CSE" in d:  return "CSE"
+    if "Electronics" in d or "ECE" in d: return "ECE"
+    if "Mechanical" in d or "ME" in d:  return "ME"
+    if "Civil" in d or "CV" in d:       return "CV"
+    if "Information" in d or "ISE" in d: return "ISE"
+    return "Other"
+
+
+def _compute_fac(students: list, attempts_count: int) -> dict:
+    total = len(students)
+    active = len([s for s in students if s.get("is_active") is not False])
+    sa = sp = st = sc = sh = ss = at_risk = ready = 0
+    dept_s = {k: {"total": 0, "score_sum": 0} for k in ["CSE", "ECE", "ME", "CV", "ISE", "Other"]}
+    DEPT_DEF = {key: 0 for key in dept_s}
+    for s in students:
+        a = s.get("academics", 0); p = s.get("aptitude", 0)
+        t = s.get("technical", 0); c = s.get("coding", 0); h = s.get("hr_comm", 0)
+        score = s.get("skill_score") or s.get("skillScore") or round((a+p+t+c+h)/5, 1)
+        sa += a; sp += p; st += t; sc += c; sh += h; ss += score
+        if score >= 75: ready += 1
+        if score < 60 or s.get("riskScore", 0) > 60: at_risk += 1
+        dk = _dept_key_fac(s.get("department", ""))
+        dept_s[dk]["total"] += 1; dept_s[dk]["score_sum"] += score
+    cnt = total or 1
+    avg = round(ss / cnt, 1)
+    return {
+        "totalStudents": total, "activeStudents": active, "avgSkillScore": avg,
+        "placementReadiness": round((ready/cnt)*100, 1) if total else 0,
+        "atRiskStudents": at_risk, "testsCompleted": attempts_count,
+        "categoryScores": {
+            "academics": round(sa/cnt,1), "aptitude": round(sp/cnt,1),
+            "technical": round(st/cnt,1), "coding": round(sc/cnt,1),
+            "hrComm": round(sh/cnt,1), "overall": avg
+        },
+        "departmentScores": [
+            {"dept": k, "score": round(v["score_sum"]/v["total"],1) if v["total"]>0 else DEPT_DEF[k]}
+            for k, v in dept_s.items()
+        ],
+        "topPerformers": sorted(
+            [{"name": s.get("full_name") or "Student",
+              "usn": s.get("student_id") or s.get("usn") or "",
+              "dept": _dept_key_fac(s.get("department", "")),
+              "score": s.get("skill_score") or s.get("skillScore") or
+                       round((s.get("academics",0)+s.get("aptitude",0)+s.get("technical",0)+
+                              s.get("coding",0)+s.get("hr_comm",0))/5,1)}
+             for s in students],
+            key=lambda x: x["score"], reverse=True
+        )[:10],
+    }
+
+# ─── Filtered dashboard endpoint ──────────────────────────────────────────────
+
+@router.get("/dashboard/filtered")
+async def get_faculty_dashboard_filtered(
+    branch:  Optional[str] = Query(None, description="Department/Branch filter, e.g. CSE"),
+    year:    Optional[str] = Query(None, description="Year filter 1-4"),
+    semester: Optional[str] = Query(None, description="Semester filter 1-8"),
+    section: Optional[str] = Query(None, description="Section filter A/B/C"),
+    current_user: dict = Depends(require_role(["faculty", "admin"]))
+):
+    """Filtered dashboard analytics for faculty portal."""
+    users_col    = get_db_collection("users")
+    attempts_col = get_db_collection("quiz_attempts")
+
+    res = await users_col.find({"role": "student"})
+    all_students = await res.to_list(length=5000) if hasattr(res, "to_list") else list(res)
+    for doc in all_students:
+        doc.pop("hashed_password", None)
+        if "_id" in doc and not isinstance(doc["_id"], str):
+            doc["_id"] = str(doc["_id"])
+
+    analytics = await build_analytics(filters={
+        "branch": branch, "year": year, "semester": semester, "section": section
+    })
+    analysis = legacy_analysis(analytics)
+    filtered = [
+        student for student in all_students
+        if (not branch or _dept_key_fac(student.get("department", "")) == branch.upper())
+        and (not year or str(student.get("year", "")) == str(year))
+        and (not semester or str(student.get("semester", "")) == str(semester))
+        and (not section or str(student.get("section", "")).upper() == section.upper())
+    ]
+
+    return {
+        "success": True,
+        "message": "Filtered faculty dashboard analytics loaded",
+        "data": {
+            "filters": {"branch": branch, "year": year, "semester": semester, "section": section},
+            "totalStudentsInFilter": len(filtered),
+            "overallAnalysis": analysis,
+            "analytics": analytics,
+            "recentStudents": filtered[:10],
+        }
+    }
+
+# ─── Original faculty dashboard ───────────────────────────────────────────────
 
 @router.get("/dashboard")
 async def get_faculty_dashboard(current_user: dict = Depends(require_role(["faculty", "admin"]))):
@@ -17,6 +253,8 @@ async def get_faculty_dashboard(current_user: dict = Depends(require_role(["facu
 
     pending_activities = [a for a in activities if a.get("status") == "Pending"]
 
+    analytics = await build_analytics()
+    analysis = legacy_analysis(analytics)
     return {
         "success": True,
         "message": "Faculty dashboard data loaded",
@@ -25,13 +263,19 @@ async def get_faculty_dashboard(current_user: dict = Depends(require_role(["facu
                 "totalStudents": len(students),
                 "activeAssessments": len(assessments),
                 "pendingVerifications": len(pending_activities),
-                "avgBatchScore": 81.4
+                "avgBatchScore": analytics["overall_average"],
+                "submittedAttempts": analytics["submitted_attempts"],
+                "participationPercentage": analytics["participation_percentage"],
             },
+            "overallAnalysis": analysis,
+            "analytics": analytics,
+            "students": students,
             "recentStudents": students[:10],
             "assessments": assessments,
             "pendingActivities": pending_activities
         }
     }
+
 
 @router.get("/students")
 async def list_faculty_students(current_user: dict = Depends(require_role(["faculty", "admin"]))):
@@ -294,4 +538,3 @@ async def get_faculty_evaluated_projects(
         "success": True,
         "data": evaluated
     }
-

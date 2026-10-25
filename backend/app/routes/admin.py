@@ -1,10 +1,248 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from app.routes.auth import require_role
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+import base64
+from datetime import datetime
+from typing import Optional
+from app.routes.auth import require_role, get_current_user
 from app.database import get_db_collection
 from app.utils.security import get_password_hash
 from app.schemas.user import UserCreate
+from app.services.analytics import build_analytics, legacy_analysis
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+def _public_profile(user: dict) -> dict:
+    profile = dict(user)
+    profile.pop("hashed_password", None)
+    profile.pop("password_plain", None)
+    return profile
+
+
+@router.get("/profile")
+async def get_admin_profile(current_user: dict = Depends(require_role(["admin"]))):
+    return {"success": True, "data": _public_profile(current_user)}
+
+
+@router.put("/profile")
+async def update_admin_profile(
+    payload: dict,
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    allowed = {}
+    if "full_name" in payload:
+        name = str(payload["full_name"]).strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Full name is required.")
+        allowed["full_name"] = name
+    if "phone" in payload:
+        phone = str(payload["phone"]).strip()
+        phone_digits = "".join(char for char in phone if char.isdigit())
+        if phone_digits.startswith("91") and len(phone_digits) == 12:
+            phone_digits = phone_digits[2:]
+        if phone and len(phone_digits) != 10:
+            raise HTTPException(status_code=400, detail="Phone number must contain exactly 10 digits.")
+        allowed["phone"] = phone
+    if "department" in payload:
+        department = str(payload["department"]).strip()
+        if len(department) > 150:
+            raise HTTPException(status_code=400, detail="Department must be 150 characters or fewer.")
+        allowed["department"] = department
+    if "summary" in payload:
+        summary = str(payload["summary"]).strip()
+        if len(summary) > 1000:
+            raise HTTPException(status_code=400, detail="Summary must be 1000 characters or fewer.")
+        allowed["summary"] = summary
+    allowed["updated_at"] = datetime.utcnow().isoformat()
+    users_col = get_db_collection("users")
+    await users_col.update_one({"email": current_user["email"]}, {"$set": allowed})
+    updated = await users_col.find_one({"email": current_user["email"]})
+    return {"success": True, "data": _public_profile(updated or current_user)}
+
+
+@router.put("/profile/password")
+async def change_admin_password(
+    payload: dict,
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    current_password = str(payload.get("current_password") or "")
+    new_password = str(payload.get("new_password") or "")
+    confirm_password = str(payload.get("confirm_password") or "")
+    if not current_password or not new_password or not confirm_password:
+        raise HTTPException(status_code=400, detail="Current password, new password, and confirmation are required.")
+    if new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="New password and confirmation do not match.")
+    from app.utils.security import verify_password
+    users_col = get_db_collection("users")
+    stored_user = await users_col.find_one({"email": current_user["email"]})
+    if not stored_user or not verify_password(current_password, stored_user.get("hashed_password", "")):
+        raise HTTPException(status_code=400, detail="Current password is incorrect.")
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters.")
+    await users_col.update_one(
+        {"email": current_user["email"]},
+        {"$set": {"hashed_password": get_password_hash(new_password), "password_plain": "", "updated_at": datetime.utcnow().isoformat()}}
+    )
+    return {"success": True, "message": "Password updated successfully."}
+
+
+@router.post("/profile/avatar")
+async def upload_admin_avatar(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    if not (file.content_type or "").startswith("image/"):
+        raise HTTPException(status_code=400, detail="Profile image must be an image file.")
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Profile image must be 5 MB or smaller.")
+    avatar_url = f"data:{file.content_type};base64,{base64.b64encode(content).decode('utf-8')}"
+    users_col = get_db_collection("users")
+    await users_col.update_one({"email": current_user["email"]}, {"$set": {"avatarUrl": avatar_url, "updated_at": datetime.utcnow().isoformat()}})
+    updated = await users_col.find_one({"email": current_user["email"]})
+    return {"success": True, "data": _public_profile(updated or current_user)}
+
+
+def _dept_key(dept_raw: str) -> str:
+    """Normalize a department string to a short key."""
+    d = (dept_raw or "").strip()
+    if "Computer" in d or "CSE" in d:
+        return "CSE"
+    if "Electronics" in d or "ECE" in d:
+        return "ECE"
+    if "Mechanical" in d or "ME" in d:
+        return "ME"
+    if "Civil" in d or "CV" in d:
+        return "CV"
+    if "Information" in d or "ISE" in d:
+        return "ISE"
+    return "Other"
+
+
+def _compute_analysis(students: list, attempts_count: int) -> dict:
+    """Compute overallAnalysis dict for a given list of students."""
+    total_students = len(students)
+    active_students = len([s for s in students if s.get("is_active") is not False])
+
+    sum_academics = sum_aptitude = sum_technical = sum_coding = sum_hr_comm = sum_skill = 0
+    at_risk = placement_ready = 0
+
+    dept_summary = {k: {"total": 0, "score_sum": 0} for k in ["CSE", "ECE", "ME", "CV", "ISE", "Other"]}
+
+    for s in students:
+        academics  = s.get("academics", 0)
+        aptitude   = s.get("aptitude", 0)
+        technical  = s.get("technical", 0)
+        coding     = s.get("coding", 0)
+        hr_comm    = s.get("hr_comm", 0)
+        skill_score = s.get("skill_score") or s.get("skillScore") or round(
+            (academics + aptitude + technical + coding + hr_comm) / 5, 1
+        )
+
+        sum_academics  += academics
+        sum_aptitude   += aptitude
+        sum_technical  += technical
+        sum_coding     += coding
+        sum_hr_comm    += hr_comm
+        sum_skill      += skill_score
+
+        if skill_score >= 75:
+            placement_ready += 1
+        if skill_score < 60 or s.get("riskScore", 0) > 60:
+            at_risk += 1
+
+        dk = _dept_key(s.get("department", ""))
+        dept_summary[dk]["total"]     += 1
+        dept_summary[dk]["score_sum"] += skill_score
+
+    cnt = total_students if total_students > 0 else 1
+    avg_skill = round(sum_skill / cnt, 1)
+
+    DEPT_DEFAULTS = {key: 0 for key in dept_summary}
+
+    return {
+        "totalStudents":      total_students,
+        "activeStudents":     active_students,
+        "avgSkillScore":      avg_skill,
+        "placementReadiness": round((placement_ready / cnt) * 100, 1) if total_students > 0 else 0,
+        "atRiskStudents":     at_risk,
+        "testsCompleted":     attempts_count,
+        "categoryScores": {
+            "academics": round(sum_academics / cnt, 1),
+            "aptitude":  round(sum_aptitude  / cnt, 1),
+            "technical": round(sum_technical / cnt, 1),
+            "coding":    round(sum_coding    / cnt, 1),
+            "hrComm":    round(sum_hr_comm   / cnt, 1),
+            "overall":   avg_skill,
+        },
+        "departmentScores": [
+            {
+                "dept":  k,
+                "score": round(v["score_sum"] / v["total"], 1) if v["total"] > 0 else DEPT_DEFAULTS[k]
+            }
+            for k, v in dept_summary.items()
+        ],
+        "topPerformers": sorted(
+            [
+                {
+                    "name":  s.get("full_name") or "Student",
+                    "usn":   s.get("student_id") or s.get("usn") or "",
+                    "dept":  _dept_key(s.get("department", "")),
+                    "score": s.get("skill_score") or s.get("skillScore") or round(
+                        (s.get("academics", 0) + s.get("aptitude", 0) + s.get("technical", 0) +
+                         s.get("coding", 0) + s.get("hr_comm", 0)) / 5, 1
+                    )
+                }
+                for s in students
+            ],
+            key=lambda x: x["score"],
+            reverse=True
+        )[:10],
+    }
+
+
+@router.get("/dashboard/filtered")
+async def get_admin_dashboard_filtered(
+    branch:  Optional[str] = Query(None, description="Department/Branch filter, e.g. CSE"),
+    year:    Optional[str] = Query(None, description="Year filter, e.g. 1,2,3,4"),
+    semester: Optional[str] = Query(None, description="Semester filter, e.g. 1-8"),
+    section: Optional[str] = Query(None, description="Section filter, e.g. A,B,C"),
+    current_user: dict = Depends(require_role(["admin"]))
+):
+    """Return database-backed analytics for the selected student cohort."""
+    users_col    = get_db_collection("users")
+    attempts_col = get_db_collection("quiz_attempts")
+
+    res_users = await users_col.find({"role": "student"})
+    all_students = await res_users.to_list(length=5000) if hasattr(res_users, "to_list") else list(res_users)
+
+    for doc in all_students:
+        doc.pop("hashed_password", None)
+        if "_id" in doc and not isinstance(doc["_id"], str):
+            doc["_id"] = str(doc["_id"])
+
+    analytics = await build_analytics(filters={
+        "branch": branch, "year": year, "semester": semester, "section": section
+    })
+    analysis = legacy_analysis(analytics)
+    filtered = [
+        student for student in all_students
+        if (not branch or _dept_key(student.get("department", "")) == branch.upper())
+        and (not year or str(student.get("year", "")) == str(year))
+        and (not semester or str(student.get("semester", "")) == str(semester))
+        and (not section or str(student.get("section", "")).upper() == section.upper())
+    ]
+
+    return {
+        "success": True,
+        "message": "Filtered dashboard analytics loaded",
+        "data": {
+            "filters": {"branch": branch, "year": year, "semester": semester, "section": section},
+            "totalStudentsInFilter": len(filtered),
+            "overallAnalysis": analysis,
+            "analytics": analytics,
+            "recentStudents": filtered[:10],
+        }
+    }
 
 @router.get("/dashboard")
 async def get_admin_dashboard(current_user: dict = Depends(require_role(["admin"]))):
@@ -12,14 +250,43 @@ async def get_admin_dashboard(current_user: dict = Depends(require_role(["admin"
     dept_col = get_db_collection("departments")
     assess_col = get_db_collection("assessments")
     activities_col = get_db_collection("activities")
+    attempts_col = get_db_collection("quiz_attempts")
 
-    all_users = await users_col.find({})
+    res_users = await users_col.find({})
+    all_users = await res_users.to_list(length=5000) if hasattr(res_users, "to_list") and callable(getattr(res_users, "to_list", None)) else list(res_users)
+
     students = [u for u in all_users if u.get("role") == "student"]
     faculty = [u for u in all_users if u.get("role") == "faculty"]
     admins = [u for u in all_users if u.get("role") == "admin"]
-    departments = await dept_col.find({})
-    assessments = await assess_col.find({})
-    activities = await activities_col.find({})
+
+    res_dept = await dept_col.find({})
+    departments = await res_dept.to_list(length=500) if hasattr(res_dept, "to_list") and callable(getattr(res_dept, "to_list", None)) else list(res_dept)
+
+    res_assess = await assess_col.find({})
+    assessments = await res_assess.to_list(length=500) if hasattr(res_assess, "to_list") and callable(getattr(res_assess, "to_list", None)) else list(res_assess)
+
+    res_act = await activities_col.find({})
+    activities = await res_act.to_list(length=1000) if hasattr(res_act, "to_list") and callable(getattr(res_act, "to_list", None)) else list(res_act)
+
+    res_att = await attempts_col.find({})
+    attempts = await res_att.to_list(length=5000) if hasattr(res_att, "to_list") and callable(getattr(res_att, "to_list", None)) else list(res_att)
+
+    # Sanitize _id for JSON serialization across returned collections
+    for doc in all_users:
+        if "_id" in doc and not isinstance(doc["_id"], str):
+            doc["_id"] = str(doc["_id"])
+        doc.pop("hashed_password", None)
+
+    for doc in departments:
+        if "_id" in doc and not isinstance(doc["_id"], str):
+            doc["_id"] = str(doc["_id"])
+
+    for doc in assessments:
+        if "_id" in doc and not isinstance(doc["_id"], str):
+            doc["_id"] = str(doc["_id"])
+
+    analytics = await build_analytics()
+    overall_analysis = legacy_analysis(analytics)
 
     return {
         "success": True,
@@ -27,14 +294,18 @@ async def get_admin_dashboard(current_user: dict = Depends(require_role(["admin"
         "data": {
             "stats": {
                 "totalUsers": len(all_users),
-                "totalStudents": len(students),
+                "totalStudents": overall_analysis["totalStudents"],
                 "totalFaculty": len(faculty),
                 "totalAdmins": len(admins),
                 "totalDepartments": len(departments),
                 "totalAssessments": len(assessments),
-                "totalActivities": len(activities)
+                "totalActivities": len(activities),
+                "testsCompleted": len(attempts)
             },
-            "recentUsers": [dict(u, hashed_password="") for u in all_users[:10]],
+            "overallAnalysis": overall_analysis,
+            "analytics": analytics,
+            "recentUsers": all_users[:10],
+            "recentStudents": students[:10],
             "departments": departments,
             "assessments": assessments
         }
@@ -343,29 +614,28 @@ async def get_departments(current_user: dict = Depends(require_role(["admin", "f
 
 @router.get("/analytics")
 async def get_system_analytics(current_user: dict = Depends(require_role(["admin"]))):
+    analytics = await build_analytics()
     return {
         "success": True,
         "data": {
             "departmentPerformance": [
-                {"department": "CSE", "avgScore": 84.5, "passRate": 92.0},
-                {"department": "ISE", "avgScore": 81.2, "passRate": 88.5},
-                {"department": "ECE", "avgScore": 79.0, "passRate": 85.0},
-                {"department": "ME", "avgScore": 76.5, "passRate": 82.0},
-                {"department": "CIV", "avgScore": 75.0, "passRate": 80.0}
+                {
+                    "department": item["group"],
+                    "avgScore": item["average"],
+                    "studentsContributing": item["students_contributing"],
+                }
+                for item in analytics["grouped_statistics"]["branch"]
             ],
-            "monthlyParticipation": [
-                {"month": "Jan", "attempts": 120, "activities": 45},
-                {"month": "Feb", "attempts": 230, "activities": 88},
-                {"month": "Mar", "attempts": 310, "activities": 140},
-                {"month": "Apr", "attempts": 450, "activities": 190},
-                {"month": "May", "attempts": 580, "activities": 260}
-            ],
+            "monthlyParticipation": [],
             "skillDistribution": [
-                {"skill": "Python", "count": 210},
-                {"skill": "Web Dev", "count": 180},
-                {"skill": "Aptitude", "count": 240},
-                {"skill": "Data Structures", "count": 195},
-                {"skill": "SQL", "count": 165}
-            ]
+                {"skill": category, "count": details["students_contributing"]}
+                for category, details in analytics["category_averages"].items()
+            ],
+            "summary": {
+                "studentCount": analytics["student_count"],
+                "submittedAttempts": analytics["submitted_attempts"],
+                "participationPercentage": analytics["participation_percentage"],
+                "overallAverage": analytics["overall_average"] or 0,
+            },
         }
     }

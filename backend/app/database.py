@@ -73,7 +73,7 @@ class InMemoryCollection:
                 return dict(item)
         return None
 
-    async def find(self, query: Dict[str, Any] = None, sort=None, limit=0) -> List[Dict[str, Any]]:
+    async def find(self, query: Dict[str, Any] = None, sort=None, limit=0) -> Any:
         results = []
         query = query or {}
         for item in self.data:
@@ -95,7 +95,12 @@ class InMemoryCollection:
         
         if limit and limit > 0:
             results = results[:limit]
-        return results
+
+        class ListWithToList(list):
+            async def to_list(self, length=None):
+                return self[:length] if length else self
+
+        return ListWithToList(results)
 
     async def insert_one(self, doc: Dict[str, Any]):
         doc_copy = dict(doc)
