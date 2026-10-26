@@ -9,43 +9,6 @@ import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import "./FacultyHomePage.css";
 
-const SAMPLE_PROJECTS_FALLBACK = [
-  {
-    project_id: "38472615",
-    id: "38472615",
-    title: "KVGCE TAP Portal & Placement Management Platform",
-    description: "An end-to-end talent assessment and campus placement management web application built for KVGCE students and training officers.",
-    techStack: ["React.js", "FastAPI", "MongoDB", "Python"],
-    githubUrl: "https://github.com/venkatesh-r/kvgce-tap-platform",
-    hostedUrl: "https://kvgce-tap.vercel.app",
-    pptName: "KVGCE_TAP_Presentation.pptx",
-    pdfName: "KVGCE_TAP_Project_Report.pdf",
-    student_name: "Venkatesh V",
-    student_id: "4KV21CS042",
-    student_department: "Computer Science Engineering",
-    status: "Approved",
-    marks: 92,
-    faculty_name: "Prof. Suresh Kumar"
-  },
-  {
-    project_id: "72910463",
-    id: "72910463",
-    title: "AI-Powered Skill Assessment & Career Assistant",
-    description: "An interactive AI platform that conducts mock HR & Technical interviews, analyzes coding submissions, and delivers personalized career roadmaps.",
-    techStack: ["Python", "PyTorch", "React", "Node.js"],
-    githubUrl: "https://github.com/venkatesh-r/ai-career-assistant",
-    hostedUrl: "https://ai-career-assistant.demo.dev",
-    pptName: "AI_Career_Assistant_Presentation.pptx",
-    pdfName: "AI_Career_Assistant_Report.pdf",
-    student_name: "Aditya Hegde",
-    student_id: "4KV21CS001",
-    student_department: "Computer Science Engineering",
-    status: "Pending",
-    marks: null,
-    faculty_name: null
-  }
-];
-
 function FacultyHomePage({ defaultTab }) {
   const { user } = useAuth();
   const location = useLocation();
@@ -91,17 +54,19 @@ function FacultyHomePage({ defaultTab }) {
       if (res.data && res.data.data && Array.isArray(res.data.data)) {
         setEvaluatedProjects(res.data.data);
       } else {
-        setEvaluatedProjects(SAMPLE_PROJECTS_FALLBACK.filter((p) => p.status === "Approved"));
+        setEvaluatedProjects([]);
       }
     } catch (err) {
-      console.warn("Evaluated projects fetch fallback:", err);
-      setEvaluatedProjects(SAMPLE_PROJECTS_FALLBACK.filter((p) => p.status === "Approved"));
+      console.error("Evaluated projects fetch failed:", err);
+      setEvaluatedProjects([]);
     }
   };
 
   useEffect(() => {
     fetchFacultyDashboard();
     fetchEvaluatedProjects();
+    const refreshTimer = window.setInterval(fetchFacultyDashboard, 15000);
+    return () => window.clearInterval(refreshTimer);
   }, []);
 
   const handleVerifyActivity = async (activityId, action) => {
@@ -147,43 +112,7 @@ function FacultyHomePage({ defaultTab }) {
       console.warn("Backend search fallback:", err);
     }
 
-    // Fallback search in SAMPLE_PROJECTS_FALLBACK and localStorage
-    let sampleMatch = SAMPLE_PROJECTS_FALLBACK.find((p) => String(p.project_id || p.id) === cleanId);
-    
-    if (!sampleMatch) {
-      // Check localStorage for student profiles
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("kvgce_student_profile_")) {
-          try {
-            const parsed = JSON.parse(localStorage.getItem(key));
-            if (parsed.projects && Array.isArray(parsed.projects)) {
-              const pMatch = parsed.projects.find((p) => String(p.project_id || p.id) === cleanId);
-              if (pMatch) {
-                sampleMatch = {
-                  ...pMatch,
-                  student_name: parsed.full_name || "Student",
-                  student_id: parsed.student_id || "4KV21CS042",
-                  student_department: parsed.department || "Computer Science Engineering"
-                };
-                break;
-              }
-            }
-          } catch (err) {
-            console.error(err);
-          }
-        }
-      }
-    }
-
-    if (sampleMatch) {
-      setFoundProject(sampleMatch);
-      if (sampleMatch.marks !== undefined && sampleMatch.marks !== null) {
-        setEvalMarks(String(sampleMatch.marks));
-      }
-    } else {
-      setSearchError(`⚠️ Project ID '${cleanId}' not found. Please verify the 8-digit Project ID.`);
-    }
+    setSearchError(`Project ID '${cleanId}' was not found in the database.`);
   };
 
   const handleEvaluateSubmit = async (e) => {
@@ -207,8 +136,8 @@ function FacultyHomePage({ defaultTab }) {
         setMsg(`✅ Project '${foundProject.title}' evaluated & approved! Assigned Marks: ${numMarks}/100`);
       }
     } catch (err) {
-      console.warn("API evaluate fallback:", err);
-      setMsg(`✅ Project '${foundProject.title}' evaluated & approved! Assigned Marks: ${numMarks}/100`);
+      setEvalError(err.response?.data?.detail || "Could not evaluate this project.");
+      return;
     }
 
     // Sync to local storage for immediate student profile reflecting
@@ -306,12 +235,13 @@ Date: ${new Date().toLocaleDateString()}`;
   }
 
   const stats = data?.stats || {
-    totalStudents: 240,
-    activeAssessments: 2,
-    pendingVerifications: 1,
-    avgBatchScore: 81.4,
+    totalStudents: 0,
+    activeAssessments: 0,
+    pendingVerifications: 0,
+    avgBatchScore: null,
+    submittedAttempts: 0,
+    participationPercentage: null,
   };
-  const students = data?.recentStudents || [];
   const pendingActivities = data?.pendingActivities || [];
 
   return (
@@ -322,13 +252,10 @@ Date: ${new Date().toLocaleDateString()}`;
         {/* TAB CONTROLS */}
         <div className="faculty-tabs" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
           <button className={activeTab === "overview" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("overview")}>
-            📊 Department Overview
+            📊 Overview
           </button>
           <button className={activeTab === "projects" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("projects")}>
             💡 Project Evaluation & List
-          </button>
-          <button className={activeTab === "students" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("students")}>
-            🎓 Student Directory ({students.length})
           </button>
           <button className={activeTab === "verifications" ? "fac-tab active" : "fac-tab"} onClick={() => setActiveTab("verifications")}>
             ✅ Pending Verifications ({pendingActivities.length})
@@ -557,61 +484,6 @@ Date: ${new Date().toLocaleDateString()}`;
         {activeTab === "overview" && (
           <div className="tab-content" style={{ padding: 0 }}>
             <DashboardOverview role="faculty" />
-          </div>
-        )}
-
-        {/* STUDENTS DIRECTORY TAB */}
-        {activeTab === "students" && (
-          <div className="tab-content">
-            <div className="fac-sec-card">
-              <h3>Computer Science Department Students</h3>
-              <table className="faculty-table">
-                <thead>
-                  <tr>
-                    <th>Student ID</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Semester</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((s) => (
-                    <tr key={s._id}>
-                      <td><strong>{s.student_id || "4KV21CS042"}</strong></td>
-                      <td>{s.full_name}</td>
-                      <td>{s.email}</td>
-                      <td>{s.phone || "+91 9741234567"}</td>
-                      <td>Sem {s.semester || 6}</td>
-                      <td>
-                        <div style={{ display: "flex", gap: "0.4rem" }}>
-                          <button
-                            className="small-action-btn"
-                            style={{ background: "#2563eb", color: "#fff" }}
-                            onClick={() => {
-                              setSelectedStudentUsn(s.student_id || "4KV21CS042");
-                              setActiveTab("singleOverview");
-                            }}
-                          >
-                            View Overview 👁️
-                          </button>
-                          <button
-                            className="small-action-btn"
-                            onClick={() => {
-                              setFeedbackForm({ ...feedbackForm, student_email: s.email });
-                              setActiveTab("feedback");
-                            }}
-                          >
-                            Give Feedback
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         )}
 

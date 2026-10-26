@@ -25,6 +25,8 @@ function StudentHomePage() {
       }
     };
     fetchDashboard();
+    const refreshTimer = window.setInterval(fetchDashboard, 15000);
+    return () => window.clearInterval(refreshTimer);
   }, []);
 
   // Retrieve custom saved profile for active student if present
@@ -116,21 +118,13 @@ function StudentHomePage() {
 
   // Render Overall Score Graph (Y: 0 to 100%, X: Date Timeline with Red-to-Green ups & downs)
   const renderSkillGrowthGraph = () => {
-    const pointsData = data?.profile?.score_history || user?.score_history || [
-      {"date": "15 Jan", "day": "Thu", "score": 48.0, "change": "-4.0%", "trend": "down"},
-      {"date": "10 Feb", "day": "Tue", "score": 56.5, "change": "+8.5%", "trend": "up"},
-      {"date": "05 Mar", "day": "Thu", "score": 51.0, "change": "-5.5%", "trend": "down"},
-      {"date": "22 Apr", "day": "Wed", "score": 67.0, "change": "+16.0%", "trend": "up"},
-      {"date": "18 May", "day": "Mon", "score": 63.5, "change": "-3.5%", "trend": "down"},
-      {"date": "12 Jun", "day": "Fri", "score": 75.0, "change": "+11.5%", "trend": "up"},
-      {"date": "25 Jul", "day": "Sat", "score": 71.8, "change": "-3.2%", "trend": "down"},
-      {"date": "14 Aug", "day": "Fri", "score": 79.5, "change": "+7.7%", "trend": "up"},
-      {"date": "23 Sep", "day": "Wed", "score": 82.5, "change": "+3.0%", "trend": "up"}
-    ];
+    const pointsData = data?.profile?.score_history || user?.score_history || [];
 
     // Map Y from 0% (Y=155) to 100% (Y=15)
     const mapY = (score) => 155 - (score / 100) * 140;
-    const mapX = (index) => 55 + index * (420 / (pointsData.length - 1));
+    const mapX = (index) => pointsData.length > 1
+      ? 55 + index * (420 / (pointsData.length - 1))
+      : 265;
 
     const pathD = pointsData.reduce((acc, pt, i) => {
       const x = mapX(i);
@@ -138,7 +132,9 @@ function StudentHomePage() {
       return i === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
     }, "");
 
-    const areaD = `${pathD} L ${mapX(pointsData.length - 1)} 155 L ${mapX(0)} 155 Z`;
+    const areaD = pointsData.length > 0
+      ? `${pathD} L ${mapX(pointsData.length - 1)} 155 L ${mapX(0)} 155 Z`
+      : "";
 
     // Calculate average score of all points
     const avgScore = pointsData.length > 0
@@ -490,4 +486,3 @@ function StudentHomePage() {
 }
 
 export default StudentHomePage;
-

@@ -98,9 +98,10 @@ const getScoreColorClass = (score) => {
   return "score-red";
 };
 
-function AcademicStudentRankingsTable({ title = "Student Rankings" }) {
+function AcademicStudentRankingsTable({ title = "Student Rankings", showExport = null }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const canExport = showExport !== null ? showExport : (user?.role === "admin");
 
   const [rawStudents, setRawStudents] = useState([]);
   const [usnFilter, setUsnFilter] = useState("");
@@ -550,16 +551,18 @@ function AcademicStudentRankingsTable({ title = "Student Rankings" }) {
               </select>
             </div>
 
-            {/* EXPORT CSV BUTTON */}
-            <button className="export-excel-btn" onClick={exportToExcel} title="Export Student Rankings to CSV">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <line x1="9" y1="3" x2="9" y2="21"/>
-                <line x1="3" y1="9" x2="21" y2="9"/>
-                <line x1="3" y1="15" x2="21" y2="15"/>
-              </svg>
-              <span>Export CSV</span>
-            </button>
+            {/* EXPORT EXCEL BUTTON (Only visible to Admin) */}
+            {canExport && (
+              <button className="export-excel-btn" onClick={exportToExcel} title="Export Student Rankings to Excel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="9" y1="3" x2="9" y2="21"/>
+                  <line x1="3" y1="9" x2="21" y2="9"/>
+                  <line x1="3" y1="15" x2="21" y2="15"/>
+                </svg>
+                <span>Export Excel</span>
+              </button>
+            )}
           </div>
         </div>
 

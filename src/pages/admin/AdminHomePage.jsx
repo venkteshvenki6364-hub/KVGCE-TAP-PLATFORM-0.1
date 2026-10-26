@@ -9,213 +9,6 @@ import CodingProblemBuilder from "../../components/quiz/CodingProblemBuilder";
 import api from "../../services/api";
 import "./AdminHomePage.css";
 
-// Mock Sample Student Data for Comprehensive Analytics & Individual Lookup
-const ALL_STUDENTS_DATA = [
-  {
-    usn: "4KV21CS018",
-    name: "Karthik M",
-    dept: "CSE",
-    year: "4th Year",
-    semester: "7th Sem",
-    skillScore: 94.2,
-    cgpa: 9.4,
-    placementStatus: "Ready",
-    academics: 92,
-    aptitude: 96,
-    technical: 95,
-    coding: 94,
-    hrComm: 90,
-    riskScore: 5,
-    riskReasons: [],
-    recentTests: [
-      { name: "Advanced Java & Data Structures", score: "96%", date: "14 Aug 2026" },
-      { name: "Aptitude Mock Speed Test", score: "94%", date: "10 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21CS042",
-    name: "Sahana P",
-    dept: "CSE",
-    year: "4th Year",
-    semester: "7th Sem",
-    skillScore: 92.1,
-    cgpa: 9.2,
-    placementStatus: "Ready",
-    academics: 90,
-    aptitude: 94,
-    technical: 92,
-    coding: 90,
-    hrComm: 94,
-    riskScore: 8,
-    riskReasons: [],
-    recentTests: [
-      { name: "Full Stack React & Node Quiz", score: "95%", date: "13 Aug 2026" },
-      { name: "Verbal & Communication Assessment", score: "92%", date: "09 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21EC027",
-    name: "Likith R",
-    dept: "ECE",
-    year: "3rd Year",
-    semester: "5th Sem",
-    skillScore: 91.3,
-    cgpa: 8.9,
-    placementStatus: "Ready",
-    academics: 88,
-    aptitude: 92,
-    technical: 94,
-    coding: 89,
-    hrComm: 86,
-    riskScore: 10,
-    riskReasons: [],
-    recentTests: [
-      { name: "Embedded Systems & IoT Quiz", score: "93%", date: "12 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21IS033",
-    name: "Ananya B",
-    dept: "ISE",
-    year: "4th Year",
-    semester: "7th Sem",
-    skillScore: 90.7,
-    cgpa: 8.8,
-    placementStatus: "Ready",
-    academics: 89,
-    aptitude: 90,
-    technical: 91,
-    coding: 90,
-    hrComm: 92,
-    riskScore: 12,
-    riskReasons: [],
-    recentTests: [
-      { name: "DBMS & SQL Query Optimization", score: "91%", date: "11 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21ME021",
-    name: "Vivek S",
-    dept: "ME",
-    year: "3rd Year",
-    semester: "5th Sem",
-    skillScore: 89.6,
-    cgpa: 8.7,
-    placementStatus: "Ready",
-    academics: 87,
-    aptitude: 88,
-    technical: 92,
-    coding: 85,
-    hrComm: 86,
-    riskScore: 15,
-    riskReasons: [],
-    recentTests: [
-      { name: "CAD Modelling & Mechanical Design", score: "90%", date: "08 Aug 2026" },
-    ]
-  },
-  // At Risk Students
-  {
-    usn: "4KV21CS110",
-    name: "Rohith K",
-    dept: "CSE",
-    year: "3rd Year",
-    semester: "5th Sem",
-    skillScore: 52.4,
-    cgpa: 6.4,
-    placementStatus: "Needs Improvement",
-    academics: 65,
-    aptitude: 50,
-    technical: 48,
-    coding: 45,
-    hrComm: 55,
-    riskScore: 82,
-    riskReasons: ["Low quiz participation", "Coding lab submission speed below threshold"],
-    recentTests: [
-      { name: "Algorithms Basics", score: "48%", date: "05 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21EC056",
-    name: "Prajwal B",
-    dept: "ECE",
-    year: "2nd Year",
-    semester: "3rd Sem",
-    skillScore: 56.1,
-    cgpa: 6.8,
-    placementStatus: "Needs Improvement",
-    academics: 68,
-    aptitude: 45,
-    technical: 55,
-    coding: 50,
-    hrComm: 60,
-    riskScore: 78,
-    riskReasons: ["Poor aptitude test scores", "Missed 3 mock assessments"],
-    recentTests: [
-      { name: "Digital Signal Processing", score: "52%", date: "04 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21ME045",
-    name: "Nikhil M",
-    dept: "ME",
-    year: "4th Year",
-    semester: "7th Sem",
-    skillScore: 58.0,
-    cgpa: 6.2,
-    placementStatus: "Needs Improvement",
-    academics: 60,
-    aptitude: 58,
-    technical: 55,
-    coding: 52,
-    hrComm: 62,
-    riskScore: 75,
-    riskReasons: ["Attendance < 65%", "Incomplete mini-project documentation"],
-    recentTests: [
-      { name: "Thermodynamics Quiz", score: "54%", date: "02 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21CS128",
-    name: "Arjun U",
-    dept: "CSE",
-    year: "3rd Year",
-    semester: "5th Sem",
-    skillScore: 61.2,
-    cgpa: 7.0,
-    placementStatus: "Developing",
-    academics: 70,
-    aptitude: 62,
-    technical: 58,
-    coding: 55,
-    hrComm: 60,
-    riskScore: 72,
-    riskReasons: ["Failed 2 technical quizzes", "Needs coding practice acceleration"],
-    recentTests: [
-      { name: "Python Core Assessment", score: "58%", date: "01 Aug 2026" },
-    ]
-  },
-  {
-    usn: "4KV21IS059",
-    name: "Deepika N",
-    dept: "ISE",
-    year: "2nd Year",
-    semester: "3rd Sem",
-    skillScore: 63.5,
-    cgpa: 7.1,
-    placementStatus: "Developing",
-    academics: 72,
-    aptitude: 65,
-    technical: 60,
-    coding: 58,
-    hrComm: 62,
-    riskScore: 70,
-    riskReasons: ["Delayed project submissions", "Low practice frequency"],
-    recentTests: [
-      { name: "Computer Networks Basics", score: "62%", date: "30 Jul 2026" },
-    ]
-  }
-];
-
 function AdminHomePage() {
   const location = useLocation();
   const [data, setData] = useState(null);
@@ -230,8 +23,11 @@ function AdminHomePage() {
     if (typeof window !== "undefined" && window.location.pathname.includes("/faculty")) {
       return "faculty";
     }
-    return "pending";
-  }); // pending | broadcast | analysis | faculty | users | departments | quizBuilder | codingBuilder | analytics
+    if (typeof window !== "undefined" && (window.location.pathname.includes("/students") || window.location.pathname.includes("/rankings"))) {
+      return "rankings";
+    }
+    return "overview";
+  }); // overview | pending | broadcast | analysis | faculty | users | departments | quizBuilder | codingBuilder | analytics | rankings | students
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -245,6 +41,8 @@ function AdminHomePage() {
   const [filterMode, setFilterMode] = useState("all");
   const [selectedDept, setSelectedDept] = useState("all");
   const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedSemester, setSelectedSemester] = useState("all");
+  const [selectedSection, setSelectedSection] = useState("all");
   const [selectedStudentUSN, setSelectedStudentUSN] = useState("4KV21CS018");
   const [dateRange, setDateRange] = useState("01 Feb 2026 - 14 Aug 2026");
 
@@ -252,6 +50,16 @@ function AdminHomePage() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState("");
+  const [newUser, setNewUser] = useState({
+    full_name: "",
+    email: "",
+    role: "student",
+    department: "Computer Science & Engineering",
+    student_id: "",
+    faculty_id: "",
+    phone: "",
+    password: "Password123!",
+  });
 
   // Broadcast Notifications & Active Banner Management
   const [broadcastList, setBroadcastList] = useState(() => {
@@ -457,7 +265,23 @@ function AdminHomePage() {
 
   useEffect(() => {
     fetchAdminData();
+    const refreshTimer = window.setInterval(fetchAdminData, 15000);
+    return () => window.clearInterval(refreshTimer);
   }, []);
+
+  useEffect(() => {
+    if (filterMode === "single") return;
+    const params = new URLSearchParams();
+    if (selectedDept !== "all") params.set("branch", selectedDept);
+    if (selectedYear !== "all") params.set("year", selectedYear);
+    if (selectedSemester !== "all") params.set("semester", selectedSemester);
+    if (selectedSection !== "all") params.set("section", selectedSection);
+    api.get(`/admin/dashboard/filtered?${params.toString()}`)
+      .then((response) => {
+        if (response.data?.data) setData((current) => ({ ...current, ...response.data.data }));
+      })
+      .catch((error) => console.error("Error loading filtered analytics:", error));
+  }, [filterMode, selectedDept, selectedYear, selectedSemester, selectedSection]);
 
   const handleApproveReset = async (reqId, name) => {
     try {
@@ -617,81 +441,34 @@ function AdminHomePage() {
 
   // Dynamic Metrics Filter Engine
   const getFilteredData = () => {
-    let filtered = [...ALL_STUDENTS_DATA];
-
-    if (filterMode === "class") {
-      if (selectedDept !== "all") {
-        filtered = filtered.filter((s) => s.dept === selectedDept);
-      }
-      if (selectedYear !== "all") {
-        filtered = filtered.filter((s) => s.year === selectedYear);
-      }
-    } else if (filterMode === "single") {
-      const singleStudent = ALL_STUDENTS_DATA.find((s) => s.usn === selectedStudentUSN);
-      if (singleStudent) {
-        return {
-          isSingle: true,
-          student: singleStudent,
-          overallScore: singleStudent.skillScore,
-          categoryScores: {
-            academics: singleStudent.academics,
-            aptitude: singleStudent.aptitude,
-            technical: singleStudent.technical,
-            coding: singleStudent.coding,
-            hrComm: singleStudent.hrComm,
-            overall: singleStudent.skillScore,
-          },
-          totalCount: 1,
-          activeCount: 1,
-          avgSkillScore: singleStudent.skillScore,
-          placementReadyPercent: singleStudent.placementStatus === "Ready" ? 100 : singleStudent.placementStatus === "Developing" ? 65 : 40,
-          atRiskCount: singleStudent.riskScore > 60 ? 1 : 0,
-          testsCompleted: singleStudent.recentTests.length * 15 + 8,
-          deptScores: [
-            { dept: singleStudent.dept, score: singleStudent.skillScore },
-          ],
-        };
-      }
-    }
-
-    const count = filtered.length || 1;
-    const avgSkill = (filtered.reduce((acc, curr) => acc + curr.skillScore, 0) / count).toFixed(1);
-    const avgAcademics = Math.round(filtered.reduce((acc, curr) => acc + curr.academics, 0) / count);
-    const avgAptitude = Math.round(filtered.reduce((acc, curr) => acc + curr.aptitude, 0) / count);
-    const avgTechnical = Math.round(filtered.reduce((acc, curr) => acc + curr.technical, 0) / count);
-    const avgCoding = Math.round(filtered.reduce((acc, curr) => acc + curr.coding, 0) / count);
-    const avgHrComm = Math.round(filtered.reduce((acc, curr) => acc + curr.hrComm, 0) / count);
-
+    const analysis = data?.overallAnalysis || {};
+    const scores = analysis.categoryScores || {};
+    const departments = analysis.departmentScores || [];
     return {
       isSingle: false,
-      overallScore: avgSkill,
+      overallScore: analysis.avgSkillScore,
       categoryScores: {
-        academics: avgAcademics || 78,
-        aptitude: avgAptitude || 85,
-        technical: avgTechnical || 80,
-        coding: avgCoding || 75,
-        hrComm: avgHrComm || 70,
-        overall: parseFloat(avgSkill) || 82.5,
+        academics: scores.academics,
+        aptitude: scores.aptitude,
+        technical: scores.technical,
+        coding: scores.coding,
+        hrComm: scores.hrComm,
+        overall: scores.overall,
       },
-      totalCount: filterMode === "all" ? 1248 : count * 150,
-      activeCount: filterMode === "all" ? 1182 : Math.round(count * 140),
-      avgSkillScore: avgSkill,
-      placementReadyPercent: 78,
-      atRiskCount: filterMode === "all" ? 128 : Math.round(count * 12),
-      testsCompleted: filterMode === "all" ? 2856 : count * 320,
-      deptScores: [
-        { dept: "CSE", score: 84.6 },
-        { dept: "ECE", score: 79.3 },
-        { dept: "ME", score: 72.5 },
-        { dept: "CV", score: 75.8 },
-        { dept: "ISE", score: 81.2 },
-        { dept: "Other", score: 68.4 },
-      ],
+      totalCount: analysis.totalStudents,
+      activeCount: analysis.activeStudents,
+      avgSkillScore: analysis.avgSkillScore,
+      placementReadyPercent: analysis.placementReadiness,
+      atRiskCount: analysis.atRiskStudents,
+      testsCompleted: analysis.testsCompleted,
+      deptScores: departments,
     };
   };
 
   const analyticsData = getFilteredData();
-  const currentSingleStudent = ALL_STUDENTS_DATA.find((s) => s.usn === selectedStudentUSN) || ALL_STUDENTS_DATA[0];
+  const currentSingleStudent = users.find(
+    (student) => (student.student_id || student.usn) === selectedStudentUSN
+  ) || users[0];
 
   return (
     <DashboardLayout title="Admin Dashboard">
@@ -716,7 +493,7 @@ function AdminHomePage() {
           </div>
 
           <div className="hero-right-score-badge">
-            <span className="hero-score-num">{analyticsData.overallScore}%</span>
+            <span className="hero-score-num">{analyticsData.overallScore ?? "—"}{analyticsData.overallScore === null || analyticsData.overallScore === undefined ? "" : "%"}</span>
             <span className="hero-score-label">Overall Skill Score</span>
           </div>
         </div>
@@ -724,24 +501,29 @@ function AdminHomePage() {
         {/* 2. TOP COUNTER METRIC CARDS ROW */}
         <div className="top-banner-stats-row">
           <div className="navy-stat-card">
-            <span className="navy-stat-val">2,500+</span>
+            <span className="navy-stat-val">{data?.stats?.totalStudents ?? "—"}</span>
             <span className="navy-stat-lbl">ACTIVE ENGINEERING STUDENTS</span>
           </div>
           <div className="navy-stat-card">
-            <span className="navy-stat-val">150+</span>
+            <span className="navy-stat-val">{data?.stats?.totalFaculty ?? "—"}</span>
             <span className="navy-stat-lbl">VERIFIED FACULTY MENTORS</span>
           </div>
           <div className="navy-stat-card">
-            <span className="navy-stat-val">500+</span>
+            <span className="navy-stat-val">{data?.stats?.totalAssessments ?? "—"}</span>
             <span className="navy-stat-lbl">PRACTICE TESTS & CODE LABS</span>
           </div>
           <div className="navy-stat-card">
-            <span className="navy-stat-val">98%</span>
+            <span className="navy-stat-val">{analyticsData.placementReadyPercent ?? "—"}{analyticsData.placementReadyPercent === null || analyticsData.placementReadyPercent === undefined ? "" : "%"}</span>
             <span className="navy-stat-lbl">PLACEMENT CAREER READINESS</span>
           </div>
         </div>
 
         {/* TAB CONTENTS CONTROLLED BY SIDEBAR NAVIGATION */}
+
+        {/* TAB 0: DASHBOARD OVERVIEW */}
+        {(activeTab === "overview" || !activeTab) && (
+          <DashboardOverview role="admin" dashboardData={data} />
+        )}
 
         {/* TAB: BROADCAST & NOTIFICATIONS CONTROL PANEL */}
         {activeTab === "broadcast" && (
@@ -1008,6 +790,13 @@ function AdminHomePage() {
           </div>
         )}
 
+        {/* TAB: STUDENT RANKINGS & LEADERBOARD */}
+        {activeTab === "rankings" && (
+          <div style={{ marginTop: "1rem" }}>
+            <DashboardOverview role="admin" dashboardData={data} />
+          </div>
+        )}
+
         {/* TAB 0: FACULTIES VIEW */}
         {activeTab === "faculty" && <AdminFacultyView />}
 
@@ -1109,9 +898,9 @@ function AdminHomePage() {
                       onChange={(e) => setSelectedStudentUSN(e.target.value)}
                       className="student-picker-select"
                     >
-                      {ALL_STUDENTS_DATA.map((s) => (
-                        <option key={s.usn} value={s.usn}>
-                          {s.usn} - {s.name} ({s.dept}, {s.year})
+                      {users.filter((user) => user.role === "student").map((s) => (
+                        <option key={s.student_id || s.usn || s.email} value={s.student_id || s.usn || s.email}>
+                          {s.student_id || s.usn || s.email} - {s.full_name} ({s.department || "Unknown"}, {s.year || "Unknown"})
                         </option>
                       ))}
                     </select>
@@ -1149,10 +938,10 @@ function AdminHomePage() {
               </div>
 
               {pendingResets.length === 0 ? (
-                <div style={{ padding: "2.5rem 1.5rem", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1", marginTop: "1rem" }}>
-                  <div style={{ fontSize: "2rem", marginBottom: "0.25rem" }}>🔑</div>
-                  <h4 style={{ margin: "0 0 4px 0", color: "#1e293b", fontSize: "1.05rem" }}>No Pending Password Reset Requests</h4>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.875rem" }}>
+                <div className="approval-empty-state password-reset-empty">
+                  <div className="approval-empty-icon">🔑</div>
+                  <h4>No Pending Password Reset Requests</h4>
+                  <p>
                     When a user submits a "Forgot Password" request with USN & Email ID, their update request will appear here for Admin approval.
                   </p>
                 </div>
@@ -1261,10 +1050,10 @@ function AdminHomePage() {
               </div>
 
               {pendingUsers.length === 0 ? (
-                <div style={{ padding: "3rem 1.5rem", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1", marginTop: "1rem" }}>
-                  <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🎉</div>
-                  <h4 style={{ margin: "0 0 6px 0", color: "#1e293b", fontSize: "1.1rem" }}>No Pending Verification Requests</h4>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>
+                <div className="approval-empty-state verification-empty">
+                  <div className="approval-empty-icon">🎉</div>
+                  <h4>No Pending Verification Requests</h4>
+                  <p>
                     All user sign-ups have been verified and added to the database. New registrations will appear here for Admin approval.
                   </p>
                 </div>
@@ -1419,34 +1208,6 @@ function AdminHomePage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-
-        {/* TAB 3: DEPARTMENTS */}
-        {activeTab === "departments" && (
-          <div className="admin-sec-card">
-            <h3>KVGCE Engineering Departments</h3>
-            <div className="dept-grid">
-              {["Computer Science & Engineering", "Information Science & Engineering", "Electronics & Communication", "Mechanical Engineering", "Civil Engineering"].map((dept, i) => (
-                <div key={i} className="dept-card">
-                  <h4>{dept}</h4>
-                  <p>HOD: Dr. K. V. Gururaja</p>
-                  <span className="dept-code">CODE: {dept.split(" ")[0]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: SYSTEM HEALTH */}
-        {activeTab === "analytics" && (
-          <div className="admin-sec-card">
-            <h3>System Performance & Infrastructure Status</h3>
-            <div className="analytics-box">
-              <p>🟢 <strong>FastAPI Backend Status:</strong> Healthy (Uptime: 99.9%)</p>
-              <p>🗄️ <strong>Database Store:</strong> Motor / MongoDB Live Sync</p>
-              <p>🔐 <strong>JWT Token Security:</strong> HS256 Encrypted</p>
-            </div>
           </div>
         )}
 

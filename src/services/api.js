@@ -7,10 +7,9 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000,
+  timeout: 30000,
 });
 
-// Request interceptor to attach JWT authorization token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("kvgce_tap_token");
@@ -22,14 +21,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for unified error formatting
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear expired token if unauthorized
       localStorage.removeItem("kvgce_tap_token");
       localStorage.removeItem("kvgce_tap_user");
+      localStorage.removeItem("kvgce_tap_role");
     }
     return Promise.reject(error);
   }

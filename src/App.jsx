@@ -24,6 +24,7 @@ import SingleStudentOverviewPage from "./pages/student/SingleStudentOverviewPage
 import FacultyHomePage from "./pages/faculty/FacultyHomePage";
 import AdminHomePage from "./pages/admin/AdminHomePage";
 import QuizBuilderPage from "./pages/faculty/QuizBuilderPage";
+import RoleProfilePage from "./pages/RoleProfilePage";
 
 import "./App.css";
 
@@ -248,6 +249,14 @@ function App() {
             }
           />
           <Route
+            path="/faculty/profile"
+            element={
+              <ProtectedRoute allowedRoles={["faculty", "admin"]}>
+                <RoleProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/faculty/students"
             element={
               <ProtectedRoute allowedRoles={["faculty", "admin"]}>
@@ -358,6 +367,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <RoleProfilePage />
               </ProtectedRoute>
             }
           />

@@ -22,26 +22,34 @@ export const codingApi = {
   },
 
   runCode: async ({ questionId, languageId, language, sourceCode, code, stdin, stdinInput }) => {
-    const res = await api.post("/coding/run", {
+    const payload = {
       questionId,
+      question_id: questionId,
       languageId,
+      language_id: languageId,
       language,
       sourceCode: sourceCode || code,
+      source_code: sourceCode || code,
       code: sourceCode || code,
       stdin: stdin !== undefined ? stdin : (stdinInput || ""),
       stdinInput: stdin !== undefined ? stdin : (stdinInput || "")
-    });
+    };
+    const res = await api.post("/coding/run", payload);
     return res.data;
   },
 
   submitCode: async ({ questionId, languageId, language, sourceCode, code }) => {
-    const res = await api.post("/coding/submit", {
+    const payload = {
       questionId,
+      question_id: questionId,
       languageId,
+      language_id: languageId,
       language,
       sourceCode: sourceCode || code,
+      source_code: sourceCode || code,
       code: sourceCode || code
-    });
+    };
+    const res = await api.post("/coding/submit", payload);
     return res.data;
   },
 

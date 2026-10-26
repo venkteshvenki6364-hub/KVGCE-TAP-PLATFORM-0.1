@@ -130,7 +130,7 @@ export const AuthProvider = ({ children }) => {
           },
         },
         {
-          ids: ["8904320976", "faculty@kvgce.edu.in", "faculty"],
+          ids: ["8904320976", "9448123456", "KVG-FAC-102", "faculty@kvgce.edu.in", "faculty"],
           passwords: ["15-08-1985", "15/08/1985", "15.08.1985", "15081985"],
           user: {
             id: "user-faculty-1",

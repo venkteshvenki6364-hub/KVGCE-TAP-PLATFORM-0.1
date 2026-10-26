@@ -555,7 +555,7 @@ const isValidEmail = (emailStr) => {
                 {role === "student"
                   ? "Student USN"
                   : role === "faculty"
-                  ? "Faculty Phone Number"
+                  ? "Faculty ID / Phone Number"
                   : "Admin User ID"}
               </label>
               <div className={`input-rel-box ${fieldErrors.userId ? "has-error" : ""}`}>
@@ -572,7 +572,7 @@ const isValidEmail = (emailStr) => {
                     role === "student"
                       ? "Enter Student USN (e.g. 4KV23CE033)"
                       : role === "faculty"
-                      ? "Enter 10-digit Phone Number (e.g. 8904320976)"
+                      ? "Enter Faculty ID or phone (e.g. KVG-FAC-102 or 9448123456)"
                       : "Enter Admin User ID (e.g. ADMIN-001)"
                   }
                   value={role === "student" ? formData.usn : formData.userId}

@@ -48,7 +48,9 @@ const INITIAL_QUESTIONS = [
 export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defaultCategory = "Technical", onBack, onPublish }) {
   // Stepper state: 1 = Add Question, 2 = Question List, 3 = Review & Publish
   const [currentStep, setCurrentStep] = useState(1);
+  const [showBuilder, setShowBuilder] = useState(false);
   const [assessmentTitle, setAssessmentTitle] = useState(quizTitle);
+  const [assessmentKind, setAssessmentKind] = useState("quiz");
   const [quizCategory, setQuizCategory] = useState(defaultCategory);
 
   // Question list state
@@ -232,7 +234,8 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
 
     const quizPayload = {
       title: assessmentTitle || quizTitle,
-      description: `Assessment for ${quizCategory} domain`,
+      description: `${assessmentKind === "test" ? "Test" : "Quiz"} for ${quizCategory} domain`,
+      assessment_type: assessmentKind,
       category: quizCategory, // "Aptitude" or "Technical"
       duration_minutes: Number(timeLimit) || 30,
       total_marks: totalMarks,
@@ -260,6 +263,56 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
     if (onPublish) onPublish(quizPayload);
   };
 
+  if (!showBuilder) {
+    return (
+      <div className="quiz-question-builder-container">
+        <div className="q-builder-top-bar">
+          <div className="q-builder-breadcrumbs">
+            <span>Assessments</span>
+            <span className="bc-sep">›</span>
+            <span className="bc-active">Create Quiz or Test</span>
+          </div>
+          <div className="q-builder-title-row">
+            <div>
+              <h2 className="q-builder-main-title">Quiz and Test</h2>
+              <p className="q-builder-sub-title">Choose an assessment to continue.</p>
+            </div>
+            <button className="btn-outline-blue" onClick={onBack || (() => window.history.back())}>
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+
+        <div className="assessment-launcher">
+          <button
+            type="button"
+            className="assessment-launch-card"
+            onClick={() => {
+              setAssessmentKind("quiz");
+              setShowBuilder(true);
+            }}
+          >
+            <strong>MCQ Question</strong>
+            <span>Create a quiz with multiple-choice questions.</span>
+          </button>
+          <button
+            type="button"
+            className="assessment-add-card"
+            onClick={() => {
+              setAssessmentKind("test");
+              setAssessmentTitle("");
+              setShowBuilder(true);
+            }}
+          >
+            <span className="assessment-add-symbol">+</span>
+            <strong>Add New Test</strong>
+            <span>Create a new test and add questions.</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="quiz-question-builder-container">
       {/* 1. TOP BREADCRUMB & HEADER ACTION BAR */}
@@ -267,7 +320,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
         <div className="q-builder-breadcrumbs">
           <span>{quizCategory}</span>
           <span className="bc-sep">›</span>
-          <span>Create New Quiz</span>
+          <span>Create New {assessmentKind === "test" ? "Test" : "Quiz"}</span>
           <span className="bc-sep">›</span>
           <span className="bc-active">Add Questions</span>
         </div>
@@ -294,13 +347,13 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
               </select>
             </div>
             <p className="q-builder-sub-title">
-              Create and manage questions for your quiz. You can add, edit, reorder and review questions.
+              Create and manage questions for your {assessmentKind === "test" ? "test" : "quiz"}. You can add, edit, reorder and review questions.
             </p>
           </div>
 
           <div className="q-builder-top-actions">
-            <button className="btn-outline-blue" onClick={onBack || (() => window.history.back())}>
-              ← Back to Dashboard
+            <button className="btn-outline-blue" onClick={() => setShowBuilder(false)}>
+              Back to Assessments
             </button>
             <button className="btn-solid-blue" onClick={() => setShowPreviewModal(true)}>
               👁️ Preview Quiz
@@ -393,9 +446,14 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
               {/* Options Section */}
               <div className="form-group-item">
                 <label className="input-lbl">Options <span className="req-star">*</span></label>
+                <div className="options-heading">
+                  <span>Add at least two options and mark the correct answer.</span>
+                  <span className="options-count">{options.length}/6</span>
+                </div>
                 <div className="options-stack">
                   {options.map((opt, idx) => (
                     <div key={idx} className={`option-row ${opt.isCorrect ? "correct-selected" : ""}`}>
+                      <span className="option-letter">{String.fromCharCode(65 + idx)}</span>
                       <input
                         type="radio"
                         name="correctOption"
@@ -425,7 +483,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
                 </div>
 
                 <div className="options-actions-bar">
-                  <button type="button" className="btn-outline-blue-small" onClick={handleAddOption}>
+                  <button type="button" className="btn-outline-blue-small" onClick={handleAddOption} disabled={options.length >= 6}>
                     + Add Option
                   </button>
                   <button type="button" className="btn-outline-red-small" onClick={handleClearOptions}>
@@ -509,7 +567,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
               <div className="review-summary-card">
                 <div className="review-stat-item">
                   <span className="r-lbl">Quiz Name:</span>
-                  <span className="r-val">{quizTitle}</span>
+                  <span className="r-val">{assessmentTitle || quizTitle}</span>
                 </div>
                 <div className="review-stat-item">
                   <span className="r-lbl">Total Questions:</span>

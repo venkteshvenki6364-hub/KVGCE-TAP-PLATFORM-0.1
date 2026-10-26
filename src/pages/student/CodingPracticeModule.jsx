@@ -1,124 +1,162 @@
 import React, { useState, useEffect, useRef } from "react";
+import Editor from "@monaco-editor/react";
 import DashboardLayout from "../../components/DashboardLayout";
 import api from "../../services/api";
 import codingApi from "../../services/codingApi";
 import "./CodingPracticeModule.css";
 
-// Popular & Family Languages List (Python, Java, JavaScript, C++, C, SQL, MongoDB, C#, Go, Rust)
-const POPULAR_LANGUAGES = [
-  { id: "python", name: "Python 3", ext: "main.py" },
-  { id: "java", name: "Java 17", ext: "Main.java" },
-  { id: "javascript", name: "JavaScript (Node)", ext: "main.js" },
-  { id: "cpp", name: "C++ (g++ 17)", ext: "main.cpp" },
-  { id: "c", name: "C (gcc 11)", ext: "main.c" },
-  { id: "sql", name: "SQL (SQLite 3)", ext: "query.sql" },
-  { id: "mongodb", name: "MongoDB (JS Query)", ext: "query.js" },
-  { id: "typescript", name: "TypeScript", ext: "main.ts" },
-  { id: "csharp", name: "C#", ext: "Program.cs" },
-  { id: "go", name: "Go", ext: "main.go" },
-  { id: "rust", name: "Rust", ext: "main.rs" }
+// Comprehensive Judge0 Language Map & Configuration
+const DEFAULT_LANGUAGES = [
+  { id: "java", name: "Java (OpenJDK 13.0.1)", judge0Id: 62, ext: "Main.java", monaco: "java" },
+  { id: "python", name: "Python 3 (3.8.1)", judge0Id: 71, ext: "main.py", monaco: "python" },
+  { id: "cpp", name: "C++ (GCC 9.2.0)", judge0Id: 54, ext: "main.cpp", monaco: "cpp" },
+  { id: "c", name: "C (GCC 9.2.0)", judge0Id: 50, ext: "main.c", monaco: "c" },
+  { id: "javascript", name: "JavaScript (Node.js 12.14.0)", judge0Id: 63, ext: "main.js", monaco: "javascript" },
+  { id: "typescript", name: "TypeScript (3.7.4)", judge0Id: 74, ext: "main.ts", monaco: "typescript" },
+  { id: "csharp", name: "C# (Mono 6.6.0.161)", judge0Id: 51, ext: "Program.cs", monaco: "csharp" },
+  { id: "go", name: "Go (1.13.5)", judge0Id: 60, ext: "main.go", monaco: "go" },
+  { id: "rust", name: "Rust (1.40.0)", judge0Id: 73, ext: "main.rs", monaco: "rust" },
+  { id: "php", name: "PHP (7.4.1)", judge0Id: 68, ext: "index.php", monaco: "php" },
+  { id: "kotlin", name: "Kotlin (1.3.70)", judge0Id: 78, ext: "Main.kt", monaco: "kotlin" },
+  { id: "swift", name: "Swift (5.2.3)", judge0Id: 83, ext: "main.swift", monaco: "swift" },
+  { id: "ruby", name: "Ruby (2.7.0)", judge0Id: 72, ext: "main.rb", monaco: "ruby" },
+  { id: "r", name: "R (4.0.0)", judge0Id: 80, ext: "main.r", monaco: "r" },
+  { id: "sql", name: "SQL (SQLite 3.27.2)", judge0Id: 82, ext: "query.sql", monaco: "sql" }
 ];
 
-// Default General Syntax Templates for Popular Programming Languages
-const DEFAULT_GENERAL_SYNTAX = {
-  python: `import sys
-
-def main():
-    # Python 3 General Syntax
-    # Write your code logic here...
-    print("Hello World!")
-
-if __name__ == '__main__':
-    main()`,
-
+// Exact Starter Templates specified in Requirement 4
+const STARTER_TEMPLATES = {
   java: `import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        // Java General Syntax
-        // Write your code logic here...
         Scanner sc = new Scanner(System.in);
-        System.out.println("Hello World!");
+
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+
+        System.out.println(a + b);
+
+        sc.close();
     }
 }`,
 
-  javascript: `// JavaScript (Node.js) General Syntax
-// Write your code logic here...
-console.log("Hello World!");`,
+  python: `a, b = map(int, input().split())
+print(a + b)`,
 
   cpp: `#include <iostream>
 using namespace std;
 
 int main() {
-    // C++ General Syntax
-    // Write your code logic here...
-    cout << "Hello World!" << endl;
+    long long a, b;
+    cin >> a >> b;
+    cout << a + b << endl;
     return 0;
 }`,
 
   c: `#include <stdio.h>
 
 int main() {
-    // C General Syntax
-    // Write your code logic here...
-    printf("Hello World!\\n");
+    long long a, b;
+    scanf("%lld %lld", &a, &b);
+    printf("%lld\\n", a + b);
     return 0;
 }`,
 
-  sql: `-- SQL Query General Syntax
-SELECT 'Hello World' AS OutputMessage;`,
+  javascript: `const fs = require('fs');
+const input = fs.readFileSync(0, 'utf8').trim().split(/\\s+/);
+const a = Number(input[0]);
+const b = Number(input[1]);
+console.log(a + b);`,
 
-  mongodb: `// MongoDB Query Syntax
-db.collection.find({});`,
-
-  typescript: `// TypeScript General Syntax
-const message: string = "Hello World!";
-console.log(message);`,
+  typescript: `import * as fs from 'fs';
+const input = fs.readFileSync(0, 'utf8').trim().split(/\\s+/);
+const a: number = Number(input[0]);
+const b: number = Number(input[1]);
+console.log(a + b);`,
 
   csharp: `using System;
 
 public class Program {
-    public static void Main(String[] args) {
-        // C# General Syntax
-        Console.WriteLine("Hello World!");
+    public static void Main(string[] args) {
+        string[] input = Console.ReadLine().Split();
+        long a = long.Parse(input[0]);
+        long b = long.Parse(input[1]);
+        Console.WriteLine(a + b);
     }
 }`,
 
   go: `package main
 
-import "fmt"
+import (
+    "fmt"
+)
 
 func main() {
-    // Go General Syntax
-    fmt.Println("Hello World!")
+    var a, b int64
+    fmt.Scan(&a, &b)
+    fmt.Println(a + b)
 }`,
 
-  rust: `fn main() {
-    // Rust General Syntax
-    println!("Hello World!");
-}`
+  rust: `use std::io;
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    let nums: Vec<i64> = input.split_whitespace().map(|s| s.parse().unwrap()).collect();
+    if nums.len() >= 2 {
+        println!("{}", nums[0] + nums[1]);
+    }
+}`,
+
+  php: `<?php
+$input = explode(" ", trim(file_get_contents("php://stdin")));
+$a = intval($input[0] ?? 0);
+$b = intval($input[1] ?? 0);
+echo ($a + $b) . "\\n";
+?>`,
+
+  kotlin: `import java.util.Scanner
+
+fun main() {
+    val sc = Scanner(System.\`in\`)
+    val a = sc.nextLong()
+    val b = sc.nextLong()
+    println(a + b)
+}`,
+
+  swift: `import Foundation
+
+if let line = readLine() {
+    let parts = line.split(separator: " ").compactMap { Int64($0) }
+    if parts.count >= 2 {
+        print(parts[0] + parts[1])
+    }
+}`,
+
+  ruby: `a, b = gets.split.map(&:to_i)
+puts a + b`,
+
+  r: `input <- readLines("stdin", n=1)
+nums <- as.numeric(strsplit(input, "\\\\s+")[[1]])
+cat(nums[1] + nums[2], "\\n")`,
+
+  sql: `SELECT 10 + 20 AS Result;`
 };
 
-// Rich Fallback Questions List (20 Questions with Defined Difficulty Levels)
+// Rich Default Questions
 const DEFAULT_QUESTIONS = [
   {
     _id: "q-1",
     questionNumber: 1,
     title: "1. Sum of Two Integers",
     difficulty: "Easy",
-    description: "Write a program that takes two space-separated integers A and B and prints their sum.",
+    description: "Write a program that takes two space-separated integers A and B from standard input and prints their sum.",
     inputDescription: "First line contains two space-separated integers A and B.",
-    outputDescription: "Print the sum of A and B.",
+    outputDescription: "Print the integer sum of A and B on a single line.",
     constraints: "-10^9 <= A, B <= 10^9",
-    examples: [{ input: "10 20", output: "30" }],
-    starterCode: {
-      python: "import sys\n\ndef main():\n    lines = sys.stdin.read().split()\n    if len(lines) >= 2:\n        a, b = int(lines[0]), int(lines[1])\n        print(a + b)\n\nif __name__ == '__main__':\n    main()",
-      cpp: "#include <iostream>\nusing namespace std;\nint main() {\n    int a, b;\n    if(cin >> a >> b) cout << a + b << endl;\n    return 0;\n}",
-      java: "import java.util.Scanner;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        if(sc.hasNextInt()) {\n            int a = sc.nextInt();\n            int b = sc.nextInt();\n            System.out.println(a + b);\n        }\n    }\n}",
-      javascript: "const fs = require('fs');\nconst input = fs.readFileSync('/dev/stdin', 'utf-8').trim().split(/\\s+/);\nif(input.length >= 2) {\n    console.log(parseInt(input[0]) + parseInt(input[1]));\n}",
-      sql: "-- SQL Query to select sum\nSELECT 10 + 20 AS TotalSum;",
-      mongodb: "// MongoDB Query\ndb.numbers.aggregate([\n  { $group: { _id: null, total: { $sum: \"$value\" } } }\n]);"
-    }
+    examples: [{ input: "10 20", output: "30" }, { input: "-5 2", output: "-3" }],
+    starterCode: STARTER_TEMPLATES
   },
   {
     _id: "q-2",
@@ -163,228 +201,103 @@ const DEFAULT_QUESTIONS = [
     outputDescription: "Print N! (factorial of N).",
     constraints: "0 <= N <= 20",
     examples: [{ input: "5", output: "120" }]
-  },
-  {
-    _id: "q-6",
-    questionNumber: 6,
-    title: "6. Check Prime Number",
-    difficulty: "Easy",
-    description: "Given an integer N, determine whether N is a prime number. Print 'Prime' or 'Not Prime'.",
-    inputDescription: "First line contains an integer N.",
-    outputDescription: "Print 'Prime' or 'Not Prime'.",
-    constraints: "1 <= N <= 10^9",
-    examples: [{ input: "13", output: "Prime" }, { input: "15", output: "Not Prime" }]
-  },
-  {
-    _id: "q-7",
-    questionNumber: 7,
-    title: "7. Fibonacci Series Term",
-    difficulty: "Easy",
-    description: "Write a program to find the N-th Fibonacci number where Fib(0)=0 and Fib(1)=1.",
-    inputDescription: "First line contains an integer N.",
-    outputDescription: "Print the N-th Fibonacci number.",
-    constraints: "0 <= N <= 50",
-    examples: [{ input: "7", output: "13" }]
-  },
-  {
-    _id: "q-8",
-    questionNumber: 8,
-    title: "8. Linear Search in Array",
-    difficulty: "Medium",
-    description: "Search for a target value X in an array of N integers. Print the 0-based index if found, else print -1.",
-    inputDescription: "First line contains N and X. Second line contains N space-separated integers.",
-    outputDescription: "Print the index of X or -1.",
-    constraints: "1 <= N <= 1000",
-    examples: [{ input: "5 30\n10 20 30 40 50", output: "2" }]
-  },
-  {
-    _id: "q-9",
-    questionNumber: 9,
-    title: "9. Sum of Array Elements",
-    difficulty: "Easy",
-    description: "Given an array of N integers, calculate and print the sum of all elements.",
-    inputDescription: "First line contains integer N. Second line contains N integers.",
-    outputDescription: "Print the sum of array elements.",
-    constraints: "1 <= N <= 1000",
-    examples: [{ input: "4\n1 2 3 4", output: "10" }]
-  },
-  {
-    _id: "q-10",
-    questionNumber: 10,
-    title: "10. Count Vowels in String",
-    difficulty: "Easy",
-    description: "Count the total number of vowels (a, e, i, o, u case-insensitive) in a given string S.",
-    inputDescription: "First line contains a string S.",
-    outputDescription: "Print the vowel count.",
-    constraints: "1 <= |S| <= 1000",
-    examples: [{ input: "Hello Placement", output: "5" }]
-  },
-  {
-    _id: "q-11",
-    questionNumber: 11,
-    title: "11. Palindrome Check",
-    difficulty: "Easy",
-    description: "Determine if a given string S is a palindrome (reads same forward and backward). Print 'YES' or 'NO'.",
-    inputDescription: "First line contains string S.",
-    outputDescription: "Print 'YES' or 'NO'.",
-    constraints: "1 <= |S| <= 1000",
-    examples: [{ input: "racecar", output: "YES" }]
-  },
-  {
-    _id: "q-12",
-    questionNumber: 12,
-    title: "12. Binary Search in Sorted Array",
-    difficulty: "Medium",
-    description: "Perform binary search on a sorted array of N integers to find target X. Print index or -1.",
-    inputDescription: "First line contains N and X. Second line contains N sorted integers.",
-    outputDescription: "Print index of X or -1.",
-    constraints: "1 <= N <= 10^5",
-    examples: [{ input: "6 25\n5 10 15 20 25 30", output: "4" }]
-  },
-  {
-    _id: "q-13",
-    questionNumber: 13,
-    title: "13. Bubble Sort Implementation",
-    difficulty: "Medium",
-    description: "Sort an array of N integers in ascending order using Bubble Sort algorithm.",
-    inputDescription: "First line contains N. Second line contains N integers.",
-    outputDescription: "Print space-separated sorted array.",
-    constraints: "1 <= N <= 500",
-    examples: [{ input: "5\n64 34 25 12 22", output: "12 22 25 34 64" }]
-  },
-  {
-    _id: "q-14",
-    questionNumber: 14,
-    title: "14. Matrix Addition",
-    difficulty: "Medium",
-    description: "Add two N x M matrices and print the resulting matrix.",
-    inputDescription: "First line contains N and M. Followed by N lines for Matrix A and N lines for Matrix B.",
-    outputDescription: "Print the sum matrix.",
-    constraints: "1 <= N, M <= 50",
-    examples: [{ input: "2 2\n1 2\n3 4\n5 6\n7 8", output: "6 8\n10 12" }]
-  },
-  {
-    _id: "q-15",
-    questionNumber: 15,
-    title: "15. Find GCD of Two Numbers",
-    difficulty: "Easy",
-    description: "Calculate the Greatest Common Divisor (GCD / HCF) of two positive integers A and B.",
-    inputDescription: "First line contains two integers A and B.",
-    outputDescription: "Print the GCD of A and B.",
-    constraints: "1 <= A, B <= 10^9",
-    examples: [{ input: "48 18", output: "6" }]
-  },
-  {
-    _id: "q-16",
-    questionNumber: 16,
-    title: "16. Find LCM of Two Numbers",
-    difficulty: "Easy",
-    description: "Calculate the Least Common Multiple (LCM) of two positive integers A and B.",
-    inputDescription: "First line contains two integers A and B.",
-    outputDescription: "Print the LCM of A and B.",
-    constraints: "1 <= A, B <= 10^9",
-    examples: [{ input: "12 18", output: "36" }]
-  },
-  {
-    _id: "q-17",
-    questionNumber: 17,
-    title: "17. Merge Two Sorted Arrays",
-    difficulty: "Medium",
-    description: "Given two sorted arrays of size N and M, merge them into a single sorted array.",
-    inputDescription: "First line: N and M. Second line: N sorted integers. Third line: M sorted integers.",
-    outputDescription: "Print space-separated merged sorted array.",
-    constraints: "1 <= N, M <= 1000",
-    examples: [{ input: "3 3\n1 3 5\n2 4 6", output: "1 2 3 4 5 6" }]
-  },
-  {
-    _id: "q-18",
-    questionNumber: 18,
-    title: "18. Second Largest Element in Array",
-    difficulty: "Medium",
-    description: "Find the second largest distinct element in an array of N integers. Print -1 if it does not exist.",
-    inputDescription: "First line contains N. Second line contains N integers.",
-    outputDescription: "Print second largest element or -1.",
-    constraints: "1 <= N <= 1000",
-    examples: [{ input: "5\n12 35 1 10 34", output: "34" }]
-  },
-  {
-    _id: "q-19",
-    questionNumber: 19,
-    title: "19. Count Occurrences of Character",
-    difficulty: "Easy",
-    description: "Given string S and character C, count how many times C appears in S.",
-    inputDescription: "First line: string S. Second line: character C.",
-    outputDescription: "Print character count.",
-    constraints: "1 <= |S| <= 1000",
-    examples: [{ input: "programming\ng", output: "2" }]
-  },
-  {
-    _id: "q-20",
-    questionNumber: 20,
-    title: "20. Check Armstrong Number",
-    difficulty: "Hard",
-    description: "Determine if N is an Armstrong number (sum of digits raised to number of digits equals N). Print 'YES' or 'NO'.",
-    inputDescription: "First line contains integer N.",
-    outputDescription: "Print 'YES' or 'NO'.",
-    constraints: "1 <= N <= 10^9",
-    examples: [{ input: "153", output: "YES" }, { input: "123", output: "NO" }]
   }
 ];
 
 function CodingPracticeModule() {
-  // Navigation Page View: "overview" (Page 1) or "workspace" (Page 2)
   const [currentPage, setCurrentPage] = useState("overview");
 
   const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
-  const [selectedLanguage, setSelectedLanguage] = useState("python");
+  const [selectedLanguage, setSelectedLanguage] = useState("java");
+  const [supportedLanguages, setSupportedLanguages] = useState(DEFAULT_LANGUAGES);
 
-  // Active Console Tab: "OUTPUT" (default), "STDIN", "TERMINAL", "PROBLEMS"
-  const [terminalTab, setTerminalTab] = useState("OUTPUT");
-
-  // Custom Stdin input typed by user
-  const [customStdin, setCustomStdin] = useState("");
-  
-  // Ref for horizontally scrolling the questions palette
-  const paletteScrollRef = useRef(null);
+  // Stdin & Terminal Panel State
+  const [stdinText, setStdinText] = useState("10 20");
+  const [activeConsoleTab, setActiveConsoleTab] = useState("stdout"); // Default to stdout for clean output view
+  const [outputResult, setOutputResult] = useState(null);
 
   // Mouse Drag Resizing State for Top Split (Left = Question, Right = Compiler)
-  const [leftWidthPercent, setLeftWidthPercent] = useState(50);
+  const [leftWidthPercent, setLeftWidthPercent] = useState(48);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Independent code storage per question & language
+  // Storage for user code per question & per language
   const [userCodes, setUserCodes] = useState({});
   const [questionStates, setQuestionStates] = useState({});
 
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [outputResult, setOutputResult] = useState(null);
+  const [copied, setCopied] = useState(false);
 
-  // Fetch questions from Backend API
+  const paletteScrollRef = useRef(null);
+
+  // Fetch Questions and Judge0 Languages from Backend API
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get("/coding/questions");
-        if (res.data && res.data.data && res.data.data.length > 0) {
-          setQuestions(res.data.data);
-          setSelectedQuestionIndex(0);
+        const qRes = await api.get("/coding/questions");
+        if (qRes.data && qRes.data.data && qRes.data.data.length > 0) {
+          setQuestions(qRes.data.data);
         }
       } catch (err) {
-        console.warn("Using default rich 20-questions list fallback:", err);
+        console.warn("Using default questions list fallback:", err);
+      }
+
+      try {
+        const langRes = await codingApi.getLanguages();
+        if (langRes && langRes.data && langRes.data.length > 0) {
+          const mapKeyToId = (name, key) => {
+            const k = (key || name).toLowerCase();
+            if (k.includes("java")) return "java";
+            if (k.includes("python")) return "python";
+            if (k.includes("c++") || k.includes("cpp")) return "cpp";
+            if (k.includes("c#") || k.includes("csharp")) return "csharp";
+            if (k.includes("c") && !k.includes("c++") && !k.includes("c#")) return "c";
+            if (k.includes("javascript") || k.includes("node")) return "javascript";
+            if (k.includes("typescript")) return "typescript";
+            if (k.includes("go")) return "go";
+            if (k.includes("rust")) return "rust";
+            if (k.includes("php")) return "php";
+            if (k.includes("kotlin")) return "kotlin";
+            if (k.includes("swift")) return "swift";
+            if (k.includes("ruby")) return "ruby";
+            if (k.includes("r") && !k.includes("rust")) return "r";
+            if (k.includes("sql")) return "sql";
+            return k.replace(/[^a-z0-9]/g, "");
+          };
+
+          const formatted = langRes.data.map(l => {
+            const idKey = mapKeyToId(l.name, l.key);
+            const defaultMatch = DEFAULT_LANGUAGES.find(d => d.id === idKey) || {};
+            return {
+              id: idKey,
+              name: l.name,
+              judge0Id: l.id,
+              ext: defaultMatch.ext || "file.txt",
+              monaco: defaultMatch.monaco || "plaintext"
+            };
+          });
+
+          // De-duplicate formatted list
+          const uniqueLangs = [];
+          const seenIds = new Set();
+          formatted.forEach(item => {
+            if (!seenIds.has(item.id)) {
+              seenIds.add(item.id);
+              uniqueLangs.push(item);
+            }
+          });
+
+          if (uniqueLangs.length > 0) {
+            setSupportedLanguages(uniqueLangs);
+          }
+        }
+      } catch (err) {
+        console.warn("Languages backend check used default list:", err);
       }
     };
-    fetchQuestions();
+    fetchData();
   }, []);
-
-  // Sync custom stdin default when selected question changes
-  useEffect(() => {
-    const curQ = questions[selectedQuestionIndex] || DEFAULT_QUESTIONS[0];
-    if (curQ && curQ.examples && curQ.examples.length > 0) {
-      setCustomStdin(curQ.examples[0].input || "");
-    } else {
-      setCustomStdin("");
-    }
-  }, [selectedQuestionIndex, questions]);
 
   // Load saved student progress from Backend API
   useEffect(() => {
@@ -398,7 +311,9 @@ function CodingPracticeModule() {
           res.data.data.savedProgress.forEach(p => {
             if (p.questionId) {
               if (!loadedCodes[p.questionId]) loadedCodes[p.questionId] = {};
-              loadedCodes[p.questionId][p.language || "python"] = p.sourceCode;
+              if (p.sourceCode) {
+                loadedCodes[p.questionId][p.language || "java"] = p.sourceCode;
+              }
               loadedStates[p.questionId] = p.status || "Started";
             }
           });
@@ -413,55 +328,19 @@ function CodingPracticeModule() {
     fetchProgress();
   }, []);
 
-  // Mouse Drag Resizer Handler for adjusting Left (Question) and Right (Compiler) panel widths
-  const handleMouseDownResize = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-
-    const handleMouseMove = (moveEvent) => {
-      const container = document.getElementById("workspace-top-split");
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const newLeftPx = moveEvent.clientX - rect.left;
-      let newPercent = (newLeftPx / rect.width) * 100;
-      if (newPercent < 20) newPercent = 20;
-      if (newPercent > 80) newPercent = 80;
-      setLeftWidthPercent(newPercent);
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-  };
-
-  // Scroll Question Palette Left / Right with Arrow Buttons
-  const scrollPalette = (direction) => {
-    if (paletteScrollRef.current) {
-      const scrollAmount = direction === "left" ? -180 : 180;
-      paletteScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
-  // Navigate Previous / Next Question
-  const handlePrevQuestion = () => {
-    setSelectedQuestionIndex(prev => Math.max(0, prev - 1));
-    setOutputResult(null);
-  };
-
-  const handleNextQuestion = () => {
-    setSelectedQuestionIndex(prev => Math.min(questions.length - 1, prev + 1));
-    setOutputResult(null);
-  };
-
   const currentQuestion = questions[selectedQuestionIndex] || DEFAULT_QUESTIONS[0];
   const currentQId = currentQuestion._id || `q-${currentQuestion.questionNumber || selectedQuestionIndex + 1}`;
 
-  // Get code for current question & language (Defaults to General Syntax Template)
+  // Update default stdin whenever question changes
+  useEffect(() => {
+    if (currentQuestion.examples && currentQuestion.examples.length > 0 && currentQuestion.examples[0].input) {
+      setStdinText(currentQuestion.examples[0].input);
+    } else {
+      setStdinText("10 20");
+    }
+  }, [selectedQuestionIndex, currentQuestion]);
+
+  // Code Accessor with Template Fallback
   const getCurrentCode = () => {
     if (userCodes[currentQId] && userCodes[currentQId][selectedLanguage] !== undefined) {
       return userCodes[currentQId][selectedLanguage];
@@ -469,10 +348,9 @@ function CodingPracticeModule() {
     if (currentQuestion.starterCode && currentQuestion.starterCode[selectedLanguage]) {
       return currentQuestion.starterCode[selectedLanguage];
     }
-    return DEFAULT_GENERAL_SYNTAX[selectedLanguage] || `// General Syntax for ${selectedLanguage}\n// Write your code here...`;
+    return STARTER_TEMPLATES[selectedLanguage] || `// Write your ${selectedLanguage} code here...\n`;
   };
 
-  // Update current code independently
   const handleCodeChange = (newCode) => {
     setUserCodes(prev => ({
       ...prev,
@@ -483,9 +361,37 @@ function CodingPracticeModule() {
     }));
   };
 
-  // Start Test & Open Next Page (Workspace)
+  const handleResetToTemplate = () => {
+    const template = STARTER_TEMPLATES[selectedLanguage] || `// Write your ${selectedLanguage} code here...\n`;
+    handleCodeChange(template);
+  };
+
+  // Resizer Mouse Handler
+  const handleMouseDownResize = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  // Scroll Question Palette
+  const scrollPalette = (direction) => {
+    if (paletteScrollRef.current) {
+      const scrollAmount = direction === "left" ? -180 : 180;
+      paletteScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    setSelectedQuestionIndex(prev => Math.max(0, prev - 1));
+    setOutputResult(null);
+  };
+
+  const handleNextQuestion = () => {
+    setSelectedQuestionIndex(prev => Math.min(questions.length - 1, prev + 1));
+    setOutputResult(null);
+  };
+
   const handleStartTest = async (qIdx = 0) => {
-    if (qIdx !== undefined) setSelectedQuestionIndex(qIdx);
+    setSelectedQuestionIndex(qIdx);
     const targetQ = questions[qIdx] || currentQuestion;
     const targetQId = targetQ._id || `q-${targetQ.questionNumber || qIdx + 1}`;
 
@@ -500,192 +406,187 @@ function CodingPracticeModule() {
         status: "Started"
       });
     } catch (e) {
-      console.warn("Saved started status locally:", e);
+      console.warn("Saved started status:", e);
     }
   };
 
-  const [accumulatedInputs, setAccumulatedInputs] = useState([]);
-  const [currentInlineInput, setCurrentInlineInput] = useState("");
-  const [isWaitingInput, setIsWaitingInput] = useState(false);
-  const inlineInputRef = useRef(null);
-
-  // Validate language vs code compatibility before execution
-  const validateLanguageCodeMatch = (lang, code) => {
-    const trimCode = (code || "").trim();
-    if (!trimCode) return null;
-
-    if (lang === "python") {
-      if (trimCode.includes("public class ") || trimCode.includes("System.out.print") || trimCode.includes("import java.")) {
-        return "Language Mismatch\n\nThe editor contains Java code, but Python 3 is selected.\n\nPlease select Java in the language dropdown.";
-      }
-      if (trimCode.includes("#include <") || trimCode.includes("using namespace std")) {
-        return "Language Mismatch\n\nThe editor contains C++ code, but Python 3 is selected.\n\nPlease select C++ in the language dropdown.";
-      }
-    } else if (lang === "java") {
-      if (trimCode.startsWith("def ") || (trimCode.includes("print(") && !trimCode.includes("System.out"))) {
-        return "Language Mismatch\n\nThe editor contains Python code, but Java is selected.\n\nPlease select Python 3 in the language dropdown.";
-      }
-    }
-    return null;
-  };
-
-  // Compile & Run Code against Real Judge0 CE Compiler Engine via Backend API
-  const handleCompileAndRun = async (overrideInputs = null) => {
+  // Compile & Run Code
+  const handleCompileAndRun = async () => {
     setRunning(true);
-    setTerminalTab("OUTPUT");
-
-    const inputsToUse = overrideInputs !== null ? overrideInputs : accumulatedInputs;
-    const stdinToUse = inputsToUse.join("\n");
 
     const codeToRun = getCurrentCode();
-
-    // Validate Language vs Code Compatibility
-    const mismatch = validateLanguageCodeMatch(selectedLanguage, codeToRun);
-    if (mismatch) {
-      setOutputResult({
-        isError: true,
-        status: "Language Mismatch",
-        output: mismatch
-      });
-      setRunning(false);
-      setIsWaitingInput(false);
-      return;
-    }
+    const activeLangObj = supportedLanguages.find(l => l.id === selectedLanguage) || DEFAULT_LANGUAGES[0];
+    const j0Id = activeLangObj.judge0Id || 62;
 
     try {
       const data = await codingApi.runCode({
         questionId: currentQId,
+        languageId: j0Id,
         language: selectedLanguage,
         sourceCode: codeToRun,
-        stdin: stdinToUse
+        stdin: stdinText
       });
 
       const execData = data?.data || data || {};
-      const status = execData.status || "Accepted";
-      const stdout = execData.stdout || "";
-      const stderr = execData.stderr || "";
-      const compileOutput = execData.compileOutput || "";
+      const statusRaw = execData.status || "Accepted";
+      const stdout = execData.stdout !== undefined ? execData.stdout : "";
+      const stderr = execData.stderr !== undefined ? execData.stderr : "";
+      const compileOutput = execData.compileOutput !== undefined ? execData.compileOutput : "";
       const timeStr = execData.time || "0.01s";
       const memoryVal = execData.memory ? `${execData.memory} KB` : "12 MB";
 
-      let displayOutput = "";
-      if (stdout) displayOutput += stdout;
-      if (stderr) displayOutput += (displayOutput ? "\n\nError:\n" : "") + stderr;
-      if (compileOutput) displayOutput += (displayOutput ? "\n\nCompiler Output:\n" : "") + compileOutput;
-      if (!displayOutput.trim()) displayOutput = "No stdout returned.";
+      let displayStatus = "Accepted";
+      let isErr = false;
 
-      const isErr = status !== "Accepted" && status !== "Success" && status !== "Execution Completed";
+      if (statusRaw === "Compilation Error" || compileOutput) {
+        displayStatus = "Compilation Error";
+        isErr = true;
+        setActiveConsoleTab("stderr");
+      } else if (statusRaw === "Runtime Error" || stderr) {
+        displayStatus = "Runtime Error";
+        isErr = true;
+        setActiveConsoleTab("stderr");
+      } else if (statusRaw === "Time Limit Exceeded") {
+        displayStatus = "Time Limit Exceeded";
+        isErr = true;
+        setActiveConsoleTab("diagnostics");
+      } else if (statusRaw === "API Network Error") {
+        displayStatus = "API Network Error";
+        isErr = true;
+        setActiveConsoleTab("stderr");
+      } else {
+        displayStatus = statusRaw;
+        isErr = !execData.success;
+        setActiveConsoleTab("stdout");
+      }
 
       setOutputResult({
         isError: isErr,
-        status: status,
-        output: displayOutput,
+        status: displayStatus,
+        stdout: stdout,
+        stderr: stderr,
+        compileOutput: compileOutput,
         executionTime: timeStr,
         memory: memoryVal
       });
-      setIsWaitingInput(false);
     } catch (err) {
-      console.error("Compile & Run connection error:", err);
-      let errDetail = "Failed to reach backend compiler service.";
-      if (!err.response) {
-        errDetail = "Compiler server is unavailable.\nPlease check that the TAP backend server is running on http://127.0.0.1:8000 and Judge0 service is reachable.";
-      } else if (err.response.data?.detail) {
+      console.error("Compile & Run error:", err);
+      let errDetail = "Failed to communicate with compiler backend API.";
+      if (err.response?.data?.detail) {
         errDetail = typeof err.response.data.detail === "string" ? err.response.data.detail : JSON.stringify(err.response.data.detail);
-      } else {
-        errDetail = `Compiler service error (${err.response.status}).`;
+      } else if (err.message) {
+        errDetail = err.message;
       }
 
       setOutputResult({
         isError: true,
-        status: "Execution Error",
-        output: `Compilation/Server Error\n\n${errDetail}`
+        status: "API Network Error",
+        stdout: "",
+        stderr: errDetail,
+        compileOutput: "",
+        executionTime: "0.00s",
+        memory: "0 KB"
       });
-      setIsWaitingInput(false);
+      setActiveConsoleTab("stderr");
     } finally {
       setRunning(false);
     }
   };
 
-  // Handle Enter key inside inline terminal prompt
-  const handleInlineInputSubmit = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const val = currentInlineInput;
-      const nextInputs = [...accumulatedInputs, val];
-      setAccumulatedInputs(nextInputs);
-      setCurrentInlineInput("");
-      handleCompileAndRun(nextInputs);
-    }
-  };
-
-  // Reset interactive terminal history on clear
-  const handleClearOutput = () => {
-    setOutputResult(null);
-    setAccumulatedInputs([]);
-    setCurrentInlineInput("");
-    setIsWaitingInput(false);
-  };
-
-  // Submit Code against Hidden Test Cases & Store Submission in Database
+  // Submit Code against hidden test cases
   const handleSubmitCode = async () => {
+    if (submitting) return;
     setSubmitting(true);
-    setTerminalTab("OUTPUT");
     setOutputResult(null);
 
     const codeToSubmit = getCurrentCode();
+    const activeLangObj = supportedLanguages.find(l => l.id === selectedLanguage) || DEFAULT_LANGUAGES[0];
+    const j0Id = activeLangObj.judge0Id || 62;
 
     try {
       const data = await codingApi.submitCode({
         questionId: currentQId,
+        languageId: j0Id,
         language: selectedLanguage,
         sourceCode: codeToSubmit
       });
 
       const subData = data?.data || data || {};
-      const status = subData.status || "Accepted";
+      const statusRaw = subData.status || "Accepted";
       const passed = subData.passedTests !== undefined ? subData.passedTests : 0;
       const total = subData.totalTests !== undefined ? subData.totalTests : 0;
+      const scoreVal = subData.score !== undefined ? subData.score : (passed === total ? 10 : 0);
       const timeStr = subData.executionTime || "0.01s";
       const memoryVal = subData.memory ? `${subData.memory} KB` : "12 MB";
       const stdout = subData.stdout || "";
       const stderr = subData.stderr || "";
+      const compileOutput = subData.compileOutput || "";
 
-      let displayOutput = stdout;
-      if (stderr) displayOutput += (displayOutput ? "\n\nError:\n" : "") + stderr;
+      const isAccepted = statusRaw === "Accepted" || (total > 0 && passed === total);
+      const finalStatus = isAccepted ? "Accepted" : statusRaw;
 
-      if (status === "Accepted" || passed === total) {
-        setOutputResult({
-          isError: false,
-          status: "Accepted",
-          output: `${displayOutput ? displayOutput + "\n\n" : ""}✓ Status: Accepted (${passed}/${total} Hidden Test Cases Passed)\nScore: ${subData.score || 100}%`,
-          executionTime: timeStr,
-          memory: memoryVal
+      setOutputResult({
+        isSubmit: true,
+        isError: !isAccepted,
+        status: `${finalStatus} (${passed}/${total} Test Cases Passed)`,
+        stdout: stdout || `Passed ${passed} / ${total} test cases. Marks awarded: ${scoreVal} pts`,
+        stderr: stderr,
+        compileOutput: compileOutput,
+        executionTime: timeStr,
+        memory: memoryVal,
+        passedCount: passed,
+        totalCount: total,
+        score: scoreVal
+      });
+
+      setQuestionStates(prev => ({ ...prev, [currentQId]: isAccepted ? "Submitted" : "Started" }));
+      setActiveConsoleTab("diagnostics");
+
+      try {
+        await codingApi.saveProgress(currentQId, {
+          language: selectedLanguage,
+          code: codeToSubmit,
+          status: isAccepted ? "Accepted" : "Attempted"
         });
-        setQuestionStates(prev => ({ ...prev, [currentQId]: "Submitted" }));
-      } else {
-        setOutputResult({
-          isError: true,
-          status: status,
-          output: `${displayOutput ? displayOutput + "\n\n" : ""}✗ Status: ${status} (${passed}/${total} Hidden Test Cases Passed)\nScore: ${subData.score || 0}%`,
-          executionTime: timeStr,
-          memory: memoryVal
-        });
-        setQuestionStates(prev => ({ ...prev, [currentQId]: "In Progress" }));
+      } catch (e) {
+        console.warn("Progress save notice:", e);
       }
     } catch (err) {
       console.error("Submission error:", err);
-      const errDetail = err.response?.data?.detail || err.message || "Submission service unavailable.";
+      const errDetail = err.response?.data?.detail || err.message || "Submission service connection failed.";
       setOutputResult({
+        isSubmit: true,
         isError: true,
         status: "Submission Error",
-        output: `Submission Error\n\n${errDetail}`
+        stdout: "",
+        stderr: errDetail,
+        compileOutput: "",
+        executionTime: "0.00s",
+        memory: "0 KB"
       });
+      setActiveConsoleTab("stderr");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Helper for question palette state style
+  const handleClearOutput = () => {
+    setOutputResult(null);
+  };
+
+  const handleCopyOutput = () => {
+    let copyText = "";
+    if (activeConsoleTab === "stdin") copyText = stdinText;
+    else if (activeConsoleTab === "stdout") copyText = outputResult?.stdout || "";
+    else if (activeConsoleTab === "stderr") copyText = outputResult?.stderr || outputResult?.compileOutput || "";
+    else if (activeConsoleTab === "diagnostics") copyText = `Status: ${outputResult?.status || ""}\nTime: ${outputResult?.executionTime || ""}\nMemory: ${outputResult?.memory || ""}`;
+
+    navigator.clipboard.writeText(copyText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const getPaletteStateClass = (q, idx) => {
     const qId = q._id || `q-${q.questionNumber || idx + 1}`;
     const isSelected = idx === selectedQuestionIndex;
@@ -693,41 +594,53 @@ function CodingPracticeModule() {
 
     let classes = "palette-btn";
     if (isSelected) classes += " active";
-    if (qState === "Submitted") classes += " state-submitted";
-    else if (qState === "Started") classes += " state-started";
+    if (qState === "Submitted" || qState === "Accepted") classes += " state-submitted";
+    else if (qState === "Started" || qState === "Attempted") classes += " state-started";
     else classes += " state-unvisited";
 
     return classes;
   };
 
-  const lineCount = (getCurrentCode() || "").split("\n").length || 1;
-  const lineNumbers = Array.from({ length: Math.max(lineCount, 16) }, (_, i) => i + 1);
-
-  const activeLangObj = POPULAR_LANGUAGES.find(l => l.id === selectedLanguage) || POPULAR_LANGUAGES[0];
+  const currentLangObj = supportedLanguages.find(l => l.id === selectedLanguage) || DEFAULT_LANGUAGES[0];
 
   return (
     <DashboardLayout title="TAP Coding Lab">
+      {/* Full-screen drag backdrop to ensure panel slider moves smoothly without Monaco capturing mouse events */}
+      {isDragging && (
+        <div
+          className="resizer-drag-overlay"
+          onMouseMove={(e) => {
+            const container = document.getElementById("workspace-top-split");
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const newLeftPx = e.clientX - rect.left;
+            let newPercent = (newLeftPx / rect.width) * 100;
+            if (newPercent < 20) newPercent = 20;
+            if (newPercent > 80) newPercent = 80;
+            setLeftWidthPercent(newPercent);
+          }}
+          onMouseUp={() => setIsDragging(false)}
+        />
+      )}
+
       <div className="coding-lab-container">
-        {/* =========================================================================
-            PAGE 1: CLEAN & SIMPLE "CODING LAB" OVERVIEW
-            ========================================================================= */}
+        {/* PAGE 1: QUESTIONS OVERVIEW */}
         {currentPage === "overview" && (
           <div className="coding-overview-page">
-            {/* Header & Simple Paragraph */}
             <div className="cl-overview-card">
-              <h2 className="cl-main-title">Coding Lab</h2>
+              <h2 className="cl-main-title">Coding Lab Workspace</h2>
               <p className="cl-instructions-paragraph">
-                Welcome to Coding Lab. Select a problem below and click <strong>Start Test</strong> to solve questions on our live compiler workspace.
+                Solve coding problems, compile & execute solution code using Judge0 multi-language compiler engine, enter standard input, and submit your code for evaluation.
               </p>
             </div>
 
-            {/* VERTICAL LIST OF QUESTION ROWS (ROW 1 = Q1 + LEVEL + START, ROW 2 = Q2 ...) */}
             <div className="questions-rows-list">
               {questions.map((q, idx) => {
                 const diffLevel = (q.difficulty || "Easy").toLowerCase();
+                const qId = q._id || `q-${q.questionNumber || idx + 1}`;
+                const qState = questionStates[qId];
                 return (
-                  <div key={q._id || idx} className="question-item-row">
-                    {/* Left: Question Badge, Title & Difficulty Level */}
+                  <div key={qId} className="question-item-row">
                     <div className="q-item-info">
                       <span className="q-item-num">
                         {String(idx + 1).padStart(2, "0")}
@@ -741,15 +654,15 @@ function CodingPracticeModule() {
                       <span className={`q-level-pill ${diffLevel}`}>
                         {q.difficulty || "Easy"}
                       </span>
+                      {qState === "Submitted" && <span className="badge-solved-pill">✓ Solved</span>}
                     </div>
 
-                    {/* Right: Start Test Button */}
                     <div className="q-item-action">
                       <button
                         className="btn-start-row-action"
                         onClick={() => handleStartTest(idx)}
                       >
-                        ▶ Start Test
+                        ▶ Solve Challenge
                       </button>
                     </div>
                   </div>
@@ -759,19 +672,16 @@ function CodingPracticeModule() {
           </div>
         )}
 
-        {/* =========================================================================
-            PAGE 2: WORKSPACE PAGE WITH AUTHENTIC VS CODE INTEGRATED TERMINAL
-            ========================================================================= */}
+        {/* PAGE 2: WORKSPACE */}
         {currentPage === "workspace" && (
           <div className="coding-workspace-page">
-            {/* TOP NAVIGATION & QUESTION SWITCHER BAR WITH ARROWS (< 01 02 ... 20 >) */}
+            {/* TOP NAVIGATION & QUESTION PALETTE */}
             <div className="workspace-top-nav">
               <button className="btn-back-overview" onClick={() => setCurrentPage("overview")}>
-                ‹ Back to Overview
+                ‹ Back to Questions
               </button>
 
               <div className="nav-questions-row">
-                {/* INNER LEFT SCROLL & PREV QUESTION ARROW BUTTON */}
                 <button
                   className="arrow-scroll-btn"
                   onClick={() => {
@@ -779,7 +689,7 @@ function CodingPracticeModule() {
                     handlePrevQuestion();
                   }}
                   disabled={selectedQuestionIndex === 0}
-                  title="Previous Question (‹)"
+                  title="Previous Question"
                 >
                   ‹
                 </button>
@@ -800,7 +710,6 @@ function CodingPracticeModule() {
                   ))}
                 </div>
 
-                {/* INNER RIGHT SCROLL & NEXT QUESTION ARROW BUTTON */}
                 <button
                   className="arrow-scroll-btn"
                   onClick={() => {
@@ -808,16 +717,16 @@ function CodingPracticeModule() {
                     handleNextQuestion();
                   }}
                   disabled={selectedQuestionIndex === questions.length - 1}
-                  title="Next Question (›)"
+                  title="Next Question"
                 >
                   ›
                 </button>
               </div>
             </div>
 
-            {/* TOP ROW: MOUSE DRAG RESIZABLE SPLIT (LEFT = QUESTION, RIGHT = COMPILER) */}
+            {/* TOP ROW: RESIZABLE SPLIT (QUESTION & MONACO EDITOR) */}
             <div className="workspace-top-split" id="workspace-top-split">
-              {/* LEFT DIV: QUESTION & PROBLEM SPECIFICATION */}
+              {/* LEFT PANEL: QUESTION DESCRIPTION */}
               <div
                 className="panel-question-display"
                 style={{ width: `${leftWidthPercent}%` }}
@@ -867,31 +776,30 @@ function CodingPracticeModule() {
                     </div>
                   ))}
 
-                  {/* HINTS SECTION DIRECTLY BELOW EXAMPLE */}
                   <div className="q-section q-hint-section">
-                    <h4 className="q-sec-heading">💡 Hint</h4>
+                    <h4 className="q-sec-heading">💡 Code Hint</h4>
                     <div className="q-hint-box">
-                      {currentQuestion.hint || "Try breaking down the problem into smaller sub-problems. Handle edge cases like empty inputs or negative values."}
+                      {currentQuestion.hint || "Read inputs using standard scanner or sys.stdin. Process inputs according to constraints and print the exact required output format."}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* MOUSE DRAG RESIZER BAR */}
+              {/* MOUSE DRAG RESIZABLE DIVIDER */}
               <div
                 className={`workspace-resizer-bar ${isDragging ? "dragging" : ""}`}
                 onMouseDown={handleMouseDownResize}
-                title="Drag left/right to adjust Question and Compiler panel widths"
+                title="Drag left/right to adjust panel width"
               >
                 <div className="resizer-handle-icon">⋮</div>
               </div>
 
-              {/* RIGHT DIV: CODING WRITING COMPILER & EDITOR */}
+              {/* RIGHT PANEL: CODE EDITOR & CONTROLS */}
               <div
                 className="panel-code-editor-fixed"
                 style={{ width: `calc(${100 - leftWidthPercent}% - 8px)` }}
               >
-                {/* COMPACT EDITOR CONTROLS ROW WITH POPULAR FAMILY LANGUAGES */}
+                {/* EDITOR CONTROLS TOOLBAR */}
                 <div className="editor-control-bar">
                   <div className="lang-select-wrap">
                     <label className="lang-label">Language:</label>
@@ -900,96 +808,254 @@ function CodingPracticeModule() {
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
                     >
-                      {POPULAR_LANGUAGES.map((lang) => (
+                      {supportedLanguages.map((lang) => (
                         <option key={lang.id} value={lang.id}>
                           {lang.name}
                         </option>
                       ))}
                     </select>
+                    <span className="file-ext-tag">{currentLangObj.ext || "file.txt"}</span>
                   </div>
 
                   <div className="action-buttons-wrap">
                     <button
+                      className="btn-reset-template"
+                      onClick={handleResetToTemplate}
+                      title="Reset code to default language template"
+                    >
+                      Reset Template
+                    </button>
+                    <button
                       className="btn-compile-run"
                       onClick={handleCompileAndRun}
-                      disabled={running}
-                      title="Compile & Run code on custom input"
+                      disabled={running || submitting}
+                      title="Compile & Run code on input stdin"
                     >
-                      {running ? "Running..." : "Compile & Run"}
+                      {running ? "Running..." : "▶ Compile & Run"}
                     </button>
                     <button
                       className="btn-submit-code"
                       onClick={handleSubmitCode}
-                      disabled={submitting}
-                      title="Submit solution against hidden test cases"
+                      disabled={running || submitting}
+                      title="Submit solution against test cases"
                     >
-                      {submitting ? "Submitting..." : "Submit"}
+                      {submitting ? "Submitting..." : "✓ Submit"}
                     </button>
                   </div>
                 </div>
 
-                {/* CODE EDITOR TEXTAREA WITH FIXED HEIGHT AND INTERNAL SCROLLBAR */}
-                <div className="editor-area-fixed-scroll">
-                  <div className="line-numbers-sidebar">
-                    {lineNumbers.map((num) => (
-                      <div key={num} className="line-num-cell">{num}</div>
-                    ))}
-                  </div>
-                  <textarea
-                    className="code-textarea-input-scroll"
+                {/* MONACO CODE EDITOR */}
+                <div className="editor-area-monaco-wrap">
+                  <Editor
+                    height="100%"
+                    language={currentLangObj.monaco || "plaintext"}
+                    theme="vs-dark"
                     value={getCurrentCode()}
-                    onChange={(e) => handleCodeChange(e.target.value)}
-                    placeholder="Write your code solution here..."
-                    spellCheck={false}
+                    onChange={(val) => handleCodeChange(val || "")}
+                    options={{
+                      fontSize: 14,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 4,
+                      wordWrap: "on",
+                      lineNumbers: "on",
+                      bracketPairColorization: { enabled: true },
+                      autoClosingBrackets: "always",
+                      autoClosingQuotes: "always",
+                      formatOnPaste: true
+                    }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* CONTINUOUS INTERACTIVE TERMINAL CONSOLE */}
-            <div className="vscode-terminal-container">
-              {/* CLEAN HEADER: ONLY "Output" */}
-              <div className="vscode-term-header">
-                <div className="vscode-term-tabs">
-                  <span className="clean-output-header-title">Output</span>
+            {/* BOTTOM SECTION: TERMINAL CONSOLE & ALWAYS-EDITABLE STDIN */}
+            <div className="terminal-console-container">
+              {/* ALWAYS-EDITABLE STDIN BAR */}
+              <div className="terminal-top-stdin-bar">
+                <div className="stdin-bar-left">
+                  <span className="stdin-bar-icon">⌨</span>
+                  <label className="stdin-bar-label">Standard Input (stdin):</label>
+                  <input
+                    type="text"
+                    className="terminal-stdin-inline-input"
+                    value={stdinText}
+                    onChange={(e) => setStdinText(e.target.value)}
+                    placeholder="Enter input (e.g. 10 20)..."
+                    title="Type custom program test input here"
+                  />
+                </div>
+                <div className="stdin-bar-right">
+                  <button
+                    className="btn-use-sample"
+                    onClick={() => {
+                      if (currentQuestion.examples && currentQuestion.examples.length > 0) {
+                        setStdinText(currentQuestion.examples[0].input);
+                      }
+                    }}
+                    title="Load default sample input for this question"
+                  >
+                    Reset Input
+                  </button>
+                  <button
+                    className="btn-run-from-stdin"
+                    onClick={handleCompileAndRun}
+                    disabled={running || submitting}
+                  >
+                    {running ? "Running..." : "▶ Run with Input"}
+                  </button>
+                </div>
+              </div>
+
+              {/* TERMINAL HEADER & TABS */}
+              <div className="term-tabs-header">
+                <div className="term-tabs-left">
+                  <button
+                    className={`term-tab-btn ${activeConsoleTab === "stdout" ? "active" : ""}`}
+                    onClick={() => setActiveConsoleTab("stdout")}
+                  >
+                    Output (stdout)
+                  </button>
+                  <button
+                    className={`term-tab-btn ${activeConsoleTab === "stdin" ? "active" : ""}`}
+                    onClick={() => setActiveConsoleTab("stdin")}
+                  >
+                    Multiline Input (stdin)
+                  </button>
+                  <button
+                    className={`term-tab-btn ${activeConsoleTab === "stderr" ? "active" : ""}`}
+                    onClick={() => setActiveConsoleTab("stderr")}
+                  >
+                    Error Output (stderr)
+                  </button>
+                  <button
+                    className={`term-tab-btn ${activeConsoleTab === "diagnostics" ? "active" : ""}`}
+                    onClick={() => setActiveConsoleTab("diagnostics")}
+                  >
+                    Compiler Diagnostics
+                  </button>
                 </div>
 
-                <div className="vscode-term-actions">
+                <div className="term-status-right">
+                  {running ? (
+                    <span className="badge-term-status running">Executing Code...</span>
+                  ) : outputResult ? (
+                    <span className={`badge-term-status ${outputResult.isError ? "error" : "success"}`}>
+                      {outputResult.status}
+                    </span>
+                  ) : null}
+
+                  {outputResult?.executionTime && (
+                    <span className="badge-metrics">
+                      Time: {outputResult.executionTime} | Memory: {outputResult.memory}
+                    </span>
+                  )}
+
+                  <button className="btn-copy-term" onClick={handleCopyOutput}>
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
                   {outputResult && (
-                    <button className="btn-clear-output" onClick={handleClearOutput} title="Clear Output">
-                      Clear
-                    </button>
+                    <button className="btn-clear-term" onClick={handleClearOutput}>Clear</button>
                   )}
                 </div>
               </div>
 
-              {/* CONTINUOUS SINGLE TERMINAL SCREEN WITH INLINE INPUT */}
-              <div className="vscode-term-body">
-                <div className="continuous-terminal-screen" onClick={() => inlineInputRef.current?.focus()}>
-                  {outputResult ? (
-                    <pre className={`terminal-text-content ${outputResult.isError ? "red-error" : ""}`}>
-                      {outputResult.output}
-                      {(isWaitingInput || outputResult.status === "Waiting for input") && (
-                        <span className="inline-terminal-input-wrap">
-                          <input
-                            ref={inlineInputRef}
-                            type="text"
-                            className="inline-terminal-input"
-                            value={currentInlineInput}
-                            onChange={(e) => setCurrentInlineInput(e.target.value)}
-                            onKeyDown={handleInlineInputSubmit}
-                            placeholder="[type number / text & press Enter]"
-                            autoFocus
-                          />
-                        </span>
-                      )}
-                    </pre>
-                  ) : (
-                    <pre className="terminal-text-content placeholder-text">
-                      Click Compile & Run or Submit to see program execution output.
-                    </pre>
-                  )}
-                </div>
+              {/* TERMINAL TAB CONTENT */}
+              <div className="term-body-content">
+                {/* TAB 1: STDOUT OUTPUT */}
+                {activeConsoleTab === "stdout" && (
+                  <div className="tab-pane-stdout">
+                    {outputResult ? (
+                      <pre className="terminal-pre-text stdout-text">
+                        {outputResult.stdout || "(Program execution produced no standard output)"}
+                      </pre>
+                    ) : (
+                      <div className="term-placeholder">
+                        Enter input in the bar above and click <strong>▶ Compile & Run</strong> to see standard output.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB 2: MULTILINE STDIN EDITOR */}
+                {activeConsoleTab === "stdin" && (
+                  <div className="tab-pane-stdin">
+                    <p className="stdin-label-hint">
+                      Edit multiline standard input values for your program:
+                    </p>
+                    <textarea
+                      className="stdin-textarea"
+                      value={stdinText}
+                      onChange={(e) => setStdinText(e.target.value)}
+                      placeholder="Type custom test input here (e.g. 10 20)..."
+                      spellCheck={false}
+                    />
+                  </div>
+                )}
+
+                {/* TAB 3: STDERR / COMPILE ERROR */}
+                {activeConsoleTab === "stderr" && (
+                  <div className="tab-pane-stderr">
+                    {outputResult && (outputResult.stderr || outputResult.compileOutput) ? (
+                      <pre className="terminal-pre-text stderr-text">
+                        {outputResult.compileOutput || outputResult.stderr}
+                      </pre>
+                    ) : outputResult ? (
+                      <div className="no-error-text">✓ No compilation or runtime errors reported.</div>
+                    ) : (
+                      <div className="term-placeholder">
+                        Compiler error messages and exception stack traces will appear here.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB 4: DIAGNOSTICS & METRICS */}
+                {activeConsoleTab === "diagnostics" && (
+                  <div className="tab-pane-diagnostics">
+                    {outputResult ? (
+                      <div className="diagnostics-summary-card">
+                        <div className="diag-row">
+                          <strong className="diag-label">Execution Status:</strong>
+                          <span className={`diag-value ${outputResult.isError ? "text-error" : "text-success"}`}>
+                            {outputResult.status}
+                          </span>
+                        </div>
+                        <div className="diag-row">
+                          <strong className="diag-label">Execution Time:</strong>
+                          <span className="diag-value">{outputResult.executionTime || "0.01s"}</span>
+                        </div>
+                        <div className="diag-row">
+                          <strong className="diag-label">Memory Usage:</strong>
+                          <span className="diag-value">{outputResult.memory || "12 KB"}</span>
+                        </div>
+                        {outputResult.isSubmit && (
+                          <>
+                            <div className="diag-row">
+                              <strong className="diag-label">Test Cases Evaluation:</strong>
+                              <span className="diag-value">{outputResult.passedCount} / {outputResult.totalCount} Passed</span>
+                            </div>
+                            <div className="diag-row">
+                              <strong className="diag-label">Score Awarded:</strong>
+                              <span className="diag-value">{outputResult.score} Points</span>
+                            </div>
+                          </>
+                        )}
+                        {outputResult.compileOutput && (
+                          <div className="diag-box">
+                            <strong>Compilation Output:</strong>
+                            <pre className="ex-pre">{outputResult.compileOutput}</pre>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="term-placeholder">
+                        Run or Submit code to view compiler diagnostic summary and execution metrics.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

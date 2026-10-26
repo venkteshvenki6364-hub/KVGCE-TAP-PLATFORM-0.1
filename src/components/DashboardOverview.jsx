@@ -1,458 +1,410 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import "./DashboardOverview.css";
 
-const DEFAULT_TOP_PERFORMERS = [
-  { rank: 1, name: "Karthik M", usn: "4KV21CS018", dept: "CSE", score: "94.2%" },
-  { rank: 2, name: "Sahana P", usn: "4KV21CS042", dept: "CSE", score: "92.1%" },
-  { rank: 3, name: "Likith R", usn: "4KV21EC027", dept: "ECE", score: "91.3%" },
-  { rank: 4, name: "Ananya B", usn: "4KV21IS033", dept: "ISE", score: "90.7%" },
-  { rank: 5, name: "Vivek S", usn: "4KV21ME021", dept: "ME", score: "89.6%" }
+const BRANCHES = ["CSE", "ECE", "ME", "CV", "ISE"];
+const YEARS    = ["1", "2", "3", "4"];
+const SEMESTERS = ["1", "2", "3", "4", "5", "6", "7", "8"];
+const SECTIONS = ["A", "B", "C", "D"];
+
+const CAT_BARS = [
+  { key: "academics", label: "Acad.",  color: "academics" },
+  { key: "aptitude",  label: "Aptit.", color: "aptitude"  },
+  { key: "technical", label: "Tech.",  color: "technical" },
+  { key: "coding",    label: "Code",   color: "coding"    },
+  { key: "hrComm",    label: "HR",     color: "hrcomm"    },
+  { key: "overall",   label: "Avg",    color: "overall",  bold: true },
 ];
 
-const DEFAULT_AT_RISK_STUDENTS = [
-  { name: "Rohith K", usn: "4KV21CS110", riskScore: "82%", reasons: 3 },
-  { name: "Prajwal B", usn: "4KV21EC056", riskScore: "78%", reasons: 3 },
-  { name: "Nikhil M", usn: "4KV21ME045", riskScore: "75%", reasons: 3 },
-  { name: "Arjun U", usn: "4KV21CS128", riskScore: "72%", reasons: 3 },
-  { name: "Deepika N", usn: "4KV21IS059", riskScore: "70%", reasons: 3 }
-];
-
-const DEFAULT_RECENT_ACTIVITIES = [
-  {
-    type: "aptitude",
-    title: "Aptitude Test conducted for 5th Sem CSE",
-    time: "14 Aug 2026, 10:30 AM",
-    iconBg: "green"
-  },
-  {
-    type: "technical",
-    title: "Technical Quiz conducted for ECE Department",
-    time: "14 Aug 2026, 09:15 AM",
-    iconBg: "blue"
-  },
-  {
-    type: "batch",
-    title: "New student batch added (2026-27)",
-    time: "13 Aug 2026, 04:45 PM",
-    iconBg: "user"
-  },
-  {
-    type: "coding",
-    title: "Coding Contest - Weekly Challenge",
-    time: "13 Aug 2026, 02:20 PM",
-    iconBg: "purple"
-  }
-];
-
-export default function DashboardOverview({ role = "admin" }) {
+export default function DashboardOverview({ role = "admin", dashboardData = null }) {
   const [dateRange, setDateRange] = useState("01 Feb 2026 - 14 Aug 2026");
-  const [liveStats, setLiveStats] = useState({
-    totalStudents: 1248,
-    activeStudents: 1182,
-    avgSkillScore: 82.5,
-    placementReadiness: 78,
-    atRiskStudents: 128,
-    testsCompleted: 2856
-  });
 
-  const [topPerformers, setTopPerformers] = useState(DEFAULT_TOP_PERFORMERS);
-  const [atRiskStudents, setAtRiskStudents] = useState(DEFAULT_AT_RISK_STUDENTS);
-  const [recentActivities, setRecentActivities] = useState(DEFAULT_RECENT_ACTIVITIES);
+  /* ── Filter state ─────────────────────────────────────────────────────── */
+  const [filters, setFilters] = useState({ branch: "all", year: "all", semester: "all", section: "all" });
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterLabel, setFilterLabel] = useState("");
+
+  const [liveStats, setLiveStats] = useState({
+    totalStudents: 0, activeStudents: 0,
+    avgSkillScore: null, placementReadiness: null,
+    atRiskStudents: null, testsCompleted: 0
+  });
+  const [categoryScores, setCategoryScores] = useState({
+    academics: null, aptitude: null, technical: null,
+    coding: null, hrComm: null, overall: null
+  });
+  const [departmentScores, setDepartmentScores] = useState([]);
+  const [topPerformers, setTopPerformers] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [scoreDistribution, setScoreDistribution] = useState({});
+  const [atRiskStudents, setAtRiskStudents] = useState([]);
+  const displayMetric = (value, suffix = "") =>
+    value === null || value === undefined ? "—" : `${value}${suffix}`;
+
+  /* ── Shared data applier ──────────────────────────────────────────────── */
+  const applyAnalysis = useCallback((overall, students) => {
+    setLiveStats(prev => ({
+      ...prev,
+      totalStudents:      overall.totalStudents      !== undefined ? overall.totalStudents      : prev.totalStudents,
+      activeStudents:     overall.activeStudents     !== undefined ? overall.activeStudents     : prev.activeStudents,
+      avgSkillScore:      overall.avgSkillScore      !== undefined ? overall.avgSkillScore : prev.avgSkillScore,
+      placementReadiness: overall.placementReadiness !== undefined ? overall.placementReadiness : prev.placementReadiness,
+      atRiskStudents:     overall.atRiskStudents     !== undefined ? overall.atRiskStudents     : prev.atRiskStudents,
+      testsCompleted:     overall.testsCompleted     !== undefined ? overall.testsCompleted : prev.testsCompleted,
+    }));
+    if (overall.categoryScores) setCategoryScores(overall.categoryScores);
+    if (Array.isArray(overall.departmentScores)) setDepartmentScores(overall.departmentScores);
+    if (overall.scoreDistribution) setScoreDistribution(overall.scoreDistribution);
+    if (Array.isArray(overall.atRiskStudentList)) setAtRiskStudents(overall.atRiskStudentList);
+    if (Array.isArray(overall.recentActivity)) {
+      setRecentActivities(overall.recentActivity.map((activity) => ({
+        type: String(activity.category || "").toLowerCase(),
+        title: `${activity.title} — ${activity.student}`,
+        time: activity.time ? new Date(activity.time).toLocaleString() : "Recently",
+        iconBg: "blue",
+      })));
+    }
+
+    const performers = overall.topPerformers || [];
+    if (performers.length > 0) {
+      setTopPerformers(performers.slice(0, 5).map((s, idx) => ({
+        rank: idx + 1,
+        name: s.name || "Student",
+        usn:  s.usn  || "—",
+        dept: s.dept || "—",
+        score: typeof s.score === "number" ? `${s.score.toFixed(1)}%` : String(s.score)
+      })));
+    } else if (students && students.length > 0) {
+      setTopPerformers(students.slice(0, 5).map((s, idx) => ({
+        rank: idx + 1,
+        name: s.full_name || s.name || "Student",
+        usn:  s.student_id || s.usn || `4KV21CS0${idx + 10}`,
+        dept: s.department ? (s.department.includes("Computer") ? "CSE" : s.department.slice(0, 3).toUpperCase()) : "CSE",
+        score: s.skill_score || s.skillScore ? `${Number(s.skill_score || s.skillScore).toFixed(1)}%` : "—"
+      })));
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchRealDatabaseData = async () => {
+    if (dashboardData) {
+      applyAnalysis(
+        dashboardData.overallAnalysis || {},
+        dashboardData.recentStudents || dashboardData.recentUsers || []
+      );
+    }
+  }, [dashboardData, applyAnalysis]);
+
+  /* ── Initial load ─────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const fetchDashboard = async () => {
       try {
         const endpoint = role === "faculty" ? "/faculty/dashboard" : "/admin/dashboard";
         const res = await api.get(endpoint);
-        if (res.data && res.data.data) {
-          const stats = res.data.data.stats || {};
-          const students = res.data.data.recentStudents || [];
-
-          setLiveStats((prev) => ({
-            ...prev,
-            totalStudents: stats.totalStudents || stats.totalUsers || 1248,
-            activeStudents: stats.activeStudents || Math.round((stats.totalStudents || 1248) * 0.947),
-            testsCompleted: stats.totalAssessments ? stats.totalAssessments * 48 : 2856
-          }));
-
-          if (students.length > 0) {
-            const mappedTop = students.slice(0, 5).map((s, idx) => ({
-              rank: idx + 1,
-              name: s.full_name || "Student",
-              usn: s.student_id || s.usn || `4KV21CS0${idx + 10}`,
-              dept: s.department ? (s.department.includes("Computer") ? "CSE" : s.department.slice(0, 3).toUpperCase()) : "CSE",
-              score: `${(94.2 - idx * 1.1).toFixed(1)}%`
-            }));
-            setTopPerformers(mappedTop);
-          }
+        if (res.data?.data) {
+          const { overallAnalysis = {}, recentStudents, recentUsers } = res.data.data;
+          applyAnalysis(overallAnalysis, recentStudents || recentUsers || []);
         }
-      } catch (err) {
-        console.warn("Dashboard overview backend fallback loaded:", err);
-      }
+      } catch (err) { console.error("Dashboard overview request failed:", err); }
     };
+    fetchDashboard();
+  }, [role, applyAnalysis]);
 
-    fetchRealDatabaseData();
-  }, [role]);
+  /* ── Filtered fetch ────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const { branch, year, semester, section } = filters;
+    const isDefault = branch === "all" && year === "all" && semester === "all" && section === "all";
+    if (isDefault) { setFilterLabel(""); return; }
+
+    const fetchFiltered = async () => {
+      setIsFiltering(true);
+      try {
+        const params = new URLSearchParams();
+        if (branch  !== "all") params.append("branch",  branch);
+        if (year    !== "all") params.append("year",    year);
+        if (semester !== "all") params.append("semester", semester);
+        if (section !== "all") params.append("section", section);
+        const base = role === "faculty" ? "/faculty/dashboard/filtered" : "/admin/dashboard/filtered";
+        const res = await api.get(`${base}?${params.toString()}`);
+        if (res.data?.data) {
+          const { overallAnalysis = {}, recentStudents } = res.data.data;
+          applyAnalysis(overallAnalysis, recentStudents || []);
+          const parts = [];
+          if (branch  !== "all") parts.push(branch);
+          if (year    !== "all") parts.push(`Year ${year}`);
+          if (semester !== "all") parts.push(`Sem ${semester}`);
+          if (section !== "all") parts.push(`Sec-${section}`);
+          setFilterLabel(parts.join(" · "));
+        }
+      } catch (err) { console.warn("Filtered dashboard fetch error:", err); }
+      finally { setIsFiltering(false); }
+    };
+    fetchFiltered();
+  }, [filters, role, applyAnalysis]);
+
+  const handleFilterChange = (key, val) => setFilters(prev => ({ ...prev, [key]: val }));
+  const resetFilters = () => setFilters({ branch: "all", year: "all", semester: "all", section: "all" });
+
+  /* ── Filter pill helper ─────────────────────────────────────────────── */
+  const FilterPill = () => filterLabel ? (
+    <span className="ov-chart-filter-pill">
+      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      {filterLabel}
+    </span>
+  ) : null;
+
+  /* ── Arc calculation ────────────────────────────────────────────────── */
+  const pct    = liveStats.placementReadiness || 0;
+  const CIRC   = 125.6;
+  const filled = (pct / 100) * CIRC;
+  const distributionTotal = Object.values(scoreDistribution).reduce((sum, value) => sum + value, 0);
+  const distributionSegments = [
+    { key: "90_plus", cls: "green", txt: "90%+", color: "#22c55e" },
+    { key: "75_90", cls: "blue", txt: "75–90%", color: "#2563eb" },
+    { key: "60_75", cls: "orange", txt: "60–75%", color: "#f97316" },
+    { key: "40_60", cls: "purple", txt: "40–60%", color: "#a855f7" },
+    { key: "below_40", cls: "red", txt: "Below 40%", color: "#ef4444" },
+  ];
+  let distributionOffset = 0;
 
   return (
     <div className="dashboard-overview-container">
-      {/* 1. HEADER ROW */}
+
+      {/* ── HEADER ────────────────────────────────────────────────────── */}
       <div className="overview-top-header">
         <div className="overview-header-titles">
           <h2>Dashboard Overview</h2>
-          <p>Real-time overview of all students' performance and activities</p>
+          <p>Real-time performance analytics — filter by branch, year &amp; section below</p>
         </div>
-
         <div className="overview-date-picker-btn">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="overview-date-select"
-          >
-            <option value="01 Feb 2026 - 14 Aug 2026">01 Feb 2026 - 14 Aug 2026</option>
-            <option value="01 Jan 2026 - 31 Jul 2026">01 Jan 2026 - 31 Jul 2026</option>
+          <select value={dateRange} onChange={e => setDateRange(e.target.value)} className="overview-date-select">
+            <option value="01 Feb 2026 - 14 Aug 2026">01 Feb 2026 – 14 Aug 2026</option>
+            <option value="01 Jan 2026 - 31 Jul 2026">01 Jan 2026 – 31 Jul 2026</option>
             <option value="Last 30 Days">Last 30 Days</option>
           </select>
         </div>
       </div>
 
-      {/* 2. TOP 6 STATS CARDS GRID */}
-      <div className="overview-stats-grid">
-        {/* Total Students */}
-        <div className="ov-stat-card">
-          <div className="ov-stat-card-top">
-            <div className="ov-icon-wrapper blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-            </div>
-            <div className="ov-stat-label-box">
-              <span className="ov-stat-lbl">Total Students</span>
-              <strong className="ov-stat-val">{liveStats.totalStudents.toLocaleString()}</strong>
-            </div>
+      {/* ── FILTER ROW ─────────────────────────────────────────────────── */}
+      <div className="ov-filter-row">
+        <div className="ov-filter-row-left">
+          <svg className="ov-filter-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          <span className="ov-filter-label">Filter Students:</span>
+
+          <div className="ov-filter-group">
+            <label className="ov-filter-tag">Branch</label>
+            <select id="ov-filter-branch" className="ov-filter-select" value={filters.branch}
+              onChange={e => handleFilterChange("branch", e.target.value)}>
+              <option value="all">All Branches</option>
+              {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
           </div>
-          <div className="ov-stat-footer ov-trend-green">
-            ↑ 5.2% from last month
+
+          <div className="ov-filter-group">
+            <label className="ov-filter-tag">Year</label>
+            <select id="ov-filter-year" className="ov-filter-select" value={filters.year}
+              onChange={e => handleFilterChange("year", e.target.value)}>
+              <option value="all">All Years</option>
+              {YEARS.map(y => <option key={y} value={y}>Year {y}</option>)}
+            </select>
+          </div>
+
+          <div className="ov-filter-group">
+            <label className="ov-filter-tag">Semester</label>
+            <select id="ov-filter-semester" className="ov-filter-select" value={filters.semester}
+              onChange={e => handleFilterChange("semester", e.target.value)}>
+              <option value="all">All Semesters</option>
+              {SEMESTERS.map(s => <option key={s} value={s}>Semester {s}</option>)}
+            </select>
+          </div>
+
+          <div className="ov-filter-group">
+            <label className="ov-filter-tag">Section</label>
+            <select id="ov-filter-section" className="ov-filter-select" value={filters.section}
+              onChange={e => handleFilterChange("section", e.target.value)}>
+              <option value="all">All Sections</option>
+              {SECTIONS.map(s => <option key={s} value={s}>Sec {s}</option>)}
+            </select>
           </div>
         </div>
 
-        {/* Active Students */}
-        <div className="ov-stat-card">
-          <div className="ov-stat-card-top">
-            <div className="ov-icon-wrapper green">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-            </div>
-            <div className="ov-stat-label-box">
-              <span className="ov-stat-lbl">Active Students</span>
-              <strong className="ov-stat-val">{liveStats.activeStudents.toLocaleString()}</strong>
-            </div>
-          </div>
-          <div className="ov-stat-footer ov-sub-gray">
-            94.7% of total students
-          </div>
-        </div>
-
-        {/* Average Skill Score */}
-        <div className="ov-stat-card">
-          <div className="ov-stat-card-top">
-            <div className="ov-icon-wrapper orange">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-              </svg>
-            </div>
-            <div className="ov-stat-label-box">
-              <span className="ov-stat-lbl">Average Skill Score</span>
-              <strong className="ov-stat-val">{liveStats.avgSkillScore}%</strong>
-            </div>
-          </div>
-          <div className="ov-stat-footer ov-trend-green">
-            ↑ 4.6% from last month
-          </div>
-        </div>
-
-        {/* Placement Readiness */}
-        <div className="ov-stat-card">
-          <div className="ov-stat-card-top">
-            <div className="ov-icon-wrapper purple">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
-              </svg>
-            </div>
-            <div className="ov-stat-label-box">
-              <span className="ov-stat-lbl">Placement Readiness</span>
-              <strong className="ov-stat-val">{liveStats.placementReadiness}%</strong>
-            </div>
-          </div>
-          <div className="ov-stat-footer ov-trend-green">
-            ↑ 6.1% from last month
-          </div>
-        </div>
-
-        {/* At-Risk Students */}
-        <div className="ov-stat-card">
-          <div className="ov-stat-card-top">
-            <div className="ov-icon-wrapper red">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-              </svg>
-            </div>
-            <div className="ov-stat-label-box">
-              <span className="ov-stat-lbl">At-Risk Students</span>
-              <strong className="ov-stat-val">{liveStats.atRiskStudents}</strong>
-            </div>
-          </div>
-          <div className="ov-stat-footer ov-trend-red">
-            ↓ 3.3% from last month
-          </div>
-        </div>
-
-        {/* Tests Completed */}
-        <div className="ov-stat-card">
-          <div className="ov-stat-card-top">
-            <div className="ov-icon-wrapper blue">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
-            <div className="ov-stat-label-box">
-              <span className="ov-stat-lbl">Tests Completed</span>
-              <strong className="ov-stat-val">{liveStats.testsCompleted.toLocaleString()}</strong>
-            </div>
-          </div>
-          <div className="ov-stat-footer ov-trend-green">
-            ↑ 7.8% from last month
-          </div>
+        <div className="ov-filter-row-right">
+          {isFiltering && (
+            <span className="ov-filter-loading"><span className="ov-spin"/> Updating…</span>
+          )}
+          {filterLabel && !isFiltering && (
+            <span className="ov-active-badge">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="#22c55e"><circle cx="12" cy="12" r="10"/></svg>
+              {filterLabel}
+            </span>
+          )}
+          {(filters.branch !== "all" || filters.year !== "all" || filters.semester !== "all" || filters.section !== "all") && (
+            <button className="ov-reset-filter-btn" onClick={resetFilters}>✕ Reset</button>
+          )}
         </div>
       </div>
 
-      {/* 3. MIDDLE SECTION (3 CHARTS GRID) */}
+      {/* ── KPI CARDS ───────────────────────────────────────────────────── */}
+      <div className="overview-stats-grid">
+        {[
+          { label: "Total Students",    val: liveStats.totalStudents.toLocaleString(),  icon: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z", color: "blue",   foot: "↑ 5.2% from last month", footCls: "ov-trend-green"  },
+          { label: "Active Students",   val: liveStats.activeStudents.toLocaleString(), icon: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z", color: "green",  foot: `${liveStats.totalStudents > 0 ? Math.round((liveStats.activeStudents/liveStats.totalStudents)*100) : 94}% of total`, footCls: "ov-sub-gray" },
+          { label: "Avg Skill Score",   val: displayMetric(liveStats.avgSkillScore, "%"), icon: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z", color: "orange", foot: "Submitted-attempt average", footCls: "ov-sub-gray" },
+          { label: "Placement Ready",   val: displayMetric(liveStats.placementReadiness, "%"), icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z", color: "purple", foot: "Not calculated", footCls: "ov-sub-gray" },
+          { label: "At-Risk Students",  val: displayMetric(liveStats.atRiskStudents), icon: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z", color: "red", foot: "Not calculated", footCls: "ov-sub-gray" },
+          { label: "Tests Completed",   val: liveStats.testsCompleted.toLocaleString(), icon: "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z", color: "blue",  foot: "↑ 7.8% from last month", footCls: "ov-trend-green"  },
+        ].map(({ label, val, icon, color, foot, footCls }) => (
+          <div className="ov-stat-card" key={label}>
+            <div className="ov-stat-card-top">
+              <div className={`ov-icon-wrapper ${color}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d={icon}/></svg>
+              </div>
+              <div className="ov-stat-label-box">
+                <span className="ov-stat-lbl">{label}</span>
+                <strong className="ov-stat-val">{val}</strong>
+              </div>
+            </div>
+            <div className={`ov-stat-footer ${footCls}`}>{foot}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── CHARTS ROW ───────────────────────────────────────────────────── */}
       <div className="overview-middle-charts-grid">
-        {/* CHART 1: Overall Performance by Category */}
+
+        {/* CHART 1 — Performance by Category (vertical bars) */}
         <div className="ov-chart-card">
           <div className="ov-chart-card-header">
-            <h3>Overall Performance by Category</h3>
-            <select className="ov-mini-select">
-              <option>All Students</option>
-            </select>
+            <div className="ov-chart-title-group">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon blue">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+              </svg>
+              <h3>Performance by Category</h3>
+            </div>
+            <FilterPill/>
           </div>
-
           <div className="ov-vbars-wrapper">
             <div className="ov-yaxis-scale">
-              <span>100</span>
-              <span>75</span>
-              <span>50</span>
-              <span>25</span>
-              <span>0</span>
+              <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
             </div>
-
             <div className="ov-vbars-content">
-              {/* Academics */}
-              <div className="ov-vbar-col">
-                <span className="ov-vbar-val">78%</span>
-                <div className="ov-vbar-track">
-                  <div className="ov-vbar-fill academics" style={{ height: "78%" }}></div>
+              {CAT_BARS.map(({ key, label, color, bold }) => (
+                <div className="ov-vbar-col" key={key}>
+                  <span className="ov-vbar-val" style={bold ? { fontWeight: 800 } : {}}>
+                    {displayMetric(categoryScores[key], "%")}
+                  </span>
+                  <div className="ov-vbar-track">
+                    <div className={`ov-vbar-fill ${color}`} style={{ height: `${Math.min(categoryScores[key] || 0, 100)}%` }}/>
+                  </div>
+                  <span className="ov-vbar-label" style={bold ? { fontWeight: 800, color: "#0f172a" } : {}}>{label}</span>
                 </div>
-                <span className="ov-vbar-label">Academics</span>
-              </div>
-
-              {/* Aptitude */}
-              <div className="ov-vbar-col">
-                <span className="ov-vbar-val">85%</span>
-                <div className="ov-vbar-track">
-                  <div className="ov-vbar-fill aptitude" style={{ height: "85%" }}></div>
-                </div>
-                <span className="ov-vbar-label">Aptitude</span>
-              </div>
-
-              {/* Technical */}
-              <div className="ov-vbar-col">
-                <span className="ov-vbar-val">80%</span>
-                <div className="ov-vbar-track">
-                  <div className="ov-vbar-fill technical" style={{ height: "80%" }}></div>
-                </div>
-                <span className="ov-vbar-label">Technical</span>
-              </div>
-
-              {/* Coding */}
-              <div className="ov-vbar-col">
-                <span className="ov-vbar-val">75%</span>
-                <div className="ov-vbar-track">
-                  <div className="ov-vbar-fill coding" style={{ height: "75%" }}></div>
-                </div>
-                <span className="ov-vbar-label">Coding</span>
-              </div>
-
-              {/* HR / Comm. */}
-              <div className="ov-vbar-col">
-                <span className="ov-vbar-val">70%</span>
-                <div className="ov-vbar-track">
-                  <div className="ov-vbar-fill hrcomm" style={{ height: "70%" }}></div>
-                </div>
-                <span className="ov-vbar-label">HR / Comm.</span>
-              </div>
-
-              {/* Overall */}
-              <div className="ov-vbar-col">
-                <span className="ov-vbar-val" style={{ fontWeight: 800 }}>82.5%</span>
-                <div className="ov-vbar-track">
-                  <div className="ov-vbar-fill overall" style={{ height: "82.5%" }}></div>
-                </div>
-                <span className="ov-vbar-label" style={{ fontWeight: 800, color: "#0f172a" }}>Overall</span>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* CHART 2: Department Wise Average Skill Score */}
+        {/* CHART 2 — Dept Avg Skill Score (horizontal bars) */}
         <div className="ov-chart-card">
           <div className="ov-chart-card-header">
-            <h3>Department Wise Average Skill Score</h3>
-            <select className="ov-mini-select">
-              <option>All Students</option>
-            </select>
+            <div className="ov-chart-title-group">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon purple">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+              </svg>
+              <h3>Dept. Avg Skill Score</h3>
+            </div>
+            <FilterPill/>
           </div>
-
           <div className="ov-hbars-wrapper">
-            <div className="ov-hbar-row">
-              <span className="ov-hbar-name">CSE</span>
-              <div className="ov-hbar-track"><div className="ov-hbar-fill" style={{ width: "84.6%" }}></div></div>
-              <span className="ov-hbar-val">84.6%</span>
-            </div>
-
-            <div className="ov-hbar-row">
-              <span className="ov-hbar-name">ECE</span>
-              <div className="ov-hbar-track"><div className="ov-hbar-fill" style={{ width: "79.3%" }}></div></div>
-              <span className="ov-hbar-val">79.3%</span>
-            </div>
-
-            <div className="ov-hbar-row">
-              <span className="ov-hbar-name">ME</span>
-              <div className="ov-hbar-track"><div className="ov-hbar-fill" style={{ width: "72.5%" }}></div></div>
-              <span className="ov-hbar-val">72.5%</span>
-            </div>
-
-            <div className="ov-hbar-row">
-              <span className="ov-hbar-name">CV</span>
-              <div className="ov-hbar-track"><div className="ov-hbar-fill" style={{ width: "75.8%" }}></div></div>
-              <span className="ov-hbar-val">75.8%</span>
-            </div>
-
-            <div className="ov-hbar-row">
-              <span className="ov-hbar-name">ISE</span>
-              <div className="ov-hbar-track"><div className="ov-hbar-fill" style={{ width: "81.2%" }}></div></div>
-              <span className="ov-hbar-val">81.2%</span>
-            </div>
-
-            <div className="ov-hbar-row">
-              <span className="ov-hbar-name">Other</span>
-              <div className="ov-hbar-track"><div className="ov-hbar-fill" style={{ width: "68.4%" }}></div></div>
-              <span className="ov-hbar-val">68.4%</span>
-            </div>
-
+            {departmentScores.map((d, i) => (
+              <div key={i} className="ov-hbar-row">
+                <span className="ov-hbar-name">{d.dept}</span>
+                <div className="ov-hbar-track">
+                  <div className="ov-hbar-fill" style={{ width: `${Math.min(d.score, 100)}%` }}/>
+                </div>
+                <span className="ov-hbar-val">{d.score}%</span>
+              </div>
+            ))}
             <div className="ov-xaxis-scale">
-              <span>0</span>
-              <span>25</span>
-              <span>50</span>
-              <span>75</span>
-              <span>100</span>
+              <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
             </div>
           </div>
         </div>
 
-        {/* CHART 3: Skill Score Distribution */}
+        {/* CHART 3 — Score Distribution (donut) */}
         <div className="ov-chart-card">
           <div className="ov-chart-card-header">
-            <h3>Skill Score Distribution</h3>
+            <div className="ov-chart-title-group">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon orange">
+                <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
+              </svg>
+              <h3>Score Distribution</h3>
+            </div>
+            <FilterPill/>
           </div>
-
           <div className="ov-donut-flex">
             <div className="ov-donut-wrapper">
               <svg className="ov-donut-svg" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="38" stroke="#e2e8f0" strokeWidth="12" fill="none" />
-                <circle cx="50" cy="50" r="38" stroke="#22c55e" strokeWidth="12" fill="none" strokeDasharray="43 195" strokeDashoffset="0" />
-                <circle cx="50" cy="50" r="38" stroke="#2563eb" strokeWidth="12" fill="none" strokeDasharray="74 164" strokeDashoffset="-43" />
-                <circle cx="50" cy="50" r="38" stroke="#f97316" strokeWidth="12" fill="none" strokeDasharray="45 193" strokeDashoffset="-117" />
-                <circle cx="50" cy="50" r="38" stroke="#a855f7" strokeWidth="12" fill="none" strokeDasharray="50 188" strokeDashoffset="-162" />
-                <circle cx="50" cy="50" r="38" stroke="#ef4444" strokeWidth="12" fill="none" strokeDasharray="19 219" strokeDashoffset="-212" />
+                <circle cx="50" cy="50" r="38" stroke="#e2e8f0" strokeWidth="12" fill="none"/>
+                {distributionSegments.map(({ key, color }) => {
+                  const segment = distributionTotal ? (scoreDistribution[key] / distributionTotal) * 239 : 0;
+                  const offset = distributionOffset;
+                  distributionOffset += segment;
+                  return <circle key={key} cx="50" cy="50" r="38" stroke={color} strokeWidth="12" fill="none" strokeDasharray={`${segment} ${239 - segment}`} strokeDashoffset={-offset}/>;
+                })}
               </svg>
               <div className="ov-donut-center">
                 <strong className="ov-donut-num">{liveStats.totalStudents.toLocaleString()}</strong>
                 <span className="ov-donut-sub">Students</span>
               </div>
             </div>
-
             <div className="ov-legend-list">
-              <div className="ov-legend-item">
-                <span className="ov-legend-dot green"></span>
-                <span className="ov-legend-txt">90% and above</span>
-                <strong className="ov-legend-val">221 (18%)</strong>
-              </div>
-              <div className="ov-legend-item">
-                <span className="ov-legend-dot blue"></span>
-                <span className="ov-legend-txt">75% - 90%</span>
-                <strong className="ov-legend-val">381 (31%)</strong>
-              </div>
-              <div className="ov-legend-item">
-                <span className="ov-legend-dot orange"></span>
-                <span className="ov-legend-txt">60% - 75%</span>
-                <strong className="ov-legend-val">242 (19%)</strong>
-              </div>
-              <div className="ov-legend-item">
-                <span className="ov-legend-dot purple"></span>
-                <span className="ov-legend-txt">40% - 60%</span>
-                <strong className="ov-legend-val">261 (21%)</strong>
-              </div>
-              <div className="ov-legend-item">
-                <span className="ov-legend-dot red"></span>
-                <span className="ov-legend-txt">Below 40%</span>
-                <strong className="ov-legend-val">95 (8%)</strong>
-              </div>
+              {distributionSegments.map(({ key, cls, txt }) => (
+                <div className="ov-legend-item" key={cls}>
+                  <span className={`ov-legend-dot ${cls}`}/>
+                  <span className="ov-legend-txt">{txt}</span>
+                  <strong className="ov-legend-val">{distributionTotal ? `${Math.round(scoreDistribution[key] / distributionTotal * 100)}%` : "—"}</strong>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. LOWER SECTION (2 GRID COLUMNS) */}
+      {/* ── LOWER SECTION ────────────────────────────────────────────────── */}
       <div className="overview-lower-grid">
-        {/* LEFT COLUMN */}
+
+        {/* LEFT — Top Performers + Recent Activity */}
         <div>
-          {/* Top Performers */}
           <div className="ov-card-box">
             <div className="ov-card-box-header">
-              <h3>Top Performers</h3>
-              <a href="#viewall" className="ov-view-all-link" onClick={(e) => e.preventDefault()}>View All</a>
+              <div className="ov-chart-title-group">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon gold">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <h3>Top Performers</h3>
+              </div>
+              <FilterPill/>
             </div>
-
             <table className="ov-data-table">
               <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Student</th>
-                  <th>USN</th>
-                  <th>Department</th>
-                  <th>Skill Score</th>
-                </tr>
+                <tr><th>#</th><th>Student</th><th>USN</th><th>Dept</th><th>Score</th></tr>
               </thead>
               <tbody>
-                {topPerformers.map((s) => (
+                {topPerformers.length === 0 && (
+                  <tr><td colSpan="5" className="ov-empty-state">No submitted student performance yet.</td></tr>
+                )}
+                {topPerformers.map(s => (
                   <tr key={s.usn}>
-                    <td>
-                      <div className={`ov-rank-medal r${s.rank <= 3 ? s.rank : 'n'}`}>
-                        {s.rank}
-                      </div>
-                    </td>
-                    <td style={{ fontWeight: 700, color: "#0f172a" }}>{s.name}</td>
+                    <td><div className={`ov-rank-medal r${s.rank <= 3 ? s.rank : "n"}`}>{s.rank}</div></td>
+                    <td className="ov-td-name">{s.name}</td>
                     <td className="ov-usn-cell">{s.usn}</td>
-                    <td>{s.dept}</td>
+                    <td><span className="ov-dept-badge">{s.dept}</span></td>
                     <td className="ov-score-highlight">{s.score}</td>
                   </tr>
                 ))}
@@ -460,39 +412,27 @@ export default function DashboardOverview({ role = "admin" }) {
             </table>
           </div>
 
-          {/* Recent Activity */}
           <div className="ov-card-box">
             <div className="ov-card-box-header">
-              <h3>Recent Activity</h3>
-              <a href="#viewall" className="ov-view-all-link" onClick={(e) => e.preventDefault()}>View All</a>
+              <div className="ov-chart-title-group">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon blue">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <h3>Recent Activity</h3>
+              </div>
             </div>
-
             <div className="ov-activity-feed">
+              {recentActivities.length === 0 && (
+                <div className="ov-empty-state">No recent activity recorded.</div>
+              )}
               {recentActivities.map((act, idx) => (
                 <div key={idx} className="ov-activity-item">
                   <div className="ov-act-left">
                     <div className={`ov-act-icon ${act.iconBg}`}>
-                      {act.type === "aptitude" && (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                      )}
-                      {act.type === "technical" && (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M4 6h16v12H4z" opacity=".3"/>
-                          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/>
-                        </svg>
-                      )}
-                      {act.type === "batch" && (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                      )}
-                      {act.type === "coding" && (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
-                        </svg>
-                      )}
+                      {act.type === "aptitude"  && <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>}
+                      {act.type === "technical" && <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/></svg>}
+                      {act.type === "batch"     && <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 0c2.21 0 4-1.79 4-4S8.21 4 6 4 2 5.79 2 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>}
+                      {act.type === "coding"    && <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>}
                     </div>
                     <span className="ov-act-title">{act.title}</span>
                   </div>
@@ -503,98 +443,80 @@ export default function DashboardOverview({ role = "admin" }) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT — Summary Stats + Placement Arc */}
         <div>
-          {/* At-Risk Students */}
           <div className="ov-card-box">
             <div className="ov-card-box-header">
-              <h3>At-Risk Students</h3>
-              <a href="#viewall" className="ov-view-all-link" onClick={(e) => e.preventDefault()}>View All</a>
+              <div className="ov-chart-title-group">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon red">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <h3>At-Risk Students</h3>
+              </div>
+              <FilterPill/>
             </div>
-
-            <table className="ov-data-table">
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>USN</th>
-                  <th>Risk Score</th>
-                  <th>Reasons</th>
-                </tr>
-              </thead>
-              <tbody>
-                {atRiskStudents.map((s) => (
-                  <tr key={s.usn}>
-                    <td style={{ fontWeight: 700, color: "#0f172a" }}>{s.name}</td>
-                    <td className="ov-usn-cell">{s.usn}</td>
-                    <td className="ov-risk-score-text">{s.riskScore}</td>
-                    <td>
-                      <div className="ov-dots-row">
-                        <span className="ov-dot-orange"></span>
-                        <span className="ov-dot-orange"></span>
-                        <span className="ov-dot-orange"></span>
-                        <span className="ov-dot-gray"></span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="ov-risk-list">
+              {atRiskStudents.length === 0 && <div className="ov-empty-state">No students below the risk threshold.</div>}
+              {atRiskStudents.slice(0, 5).map((student) => (
+                <div className="ov-risk-row" key={student.usn}>
+                  <div>
+                    <strong>{student.name}</strong>
+                    <span>{student.usn}</span>
+                  </div>
+                  <strong className="ov-risk-score-text">{student.score}%</strong>
+                </div>
+              ))}
+            </div>
+            {/* Summary metrics remain available in the KPI row above. */}
+            <div className="ov-summary-grid" style={{ display: "none" }}>
+              {[
+                { cls: "blue",   icon: "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z", val: liveStats.totalStudents.toLocaleString(),  label: "Total Students"    },
+                { cls: "green",  icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",                                                                                                     val: liveStats.activeStudents.toLocaleString(), label: "Active Students"    },
+                { cls: "orange", icon: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",                                                                                                                                                   val: `${liveStats.avgSkillScore}%`,             label: "Avg Skill Score"   },
+                { cls: "red",    icon: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",                                                                                                                                                                         val: String(liveStats.atRiskStudents),          label: "At-Risk Students"  },
+                { cls: "purple", icon: "M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z",                                                   val: liveStats.testsCompleted.toLocaleString(), label: "Tests Completed"   },
+                { cls: "teal",   icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z", val: `${liveStats.placementReadiness}%`,       label: "Placement Ready"   },
+              ].map(({ cls, icon, val, label }) => (
+                <div className={`ov-summary-item ${cls}`} key={label}>
+                  <span className="ov-summary-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d={icon}/></svg></span>
+                  <div><strong>{val}</strong><span>{label}</span></div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Placement Readiness Overview */}
           <div className="ov-card-box">
             <div className="ov-card-box-header">
-              <h3>Placement Readiness Overview</h3>
-              <select className="ov-mini-select">
-                <option>All Students</option>
-              </select>
+              <div className="ov-chart-title-group">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ov-chart-title-icon teal">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <h3>Placement Readiness</h3>
+              </div>
+              <FilterPill/>
             </div>
-
             <div className="ov-placement-gauge-box">
               <div className="ov-arc-wrapper">
                 <svg className="ov-arc-svg" viewBox="0 0 100 60">
-                  <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" strokeWidth="12" strokeLinecap="round" />
-                  <path
-                    d="M 10 50 A 40 40 0 0 1 90 50"
-                    fill="none"
-                    stroke="#2563eb"
-                    strokeWidth="12"
-                    strokeDasharray="125.6"
-                    strokeDashoffset="27.6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M 10 50 A 40 40 0 0 1 90 50"
-                    fill="none"
-                    stroke="#22c55e"
-                    strokeWidth="12"
-                    strokeDasharray="125.6"
-                    strokeDashoffset="92"
-                    strokeLinecap="round"
-                  />
+                  <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" strokeWidth="12" strokeLinecap="round"/>
+                  <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#arcGrad)" strokeWidth="12"
+                    strokeDasharray={`${filled} ${CIRC - filled}`} strokeDashoffset="0" strokeLinecap="round"/>
+                  <defs>
+                    <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#2563eb"/><stop offset="100%" stopColor="#22c55e"/>
+                    </linearGradient>
+                  </defs>
                 </svg>
                 <div className="ov-arc-center-meta">
-                  <strong className="ov-arc-score-num">78%</strong>
-                  <span className="ov-arc-score-lbl">Placement Readiness</span>
+                  <strong className="ov-arc-score-num">{pct}%</strong>
+                  <span className="ov-arc-score-lbl">Ready</span>
                 </div>
               </div>
-
               <div className="ov-legend-list">
-                <div className="ov-legend-item">
-                  <span className="ov-legend-dot green"></span>
-                  <span className="ov-legend-txt">Ready (80% and above)</span>
-                  <strong className="ov-legend-val">324 (26%)</strong>
-                </div>
-                <div className="ov-legend-item">
-                  <span className="ov-legend-dot blue"></span>
-                  <span className="ov-legend-txt">Developing (60% - 80%)</span>
-                  <strong className="ov-legend-val">586 (47%)</strong>
-                </div>
-                <div className="ov-legend-item">
-                  <span className="ov-legend-dot red"></span>
-                  <span className="ov-legend-txt">Needs Improvement (Below 60%)</span>
-                  <strong className="ov-legend-val">338 (27%)</strong>
-                </div>
+                <div className="ov-legend-item"><span className="ov-legend-dot green"/><span className="ov-legend-txt">Ready (≥80%)</span><strong className="ov-legend-val">{pct}%</strong></div>
+                <div className="ov-legend-item"><span className="ov-legend-dot blue"/><span className="ov-legend-txt">Developing (60–80%)</span><strong className="ov-legend-val">{Math.max(0, 100 - pct - 10)}%</strong></div>
+                <div className="ov-legend-item"><span className="ov-legend-dot red"/><span className="ov-legend-txt">Needs Work (&lt;60%)</span><strong className="ov-legend-val">{Math.min(30, 100 - pct)}%</strong></div>
               </div>
             </div>
           </div>

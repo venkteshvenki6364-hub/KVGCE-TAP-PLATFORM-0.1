@@ -841,7 +841,6 @@ const DashboardLayout = ({ children, title }) => {
       return [
         { path: "/faculty/dashboard", label: "Overview", icon: "📊" },
         { path: "/faculty/projects", label: "Project Evaluation", icon: "💡" },
-        { path: "/faculty/students", label: "Student List", icon: "👥" },
         { path: "/student/overview", label: "Student Single Overview", icon: "👤" },
         { path: "/student/rankings", label: "Rankings", icon: "🏆" },
         { path: "/faculty/assessments", label: "Assessments", icon: "📝" },
@@ -852,15 +851,13 @@ const DashboardLayout = ({ children, title }) => {
       ];
     } else if (role === "admin") {
       return [
+        { path: "/admin/dashboard?tab=overview", label: "Dashboard Overview", icon: "📊" },
         { path: "/admin/dashboard?tab=pending", label: "Pending Approvals", icon: "⏳" },
-        { path: "/admin/dashboard?tab=analysis", label: "Overall Analysis", icon: "📊" },
+        { path: "/admin/dashboard?tab=analysis", label: "Overall Analysis", icon: "📈" },
         { path: "/admin/dashboard?tab=faculty", label: "Faculties", icon: "👨‍🏫" },
         { path: "/admin/dashboard?tab=users", label: "User Management", icon: "👤" },
-        { path: "/admin/dashboard?tab=departments", label: "Departments", icon: "🏢" },
         { path: "/admin/dashboard?tab=quizBuilder", label: "Quiz & Aptitude Builder", icon: "📝" },
         { path: "/admin/dashboard?tab=codingBuilder", label: "Coding Lab Builder", icon: "💻" },
-        { path: "/admin/dashboard?tab=analytics", label: "System Health", icon: "📈" },
-        { path: "/admin/students", label: "Students List", icon: "🎓" },
         { path: "/student/rankings", label: "Rankings", icon: "🏆" },
       ];
     }
@@ -1020,7 +1017,7 @@ const DashboardLayout = ({ children, title }) => {
             className="nav-action-icon-btn nav-profile-avatar-btn"
             title={user?.full_name || "Profile"}
             aria-label="Profile"
-            onClick={() => navigate("/student/profile")}
+            onClick={() => navigate(role === "student" ? "/student/profile" : role === "faculty" ? "/faculty/profile" : "/admin/profile")}
           >
             {avatarUrl ? (
               <img
@@ -1404,4 +1401,3 @@ const DashboardLayout = ({ children, title }) => {
 };
 
 export default DashboardLayout;
-
