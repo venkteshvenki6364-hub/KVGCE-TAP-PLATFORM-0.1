@@ -380,11 +380,7 @@ function App() {
           />
           <Route
             path="/admin/users"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminHomePage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/admin/dashboard" replace />}
           />
           <Route
             path="/admin/profile"
@@ -396,11 +392,7 @@ function App() {
           />
           <Route
             path="/admin/students"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminHomePage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/admin/dashboard" replace />}
           />
           <Route
             path="/admin/faculty"
@@ -412,19 +404,11 @@ function App() {
           />
           <Route
             path="/admin/departments"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminHomePage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/admin/dashboard" replace />}
           />
           <Route
             path="/admin/analytics"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminHomePage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/admin/dashboard" replace />}
           />
 
           {/* Fallback Redirect */}

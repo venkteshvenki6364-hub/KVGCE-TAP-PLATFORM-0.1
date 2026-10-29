@@ -61,7 +61,7 @@ export const ALL_STUDENTS_MOCK_DATA = [
       {
         id: 3,
         type: "quiz",
-        title: "Attempted Technical Quiz",
+        title: "Technical Quiz - Java",
         detail: "Score: 80%",
         date: "09 Aug 2026",
       },
@@ -218,7 +218,7 @@ export const ALL_STUDENTS_MOCK_DATA = [
 export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userRole = "admin" }) {
   const navigate = useNavigate();
 
-  // Search & Filter state matching top toolbar in image
+  // Search & Filter state
   const [searchUsn, setSearchUsn] = useState(defaultUsn);
   const [selectedDept, setSelectedDept] = useState("all");
   const [selectedSem, setSelectedSem] = useState("all");
@@ -242,24 +242,48 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
     return () => { isMounted = false; };
   }, [searchUsn]);
 
+  // Dynamic filter for student selector dropdown
+  const filteredStudents = ALL_STUDENTS_MOCK_DATA.filter((s) => {
+    if (selectedDept !== "all" && s.deptShort !== selectedDept) return false;
+    if (selectedSem !== "all" && !s.semester.includes(`Semester ${selectedSem}`)) return false;
+    if (selectedSec !== "all" && !s.section.includes(`Section ${selectedSec}`)) return false;
+    return true;
+  });
+
   // Find active student object (database-backed with mock fallback)
   const currentStudent = dbStudent ||
     ALL_STUDENTS_MOCK_DATA.find(
       (s) => s.usn.toLowerCase() === searchUsn.toLowerCase() || s.name.toLowerCase().includes(searchUsn.toLowerCase())
-    ) || ALL_STUDENTS_MOCK_DATA[0];
+    ) || (filteredStudents.length > 0 ? filteredStudents[0] : ALL_STUDENTS_MOCK_DATA[0]);
 
-  const cats = currentStudent.categories;
+  const cats = currentStudent.categories || {
+    academics: 78,
+    aptitude: 85,
+    technical: 80,
+    coding: 75,
+    hrComm: 70,
+    overall: 82.5,
+  };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
+  const handleResetFilters = () => {
+    setSelectedDept("all");
+    setSelectedSem("all");
+    setSelectedSec("all");
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "ST";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
   return (
     <div className="single-student-overview-container">
       {/* 1. TOP SEARCH & FILTER BAR */}
       <div className="top-filter-bar-card">
-        <form onSubmit={handleSearchSubmit} className="top-filter-form">
-          {/* USN Input / Dropdown */}
+        <div className="top-filter-form">
+          {/* USN / Student Selector */}
           <div className="filter-input-wrapper">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
@@ -269,8 +293,9 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               value={currentStudent.usn}
               onChange={(e) => setSearchUsn(e.target.value)}
               className="student-usn-select"
+              aria-label="Select student"
             >
-              {ALL_STUDENTS_MOCK_DATA.map((s) => (
+              {(filteredStudents.length > 0 ? filteredStudents : ALL_STUDENTS_MOCK_DATA).map((s) => (
                 <option key={s.usn} value={s.usn}>
                   {s.usn} - {s.name} ({s.deptShort})
                 </option>
@@ -284,8 +309,9 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
               className="top-select-field"
+              aria-label="Filter by Department"
             >
-              <option value="all">Department</option>
+              <option value="all">All Departments</option>
               <option value="CSE">CSE - Computer Science</option>
               <option value="ECE">ECE - Electronics</option>
               <option value="ISE">ISE - Information Science</option>
@@ -299,11 +325,12 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               value={selectedSem}
               onChange={(e) => setSelectedSem(e.target.value)}
               className="top-select-field"
+              aria-label="Filter by Semester"
             >
-              <option value="all">semester</option>
+              <option value="all">All Semesters</option>
+              <option value="5">Semester 5 (Year 3)</option>
               <option value="6">Semester 6 (Year 3)</option>
               <option value="7">Semester 7 (Year 4)</option>
-              <option value="5">Semester 5 (Year 3)</option>
             </select>
           </div>
 
@@ -313,62 +340,74 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               value={selectedSec}
               onChange={(e) => setSelectedSec(e.target.value)}
               className="top-select-field"
+              aria-label="Filter by Section"
             >
-              <option value="all">section</option>
+              <option value="all">All Sections</option>
               <option value="A">Section A</option>
               <option value="B">Section B</option>
             </select>
           </div>
 
-          {/* Add New Student Action */}
-          <button type="button" className="add-new-student-btn" onClick={() => alert("Add New Student Modal")}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            ADD NEW S
-          </button>
-        </form>
+          {/* Active Cohort Counter Pill */}
+          <div className="filter-cohort-pill">
+            <span className="live-pulse-dot" />
+            <span className="cohort-count-text">
+              {filteredStudents.length} {filteredStudents.length === 1 ? "Student" : "Students"} Available
+            </span>
+            {(selectedDept !== "all" || selectedSem !== "all" || selectedSec !== "all") && (
+              <button
+                type="button"
+                className="filter-reset-mini-btn"
+                onClick={handleResetFilters}
+                title="Reset filters to All"
+              >
+                ✕ Reset
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 2. STUDENT HERO PROFILE CARD */}
       <div className="student-profile-hero-card">
         <div className="hero-left-col">
-          <div className="student-avatar-circle">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="#3b82f6">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-            </svg>
+          <div className="student-avatar-initials">
+            {getInitials(currentStudent.name)}
           </div>
           <div className="student-meta-info">
             <div className="name-status-row">
               <h2 className="student-name-text">{currentStudent.name}</h2>
-              <span className="status-badge-active">{currentStudent.status}</span>
+              <span className="status-badge-active">
+                <span className="status-dot"></span>
+                {currentStudent.status || "Active"}
+              </span>
             </div>
-            <p className="student-usn-sub">USN: {currentStudent.usn}</p>
+            <p className="student-usn-sub">
+              <span className="usn-tag-label">USN:</span> {currentStudent.usn}
+            </p>
             <div className="dept-sem-details">
-              <span>🎓 {currentStudent.dept}</span>
-              <span className="divider-pipe">|</span>
-              <span>📅 {currentStudent.semester} - {currentStudent.section}</span>
+              <span className="dept-pill">🎓 {currentStudent.deptShort || currentStudent.dept}</span>
+              <span className="sem-sec-pill">📅 {currentStudent.semester} • {currentStudent.section}</span>
             </div>
           </div>
         </div>
 
         <div className="hero-right-col">
           <div className="contact-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
             <span>{currentStudent.email}</span>
           </div>
           <div className="contact-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
             <span>{currentStudent.phone}</span>
           </div>
           <div className="contact-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -430,8 +469,11 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
       {/* 3. 4 KEY METRIC CARDS ROW WITH SPARKLINES */}
       <div className="four-metrics-grid">
         {/* Metric 1: CGPA */}
-        <div className="metric-card">
-          <div className="metric-top-label font-cgpa">CGPA</div>
+        <div className="metric-card metric-card-cgpa">
+          <div className="metric-header-row">
+            <span className="metric-top-label font-cgpa">CGPA</span>
+            <div className="metric-icon-circle icon-cgpa">🎓</div>
+          </div>
           <div className="metric-val-row">
             <span className="metric-main-val">{currentStudent.cgpa}</span>
             <span className="metric-denom">/10</span>
@@ -450,13 +492,16 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
         </div>
 
         {/* Metric 2: Overall Skill Score */}
-        <div className="metric-card">
-          <div className="metric-top-label font-skill">Overall Skill Score</div>
+        <div className="metric-card metric-card-skill">
+          <div className="metric-header-row">
+            <span className="metric-top-label font-skill">Overall Skill Score</span>
+            <div className="metric-icon-circle icon-skill">⚡</div>
+          </div>
           <div className="metric-val-row">
             <span className="metric-main-val">{currentStudent.skillScore}%</span>
             <span className="metric-badge-good">{currentStudent.skillRating}</span>
           </div>
-          {/* Orange/Green Sparkline */}
+          {/* Orange Sparkline */}
           <div className="sparkline-container">
             <svg viewBox="0 0 120 30" className="sparkline-svg">
               <path
@@ -470,8 +515,11 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
         </div>
 
         {/* Metric 3: Placement Readiness */}
-        <div className="metric-card">
-          <div className="metric-top-label font-readiness">Placement Readiness</div>
+        <div className="metric-card metric-card-readiness">
+          <div className="metric-header-row">
+            <span className="metric-top-label font-readiness">Placement Readiness</span>
+            <div className="metric-icon-circle icon-readiness">🎯</div>
+          </div>
           <div className="metric-val-row">
             <span className="metric-main-val">{currentStudent.placementReadiness}%</span>
             <span className="metric-badge-high">{currentStudent.placementRating}</span>
@@ -490,11 +538,14 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
         </div>
 
         {/* Metric 4: Tests Completed */}
-        <div className="metric-card">
-          <div className="metric-top-label font-tests">Tests Completed</div>
+        <div className="metric-card metric-card-tests">
+          <div className="metric-header-row">
+            <span className="metric-top-label font-tests">Tests Completed</span>
+            <div className="metric-icon-circle icon-tests">📝</div>
+          </div>
           <div className="metric-val-row">
             <span className="metric-main-val">{currentStudent.testsCompleted}</span>
-            <span className="metric-sub-lbl">Total</span>
+            <span className="metric-sub-lbl">Tests Evaluated</span>
           </div>
           {/* Purple Sparkline */}
           <div className="sparkline-container">
@@ -514,7 +565,10 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
       <div className="charts-twin-grid">
         {/* Performance Overview Card */}
         <div className="overview-chart-card">
-          <h3 className="chart-card-title">Performance Overview</h3>
+          <div className="chart-card-header">
+            <h3 className="chart-card-title">Performance Overview</h3>
+            <span className="chart-subtitle-badge">Category Scores</span>
+          </div>
           
           <div className="custom-bar-chart-container">
             <div className="y-axis-labels">
@@ -557,7 +611,7 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               <div className="chart-column-item">
                 <span className="bar-val-badge">{cats.coding}%</span>
                 <div className="bar-track-bg">
-                  <div className="bar-fill blue-bar" style={{ height: `${cats.coding}%` }}></div>
+                  <div className="bar-fill purple-blue-bar" style={{ height: `${cats.coding}%` }}></div>
                 </div>
                 <span className="bar-column-label">Coding</span>
               </div>
@@ -573,7 +627,7 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
 
               {/* Overall */}
               <div className="chart-column-item">
-                <span className="bar-val-badge">{cats.overall}%</span>
+                <span className="bar-val-badge highlight-overall-badge">{cats.overall}%</span>
                 <div className="bar-track-bg">
                   <div className="bar-fill teal-bar" style={{ height: `${cats.overall}%` }}></div>
                 </div>
@@ -585,7 +639,10 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
 
         {/* Skill Radar Card */}
         <div className="overview-chart-card">
-          <h3 className="chart-card-title">Skill Radar</h3>
+          <div className="chart-card-header">
+            <h3 className="chart-card-title">Skill Radar</h3>
+            <span className="chart-subtitle-badge">Competency Matrix</span>
+          </div>
 
           <div className="radar-canvas-container">
             <svg viewBox="0 0 320 230" className="radar-svg-canvas">
@@ -628,7 +685,7 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               </div>
               <div className="radar-legend-item">
                 <span className="legend-dashed-gray"></span>
-                <span>Average</span>
+                <span>Cohort Average</span>
               </div>
             </div>
           </div>
@@ -639,7 +696,10 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
       <div className="three-columns-grid">
         {/* Column 1: Recent Activity */}
         <div className="lower-card">
-          <h3 className="lower-card-title">Recent Activity</h3>
+          <div className="lower-card-header">
+            <h3 className="lower-card-title">Recent Activity</h3>
+            <span className="lower-card-tag">Latest</span>
+          </div>
           <div className="activities-list-container">
             {currentStudent.recentActivities.map((act) => (
               <div key={act.id} className="activity-item-row">
@@ -658,7 +718,11 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
           </div>
 
           <div className="view-all-activity-link">
-            <button type="button" onClick={() => navigate("/student/activities")} className="view-all-btn">
+            <button
+              type="button"
+              onClick={() => navigate(userRole === "faculty" ? "/faculty/dashboard?tab=tasks" : userRole === "admin" ? "/admin/dashboard?tab=tasks" : "/student/history")}
+              className="view-all-btn"
+            >
               View All Activity →
             </button>
           </div>
@@ -667,7 +731,10 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
         {/* Column 2: Strengths & Areas to Improve */}
         <div className="lower-card">
           <div className="strengths-section">
-            <h3 className="lower-card-title">Strengths</h3>
+            <div className="lower-card-header">
+              <h3 className="lower-card-title">Key Strengths</h3>
+              <span className="strength-badge-count">{currentStudent.strengths.length}</span>
+            </div>
             <ul className="strengths-list">
               {currentStudent.strengths.map((str, idx) => (
                 <li key={idx} className="strength-item">
@@ -679,7 +746,10 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
           </div>
 
           <div className="improve-section">
-            <h3 className="lower-card-title">Areas to Improve</h3>
+            <div className="lower-card-header">
+              <h3 className="lower-card-title">Areas to Improve</h3>
+              <span className="improve-badge-count">{currentStudent.areasToImprove.length}</span>
+            </div>
             <ul className="improve-list">
               {currentStudent.areasToImprove.map((item, idx) => (
                 <li key={idx} className="improve-item">
@@ -693,9 +763,15 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
 
         {/* Column 3: Quick Actions */}
         <div className="lower-card">
-          <h3 className="lower-card-title">Quick Actions</h3>
+          <div className="lower-card-header">
+            <h3 className="lower-card-title">Quick Actions</h3>
+            <span className="lower-card-tag">Actions</span>
+          </div>
           <div className="quick-actions-flex">
-            <button className="quick-action-btn" onClick={() => navigate("/student/profile")}>
+            <button
+              className="quick-action-btn"
+              onClick={() => navigate(userRole === "admin" ? "/admin/profile" : userRole === "faculty" ? "/faculty/profile" : "/student/profile")}
+            >
               <div className="qa-left">
                 <span className="qa-icon">👤</span>
                 <span>View Full Profile</span>
@@ -703,15 +779,21 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               <span className="qa-arrow">›</span>
             </button>
 
-            <button className="quick-action-btn" onClick={() => navigate("/student/aptitude")}>
+            <button
+              className="quick-action-btn"
+              onClick={() => navigate(userRole === "faculty" ? "/faculty/dashboard?tab=tasks" : userRole === "admin" ? "/admin/dashboard?tab=tasks" : "/student/aptitude")}
+            >
               <div className="qa-left">
                 <span className="qa-icon">📋</span>
-                <span>View All Tests</span>
+                <span>View Assigned Tests</span>
               </div>
               <span className="qa-arrow">›</span>
             </button>
 
-            <button className="quick-action-btn" onClick={() => navigate("/student/activities")}>
+            <button
+              className="quick-action-btn"
+              onClick={() => navigate(userRole === "faculty" ? "/faculty/dashboard?tab=projects" : "/student/projects")}
+            >
               <div className="qa-left">
                 <span className="qa-icon">💼</span>
                 <span>View Projects</span>
@@ -719,20 +801,18 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
               <span className="qa-arrow">›</span>
             </button>
 
-            <button className="quick-action-btn" onClick={() => alert(`Generating PDF report for ${currentStudent.name}...`)}>
+            <button
+              className="quick-action-btn"
+              onClick={() => alert(`Generating detailed performance report for ${currentStudent.name} (${currentStudent.usn})...`)}
+            >
               <div className="qa-left">
                 <span className="qa-icon">📄</span>
-                <span>Generate Report</span>
+                <span>Generate PDF Report</span>
               </div>
               <span className="qa-arrow">›</span>
             </button>
           </div>
         </div>
-      </div>
-
-      {/* 6. BOTTOM HISTORY SECTION */}
-      <div className="bottom-history-card">
-        <h3 className="history-tab-title">History</h3>
       </div>
     </div>
   );

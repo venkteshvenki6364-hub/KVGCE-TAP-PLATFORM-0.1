@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import DashboardOverview from "../../components/DashboardOverview";
+import SingleStudentOverview from "../../components/SingleStudentOverview";
 import TasksCreatedView from "../../components/faculty/TasksCreatedView";
 import AdminFacultyView from "../../components/admin/AdminFacultyView";
 import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
@@ -226,8 +227,8 @@ function AdminHomePage({ defaultTab } = {}) {
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
-    if (tabParam) return tabParam;
-    if (defaultTab) return defaultTab;
+    if (tabParam && !["users", "departments", "analytics", "students"].includes(tabParam)) return tabParam;
+    if (defaultTab && !["users", "departments", "analytics", "students"].includes(defaultTab)) return defaultTab;
     if (typeof window !== "undefined" && (window.location.pathname.includes("/tasks") || window.location.search.includes("tab=tasks"))) {
       return "tasks";
     }
@@ -235,13 +236,17 @@ function AdminHomePage({ defaultTab } = {}) {
       return "faculty";
     }
     return "pending";
-  }); // pending | broadcast | analysis | faculty | users | departments | quizBuilder | codingBuilder | analytics
+  }); // pending | broadcast | analysis | faculty | quizBuilder | codingBuilder
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
     if (tabParam) {
-      setActiveTab(tabParam);
+      if (["users", "departments", "analytics", "students"].includes(tabParam)) {
+        setActiveTab("pending");
+      } else {
+        setActiveTab(tabParam);
+      }
     }
   }, [location.search]);
 
@@ -1051,6 +1056,13 @@ function AdminHomePage({ defaultTab } = {}) {
         {/* TAB 0: FACULTIES VIEW */}
         {activeTab === "faculty" && <AdminFacultyView />}
 
+        {/* TAB: STUDENT OVERVIEW */}
+        {activeTab === "singleOverview" && (
+          <div className="tab-content" style={{ padding: 0 }}>
+            <SingleStudentOverview userRole="admin" />
+          </div>
+        )}
+
         {/* TAB 1: OVERALL DATA ANALYSIS & SKILL TRACKING */}
         {activeTab === "analysis" && (
           <div className="analysis-dashboard-section" style={{ padding: 0 }}>
@@ -1198,317 +1210,280 @@ function AdminHomePage({ defaultTab } = {}) {
                 </div>
               </div>
             </div>
-            {/* CARD 1: PENDING PASSWORD RESET REQUESTS */}
-            <div className="admin-sec-card" style={{ borderLeft: "5px solid #16a34a" }}>
-              <div className="sec-header">
-                <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#1e293b", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span>Pending Password Reset Requests ({pendingResets.length})</span>
-                  </h3>
-                  <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.875rem" }}>
-                    Users submitting Forget Password requests with USN/ID and Email address. Approving a request updates their password in the database so they can log in.
-                  </p>
+                        {/* CARD 1: PENDING PASSWORD RESET REQUESTS */}
+            <div className="admin-req-card card-password-resets">
+              <div className="req-card-top-accent accent-emerald"></div>
+              
+              <div className="req-card-header">
+                <div className="req-header-left">
+                  <div className="req-header-icon-box box-emerald">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <div className="req-header-titles">
+                    <div className="req-title-row">
+                      <h3 className="req-card-title">Pending Password Reset Requests</h3>
+                      {pendingResets.length === 0 ? (
+                        <span className="req-status-pill pill-cleared">
+                          <span className="status-ping-dot green"></span>
+                          0 Pending • Queue Clear
+                        </span>
+                      ) : (
+                        <span className="req-status-pill pill-urgent">
+                          <span className="status-ping-dot amber"></span>
+                          {pendingResets.length} Awaiting Approval
+                        </span>
+                      )}
+                    </div>
+                    <p className="req-card-subtitle">
+                      Verify password recovery requests submitted with Institutional USN & College Email. Approving synchronizes updated credentials to the active database.
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {pendingResets.length === 0 ? (
-                <div style={{ padding: "2.5rem 1.5rem", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1", marginTop: "1rem" }}>
-                  <div style={{ fontSize: "2rem", marginBottom: "0.25rem" }}>No requests</div>
-                  <h4 style={{ margin: "0 0 4px 0", color: "#1e293b", fontSize: "1.05rem" }}>No Pending Password Reset Requests</h4>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.875rem" }}>
-                    When a user submits a "Forgot Password" request with USN & Email ID, their update request will appear here for Admin approval.
+                <div className="req-empty-state-box reset-empty">
+                  <div className="req-empty-icon-wrap emerald-aura">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                  </div>
+                  <h4 className="req-empty-headline">All Password Reset Requests Resolved</h4>
+                  <p className="req-empty-desc">
+                    There are currently no outstanding password reset requests. When a student or faculty member requests password assistance using their registered USN or Email, their verification record will appear here instantly for one-click admin approval.
                   </p>
+                  <div className="req-empty-chips">
+                    <span className="empty-chip"><span className="chip-dot emerald"></span> Security Watch Active</span>
+                    <span className="empty-chip"><span className="chip-dot blue"></span> Real-time Sync Operational</span>
+                    <span className="empty-chip"><span className="chip-dot teal"></span> 100% Up to Date</span>
+                  </div>
                 </div>
               ) : (
-                <table className="admin-table" style={{ marginTop: "1rem" }}>
-                  <thead>
-                    <tr>
-                      <th>User Account Details</th>
-                      <th>USN / ID</th>
-                      <th>Role</th>
-                      <th>Requested At</th>
-                      <th>Reset Status</th>
-                      <th>Admin Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingResets.map((r) => (
-                      <tr key={r._id || r.user_email}>
-                        <td>
-                          <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>{r.full_name || "User Account"}</strong>
-                          <br />
-                          <small style={{ color: "#2563eb", fontWeight: 600 }}>{r.user_email}</small>
-                        </td>
-                        <td>
-                          <strong style={{ fontFamily: "monospace", fontSize: "0.9rem", color: "#0f172a" }}>
-                            {r.user_id || "N/A"}
-                          </strong>
-                        </td>
-                        <td>
-                          <span className={`role-pill ${r.role}`} style={{ fontWeight: 600, padding: "4px 10px", borderRadius: "6px" }}>
-                            {r.role?.toUpperCase() === "FACULTY" ? "FACULTY" : r.role?.toUpperCase() === "ADMIN" ? "ADMIN" : "STUDENT"}
-                          </span>
-                        </td>
-                        <td>
-                          <small style={{ color: "#475569" }}>
-                            {r.created_at ? new Date(r.created_at).toLocaleString() : "Just now"}
-                          </small>
-                        </td>
-                        <td>
-                          <span style={{ background: "#fef3c7", color: "#d97706", border: "1px solid #fde68a", padding: "4px 10px", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 700 }}>
-                            Pending Approval
-                          </span>
-                        </td>
-                        <td>
-                          <div className="action-row" style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              type="button"
-                              onClick={() => handleApproveReset(r._id || r.user_email, r.full_name || r.user_email)}
-                              style={{
-                                background: "#16a34a",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 14px",
-                                borderRadius: "6px",
-                                fontWeight: "700",
-                                cursor: "pointer",
-                                fontSize: "0.85rem",
-                                boxShadow: "0 2px 4px rgba(22, 163, 74, 0.2)"
-                              }}
-                            >
-                              ✓ Approve Password Update
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRejectReset(r._id || r.user_email, r.full_name || r.user_email)}
-                              style={{
-                                background: "#ef4444",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                fontWeight: "600",
-                                cursor: "pointer",
-                                fontSize: "0.85rem"
-                              }}
-                            >
-                              ✕ Reject
-                            </button>
-                          </div>
-                        </td>
+                <div className="req-table-wrapper">
+                  <table className="admin-req-table">
+                    <thead>
+                      <tr>
+                        <th>User Account Details</th>
+                        <th>USN / ID</th>
+                        <th>Role</th>
+                        <th>Requested At</th>
+                        <th>Reset Status</th>
+                        <th>Admin Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {pendingResets.map((r) => (
+                        <tr key={r._id || r.user_email}>
+                          <td>
+                            <div className="user-profile-cell">
+                              <div className="user-avatar-badge role-badge-general">
+                                {(r.full_name || r.user_email || "U").charAt(0).toUpperCase()}
+                              </div>
+                              <div className="user-text-col">
+                                <strong className="user-name-text">{r.full_name || "User Account"}</strong>
+                                <span className="user-email-link">{r.user_email}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="mono-code-chip">{r.user_id || "N/A"}</span>
+                          </td>
+                          <td>
+                            <span className={`req-role-pill role-${(r.role || "student").toLowerCase()}`}>
+                              {(r.role || "STUDENT").toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="time-subtext">
+                              {r.created_at ? new Date(r.created_at).toLocaleString() : "Just now"}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="status-badge-pending">
+                              <span className="pulse-amber-dot"></span> Pending Approval
+                            </span>
+                          </td>
+                          <td>
+                            <div className="req-action-btns">
+                              <button
+                                type="button"
+                                className="btn-approve-action"
+                                onClick={() => handleApproveReset(r._id || r.user_email, r.full_name || r.user_email)}
+                              >
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Approve Password Update
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-reject-action"
+                                onClick={() => handleRejectReset(r._id || r.user_email, r.full_name || r.user_email)}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
             {/* CARD 2: PENDING USER REGISTRATIONS */}
-            <div className="admin-sec-card">
-              <div className="sec-header">
-                <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#1e293b" }}>
-                    Registration Verification Requests ({pendingUsers.length})
-                  </h3>
-                  <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.875rem" }}>
-                    Review new Student and Faculty sign-up requests. Approving a user activates their account and adds them to the active database.
-                  </p>
+            <div className="admin-req-card card-user-registrations">
+              <div className="req-card-top-accent accent-blue"></div>
+              
+              <div className="req-card-header">
+                <div className="req-header-left">
+                  <div className="req-header-icon-box box-blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="8.5" cy="7" r="4" />
+                      <polyline points="17 11 19 13 23 9" />
+                    </svg>
+                  </div>
+                  <div className="req-header-titles">
+                    <div className="req-title-row">
+                      <h3 className="req-card-title">Registration Verification Requests</h3>
+                      {pendingUsers.length === 0 ? (
+                        <span className="req-status-pill pill-cleared">
+                          <span className="status-ping-dot green"></span>
+                          0 Pending • All Verified
+                        </span>
+                      ) : (
+                        <span className="req-status-pill pill-urgent">
+                          <span className="status-ping-dot blue"></span>
+                          {pendingUsers.length} Verification Required
+                        </span>
+                      )}
+                    </div>
+                    <p className="req-card-subtitle">
+                      Review institutional registrations for new Student and Faculty profiles. Approving activates their credentials and provisions database access.
+                    </p>
+                  </div>
                 </div>
                 <button
-                  className="add-user-btn"
-                  style={{ background: "#2563eb" }}
+                  type="button"
+                  className="btn-add-direct-user"
                   onClick={() => setShowUserModal(true)}
                 >
-                  + Add Direct User (Student/Faculty)
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add Direct User (Student/Faculty)
                 </button>
               </div>
 
               {pendingUsers.length === 0 ? (
-                <div style={{ padding: "3rem 1.5rem", textAlign: "center", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1", marginTop: "1rem" }}>
-                  <div style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>No requests</div>
-                  <h4 style={{ margin: "0 0 6px 0", color: "#1e293b", fontSize: "1.1rem" }}>No Pending Verification Requests</h4>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>
-                    All user sign-ups have been verified and added to the database. New registrations will appear here for Admin approval.
+                <div className="req-empty-state-box reg-empty">
+                  <div className="req-empty-icon-wrap blue-aura">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                  </div>
+                  <h4 className="req-empty-headline">No Pending Verification Requests</h4>
+                  <p className="req-empty-desc">
+                    All student and faculty account sign-ups have been verified and activated in the institutional database. When new candidates register via the portal, their verification dossiers will appear here for Admin credential authorization.
                   </p>
+                  <div className="req-empty-chips">
+                    <span className="empty-chip"><span className="chip-dot blue"></span> Student & Faculty Directory Active</span>
+                    <span className="empty-chip"><span className="chip-dot emerald"></span> Live Onboarding Queue Clear</span>
+                    <span className="empty-chip"><span className="chip-dot indigo"></span> System Fully Synchronized</span>
+                  </div>
                 </div>
               ) : (
-                <table className="admin-table" style={{ marginTop: "1rem" }}>
-                  <thead>
-                    <tr>
-                      <th>Registration Details</th>
-                      <th>Requested Role</th>
-                      <th>USN / Faculty ID</th>
-                      <th>Department & Course</th>
-                      <th>Contact & DOB</th>
-                      <th>Verification Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingUsers.map((u) => (
-                      <tr key={u._id || u.email}>
-                        <td>
-                          <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>{u.full_name}</strong>
-                          <br />
-                          <small style={{ color: "#64748b" }}>{u.email}</small>
-                        </td>
-                        <td>
-                          <span className={`role-pill ${u.role}`} style={{ fontWeight: 600, padding: "4px 10px", borderRadius: "6px" }}>
-                            {u.role?.toUpperCase() === "STUDENT" ? "STUDENT" : "FACULTY"}
-                          </span>
-                        </td>
-                        <td>
-                          <strong style={{ fontFamily: "monospace", fontSize: "0.9rem", color: "#1e293b" }}>
-                            {u.student_id || u.faculty_id || "Pending ID"}
-                          </strong>
-                        </td>
-                        <td>
-                          <span>{u.department || "Engineering"}</span>
-                          <br />
-                          <small style={{ color: "#64748b" }}>{u.course || (u.role === "student" ? "B.E. CSE" : "Faculty Staff")}</small>
-                        </td>
-                        <td>
-                          <small style={{ color: "#334155" }}>📞 {u.phone || "N/A"}</small>
-                          <br />
-                          <small style={{ color: "#64748b" }}>🎂 DOB: {u.dob || "N/A"}</small>
-                        </td>
-                        <td>
-                          <div className="action-row" style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              type="button"
-                              onClick={() => handleApproveUser(u.email, u.full_name, u.role)}
-                              style={{
-                                background: "#16a34a",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                fontWeight: "600",
-                                cursor: "pointer",
-                                fontSize: "0.85rem",
-                                boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
-                              }}
-                            >
-                              ✓ Approve & Add
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRejectUser(u.email, u.full_name)}
-                              style={{
-                                background: "#ef4444",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                fontWeight: "600",
-                                cursor: "pointer",
-                                fontSize: "0.85rem"
-                              }}
-                            >
-                              ✕ Reject
-                            </button>
-                          </div>
-                        </td>
+                <div className="req-table-wrapper">
+                  <table className="admin-req-table">
+                    <thead>
+                      <tr>
+                        <th>Registration Details</th>
+                        <th>Requested Role</th>
+                        <th>USN / Faculty ID</th>
+                        <th>Department & Course</th>
+                        <th>Contact & DOB</th>
+                        <th>Verification Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: USER MANAGEMENT */}
-        {activeTab === "users" && (
-          <div className="admin-sec-card">
-            <div className="sec-header">
-              <h3>All Database Accounts ({users.length})</h3>
-              <button className="add-user-btn" onClick={() => setShowUserModal(true)}>
-                + Add Direct User (Student/Faculty)
-              </button>
-            </div>
-
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>User Details</th>
-                  <th>Role</th>
-                  <th>Department / ID</th>
-                  <th>Account Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u._id || u.email}>
-                    <td>
-                      <strong>{u.full_name}</strong>
-                      <br />
-                      <small>{u.email}</small>
-                    </td>
-                    <td>
-                      <span className={`role-pill ${u.role}`}>{u.role?.toUpperCase()}</span>
-                    </td>
-                    <td>
-                      {u.department || "Computer Science"}
-                      <br />
-                      <small>{u.student_id || u.faculty_id || "N/A"}</small>
-                    </td>
-                    <td>
-                      <span className={`status-pill ${u.status === "pending" || u.is_verified === false ? "inactive" : u.is_active !== false ? "active" : "inactive"}`}>
-                        {u.status === "pending" || u.is_verified === false ? "Pending Admin Verification" : u.is_active !== false ? "Active and Verified" : "Deactivated"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-row">
-                        {u.status === "pending" || u.is_verified === false ? (
-                          <button
-                            className="toggle-btn"
-                            style={{ background: "#16a34a", color: "#fff" }}
-                            onClick={() => handleApproveUser(u.email, u.full_name, u.role)}
-                          >
-                            Approve
-                          </button>
-                        ) : (
-                          <button className="toggle-btn" onClick={() => handleToggleStatus(u.email)}>
-                            {u.is_active !== false ? "Deactivate" : "Activate"}
-                          </button>
-                        )}
-                        <button className="del-btn" onClick={() => handleDeleteUser(u.email)}>
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* TAB 3: DEPARTMENTS */}
-        {activeTab === "departments" && (
-          <div className="admin-sec-card">
-            <h3>KVGCE Engineering Departments</h3>
-            <div className="dept-grid">
-              {["Computer Science & Engineering", "Information Science & Engineering", "Electronics & Communication", "Mechanical Engineering", "Civil Engineering"].map((dept, i) => (
-                <div key={i} className="dept-card">
-                  <h4>{dept}</h4>
-                  <p>HOD: Dr. K. V. Gururaja</p>
-                  <span className="dept-code">CODE: {dept.split(" ")[0]}</span>
+                    </thead>
+                    <tbody>
+                      {pendingUsers.map((u) => (
+                        <tr key={u._id || u.email}>
+                          <td>
+                            <div className="user-profile-cell">
+                              <div className="user-avatar-badge role-badge-general">
+                                {(u.full_name || u.email || "U").charAt(0).toUpperCase()}
+                              </div>
+                              <div className="user-text-col">
+                                <strong className="user-name-text">{u.full_name}</strong>
+                                <span className="user-email-link">{u.email}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`req-role-pill role-${(u.role || "student").toLowerCase()}`}>
+                              {(u.role || "STUDENT").toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="mono-code-chip">{u.student_id || u.faculty_id || "Pending ID"}</span>
+                          </td>
+                          <td>
+                            <div className="user-dept-col">
+                              <span className="dept-primary-name">{u.department || "Engineering"}</span>
+                              <span className="dept-sub-course">{u.course || (u.role === "student" ? "B.E. CSE" : "Faculty Staff")}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="contact-col">
+                              <span className="contact-item">📞 {u.phone || "N/A"}</span>
+                              <span className="contact-item sub">🎂 DOB: {u.dob || "N/A"}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="req-action-btns">
+                              <button
+                                type="button"
+                                className="btn-approve-action"
+                                onClick={() => handleApproveUser(u.email, u.full_name, u.role)}
+                              >
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Approve & Add
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-reject-action"
+                                onClick={() => handleRejectUser(u.email, u.full_name)}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: SYSTEM HEALTH */}
-        {activeTab === "analytics" && (
-          <div className="admin-sec-card">
-            <h3>System Performance & Infrastructure Status</h3>
-            <div className="analytics-box">
-              <p>🟢 <strong>FastAPI Backend Status:</strong> Healthy (Uptime: 99.9%)</p>
-              <p><strong>Database Store:</strong> Motor / MongoDB Live Sync</p>
-              <p>🔐 <strong>JWT Token Security:</strong> HS256 Encrypted</p>
+              )}
             </div>
           </div>
         )}

@@ -878,14 +878,11 @@ const DashboardLayout = ({ children, title }) => {
       return [
         { path: "/admin/dashboard?tab=pending", label: "Pending Approvals", icon: "pending" },
         { path: "/admin/dashboard?tab=analysis", label: "Overall Analysis", icon: "analysis" },
+        { path: "/admin/dashboard?tab=singleOverview", label: "Student Overview", icon: "student" },
         { path: "/admin/dashboard?tab=tasks", label: "Tasks Created", icon: "tasks" },
         { path: "/admin/dashboard?tab=faculty", label: "Faculty", icon: "faculty" },
-        { path: "/admin/dashboard?tab=users", label: "User Management", icon: "users" },
-        { path: "/admin/dashboard?tab=departments", label: "Departments", icon: "departments" },
         { path: "/admin/dashboard?tab=quizBuilder", label: "Quiz Builder", icon: "quiz" },
         { path: "/admin/dashboard?tab=codingBuilder", label: "Coding Lab", icon: "coding" },
-        { path: "/admin/dashboard?tab=analytics", label: "System Health", icon: "analytics" },
-        { path: "/admin/students", label: "Students", icon: "student" },
         { path: "/student/rankings", label: "Rankings", icon: "rankings" },
       ];
     }

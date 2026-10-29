@@ -1,263 +1,340 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import "./TasksCreatedView.css";
 
-const INITIAL_TASKS = [
+// Comprehensive initial fallback items (quizzes, aptitude tests, student projects, coding challenges)
+const INITIAL_ITEMS = [
   {
-    id: "task-1",
-    title: "DBMS Quiz - Set 3",
+    id: "quiz-1",
+    title: "DBMS Relational Normalization Quiz",
     type: "Quiz",
     subject: "Database Management Systems",
     createdOn: "12 May 2026",
-    dueDate: "19 May 2026",
+    dueDate: "25 Mins Limit",
     status: "Active",
-    description: "Assessment on relational normalization (1NF, 2NF, 3NF, BCNF) and complex SQL joins.",
+    description: "Assessment on relational database normalization (1NF, 2NF, 3NF, BCNF) and complex SQL joins.",
     targetBatch: "CSE 6th Sem - Section A & B",
+    questionsCount: 15,
+    totalMarks: 30,
+    meta: { category: "Quiz", faculty: "Prof. Suresh Kumar" }
   },
   {
-    id: "task-2",
-    title: "SQL Assignment",
-    type: "Assignment",
-    subject: "Database Management Systems",
+    id: "proj-1",
+    title: "KVGCE-TAP Platform & Assessment Engine",
+    type: "Project",
+    subject: "Full-Stack Web Engineering",
     createdOn: "10 May 2026",
-    dueDate: "20 May 2026",
-    status: "Active",
-    description: "Hands-on SQL lab exercise involving aggregation, nested subqueries, and window functions.",
-    targetBatch: "CSE 6th Sem",
+    dueDate: "Final Sem Submission",
+    status: "Approved",
+    description: "End-to-end placement readiness tracking and coding lab platform with real-time analytics and rankings.",
+    targetBatch: "CSE 8th Sem - Batch 2026",
+    questionsCount: null,
+    totalMarks: 100,
+    meta: {
+      studentName: "Aditya Hegde",
+      studentId: "4KV21CS042",
+      techStack: ["React.js", "FastAPI", "MongoDB", "Python"],
+      githubUrl: "https://github.com/venkatesh-r/kvgce-tap-platform",
+      hostedUrl: "https://kvgce-tap.vercel.app"
+    }
   },
   {
-    id: "task-3",
-    title: "UNIT 3 Test",
-    type: "Test",
-    subject: "Data Structures",
+    id: "apt-1",
+    title: "Quantitative Aptitude & Speed Math Test",
+    type: "Aptitude",
+    subject: "Quantitative Aptitude",
     createdOn: "08 May 2026",
-    dueDate: "15 May 2026",
-    status: "Completed",
-    description: "Theory and algorithmic implementation test on Binary Search Trees and Graph Traversals.",
-    targetBatch: "ISE & CSE 4th Sem",
+    dueDate: "20 Mins Limit",
+    status: "Active",
+    description: "Speed calculations, percentages, ratios, profit & loss, and time-speed-distance problem solving.",
+    targetBatch: "All Engineering Branches (3rd & 4th Year)",
+    questionsCount: 20,
+    totalMarks: 40,
+    meta: { category: "Aptitude", department: "Training & Placement Cell" }
   },
   {
-    id: "task-4",
-    title: "C Programming Quiz",
-    type: "Quiz",
-    subject: "C Programming",
-    createdOn: "05 May 2026",
-    dueDate: "12 May 2026",
-    status: "Scheduled",
-    description: "Fundamental evaluation on pointers, memory management, and file operations in C.",
-    targetBatch: "1st Year Engineering",
-  },
-  {
-    id: "task-5",
-    title: "DSA Assignment - 2",
-    type: "Assignment",
+    id: "test-1",
+    title: "Data Structures & Tree Traversals Unit Test",
+    type: "Test",
     subject: "Data Structures & Algorithms",
-    createdOn: "02 May 2026",
-    dueDate: "16 May 2026",
-    status: "Draft",
-    description: "Greedy algorithms, Dijkstra shortest path implementation, and Knapsack dynamic programming.",
-    targetBatch: "CSE 4th Sem",
+    createdOn: "05 May 2026",
+    dueDate: "45 Mins Limit",
+    status: "Completed",
+    description: "Rigorous test covering Binary Search Trees, AVL balance factors, and Graph BFS/DFS implementations.",
+    targetBatch: "CSE & ISE 4th Sem",
+    questionsCount: 12,
+    totalMarks: 25,
+    meta: { category: "Test", faculty: "Prof. Ramesh K" }
   },
+  {
+    id: "proj-2",
+    title: "AI-Powered Career & Resume Assistant",
+    type: "Project",
+    subject: "Machine Learning & NLP",
+    createdOn: "03 May 2026",
+    dueDate: "Capstone Evaluation",
+    status: "Pending",
+    description: "Automated resume parsing with Gemini AI to generate customized mock interview scenarios and skill gaps.",
+    targetBatch: "CSE 8th Sem",
+    questionsCount: null,
+    totalMarks: 100,
+    meta: {
+      studentName: "Sahana P",
+      studentId: "4KV21CS018",
+      techStack: ["Python", "PyTorch", "React", "Node.js"],
+      githubUrl: "https://github.com/venkatesh-r/ai-career-assistant"
+    }
+  },
+  {
+    id: "code-1",
+    title: "Array Manipulation & Two Pointer Challenge",
+    type: "Coding Challenge",
+    subject: "Competitive Programming",
+    createdOn: "01 May 2026",
+    dueDate: "30 Mins Limit",
+    status: "Active",
+    description: "Interactive coding problem evaluated via live Judge0 sandbox with custom hidden test suites.",
+    targetBatch: "Open Campus Coding Lab",
+    questionsCount: 3,
+    totalMarks: 30,
+    meta: { category: "Coding", difficulty: "Medium" }
+  }
 ];
 
 export default function TasksCreatedView() {
-  const [tasks, setTasks] = useState(() => {
-    try {
-      const saved = localStorage.getItem("kvgce_faculty_tasks_created");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.warn("Error loading stored tasks, using default:", e);
-    }
-    return INITIAL_TASKS;
-  });
-
-  const [activeMenuId, setActiveMenuId] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [tasks, setTasks] = useState(INITIAL_ITEMS);
   const [viewingTask, setViewingTask] = useState(null);
-  const [editingTask, setEditingTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Form state for creating new task
-  const [newTaskForm, setNewTaskForm] = useState({
-    title: "",
-    type: "Quiz",
-    subject: "Database Management Systems",
-    dueDate: "20 May 2026",
-    status: "Active",
-    description: "",
-    targetBatch: "CSE 6th Sem",
-  });
-
-  // Load tasks from backend on mount
+  // Load recently created tests, quizzes, aptitude assessments, and student projects
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchCreatedRecords = async () => {
+      setLoading(true);
       try {
-        const res = await api.get("/faculty/tasks");
-        if (res.data?.success && Array.isArray(res.data?.data) && res.data.data.length > 0) {
-          setTasks(res.data.data);
+        const aggregated = [];
+        const seenIds = new Set();
+        const seenTitles = new Set();
+
+        const addRecord = (item) => {
+          if (!item || !item.title) return;
+          const id = String(item.id || item._id || "");
+          const titleKey = String(item.title).toLowerCase().trim();
+          if ((!id || !seenIds.has(id)) && (!titleKey || !seenTitles.has(titleKey))) {
+            if (id) seenIds.add(id);
+            if (titleKey) seenTitles.add(titleKey);
+            aggregated.push(item);
+          }
+        };
+
+        // 1. Fetch published Quizzes and Aptitude Tests from Assessments API
+        try {
+          const assessRes = await api.get("/assessments");
+          const assessData = assessRes.data?.data || assessRes.data || [];
+          if (Array.isArray(assessData)) {
+            assessData.forEach((a) => {
+              const catLow = String(a.category || "").toLowerCase();
+              const titLow = String(a.title || "").toLowerCase();
+              let tType = "Test";
+              if (catLow.includes("aptitude") || catLow.includes("quant") || catLow.includes("reasoning")) {
+                tType = "Aptitude";
+              } else if (catLow.includes("quiz") || titLow.includes("quiz")) {
+                tType = "Quiz";
+              } else if (catLow.includes("coding") || titLow.includes("coding")) {
+                tType = "Coding Challenge";
+              }
+
+              const qCount = Array.isArray(a.questions) ? a.questions.length : 10;
+              const dur = a.duration_minutes || a.timeLimit || 25;
+              const marks = a.total_marks || (qCount * 2);
+
+              addRecord({
+                id: a._id || a.id || `assess-${Date.now()}-${Math.random()}`,
+                title: a.title,
+                type: tType,
+                subject: a.category || a.department || "General Engineering",
+                createdOn: a.created_at ? new Date(a.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "Active",
+                dueDate: `${dur} Mins Limit`,
+                status: a.is_published !== false ? "Active" : "Draft",
+                description: a.description || `Assessment covering ${a.category || "core concepts"} with ${qCount} questions.`,
+                targetBatch: a.department || "All Batches",
+                questionsCount: qCount,
+                totalMarks: marks,
+                meta: {
+                  category: a.category,
+                  department: a.department,
+                  questionsCount: qCount,
+                  totalMarks: marks,
+                  duration: dur
+                }
+              });
+            });
+          }
+        } catch (e) {
+          console.warn("Could not fetch assessments:", e);
         }
+
+        // 2. Fetch Student Projects from backend
+        try {
+          const projRes = await api.get("/students/projects");
+          const projData = projRes.data?.data || projRes.data || [];
+          if (Array.isArray(projData)) {
+            projData.forEach((p) => {
+              addRecord({
+                id: p.project_id || p.id || p._id || `proj-${Date.now()}-${Math.random()}`,
+                title: p.title || "Capstone Project",
+                type: "Project",
+                subject: Array.isArray(p.techStack) ? p.techStack.slice(0, 3).join(", ") : (p.student_department || "Software Engineering"),
+                createdOn: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "14 May 2026",
+                dueDate: "Project Evaluation",
+                status: p.status === "Approved" ? "Approved" : p.status === "Completed" ? "Completed" : "Pending",
+                description: p.description || "Student capstone project submission.",
+                targetBatch: p.student_department || "Final Year Students",
+                questionsCount: null,
+                totalMarks: p.marks || 100,
+                meta: {
+                  studentName: p.student_name,
+                  studentId: p.student_id,
+                  techStack: p.techStack || [],
+                  githubUrl: p.githubUrl,
+                  hostedUrl: p.hostedUrl,
+                  marks: p.marks
+                }
+              });
+            });
+          }
+        } catch (e) {
+          console.warn("Could not fetch student projects:", e);
+        }
+
+        // 3. Fetch from faculty tasks backend
+        try {
+          const tasksRes = await api.get("/faculty/tasks");
+          const taskItems = tasksRes.data?.data || [];
+          if (Array.isArray(taskItems)) {
+            taskItems.forEach((t) => addRecord(t));
+          }
+        } catch (e) {
+          console.warn("Could not fetch faculty tasks:", e);
+        }
+
+        // 4. Fetch locally published Quizzes from QuizBuilder
+        try {
+          const localQuizzes = JSON.parse(localStorage.getItem("kvgce_published_quizzes") || "[]");
+          if (Array.isArray(localQuizzes)) {
+            localQuizzes.forEach((lq) => {
+              const qCount = Array.isArray(lq.questions) ? lq.questions.length : 5;
+              addRecord({
+                id: lq.id || `quiz-local-${Date.now()}-${Math.random()}`,
+                title: lq.title,
+                type: "Quiz",
+                subject: lq.category || lq.department || "Technical Quiz",
+                createdOn: "Today",
+                dueDate: `${lq.duration_minutes || 30} Mins Limit`,
+                status: "Active",
+                description: lq.description || `Interactive quiz created via Quiz Builder with ${qCount} questions.`,
+                targetBatch: lq.department || "All Students",
+                questionsCount: qCount,
+                totalMarks: lq.total_marks || (qCount * 2),
+                meta: {
+                  category: lq.category,
+                  department: lq.department,
+                  questionsCount: qCount,
+                  totalMarks: lq.total_marks
+                }
+              });
+            });
+          }
+        } catch (e) {}
+
+        // 5. Fallback initial items if still empty
+        if (aggregated.length === 0) {
+          INITIAL_ITEMS.forEach((it) => addRecord(it));
+        }
+
+        setTasks(aggregated);
       } catch (err) {
-        console.warn("Backend tasks fetch issue, fallback to cached tasks:", err);
+        console.warn("Error consolidating created tests & projects:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchTasks();
+
+    fetchCreatedRecords();
   }, []);
-
-    // Save to localStorage whenever tasks change
-  useEffect(() => {
-    try {
-      localStorage.setItem("kvgce_faculty_tasks_created", JSON.stringify(tasks));
-    } catch (e) {
-      console.warn("Failed to persist tasks:", e);
-    }
-  }, [tasks]);
-
-  // Close dropdown menu when clicking outside
-  const menuRef = useRef(null);
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setActiveMenuId(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleCreateTask = async (e) => {
-    e.preventDefault();
-    if (!newTaskForm.title.trim()) return;
-
-    const todayStr = new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-    const newTask = {
-      id: `task-${Date.now()}`,
-      title: newTaskForm.title.trim(),
-      type: newTaskForm.type,
-      subject: newTaskForm.subject.trim() || "General Engineering",
-      createdOn: todayStr,
-      dueDate: newTaskForm.dueDate.trim() || "30 May 2026",
-      status: newTaskForm.status,
-      description: newTaskForm.description.trim() || "Detailed task instructions for students.",
-      targetBatch: newTaskForm.targetBatch.trim() || "All Enrolled Students",
-    };
-
-    try {
-      const res = await api.post("/faculty/tasks", newTask);
-      if (res.data?.data) {
-        const savedDoc = res.data.data;
-        setTasks([savedDoc, ...tasks.filter(t => (t.id || t._id) !== (savedDoc.id || savedDoc._id))]);
-        setShowCreateModal(false);
-        setNewTaskForm({
-          title: "",
-          type: "Quiz",
-          subject: "Database Management Systems",
-          dueDate: "25 May 2026",
-          status: "Active",
-          description: "",
-          targetBatch: "CSE 6th Sem",
-        });
-        return;
-      }
-    } catch (err) {
-      console.warn("Backend task create issue, using local storage fallback:", err);
-    }
-    setTasks([newTask, ...tasks]);
-    setShowCreateModal(false);
-    setNewTaskForm({
-      title: "",
-      type: "Quiz",
-      subject: "Database Management Systems",
-      dueDate: "25 May 2026",
-      status: "Active",
-      description: "",
-      targetBatch: "CSE 6th Sem",
-    });
-  };
-
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!editingTask || !editingTask.title.trim()) return;
-
-    try {
-      await api.put(`/faculty/tasks/${editingTask.id || editingTask._id}`, editingTask);
-    } catch (err) {
-      console.warn("Backend task update issue, using local storage fallback:", err);
-    }
-    setTasks((prev) =>
-      prev.map((t) => (t.id === editingTask.id ? { ...editingTask } : t))
-    );
-    setEditingTask(null);
-  };
 
   const handleDeleteTask = (taskId) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      try {
-        api.delete(`/faculty/tasks/${taskId}`).catch(() => {});
-      } catch (err) {}
+    if (window.confirm("Are you sure you want to remove this record from the view?")) {
       setTasks((prev) => prev.filter((t) => (t.id || t._id) !== taskId));
-      setActiveMenuId(null);
+      if (viewingTask && (viewingTask.id || viewingTask._id) === taskId) {
+        setViewingTask(null);
+      }
     }
   };
 
-  const handleToggleComplete = (task) => {
-    const nextStatus = task.status === "Completed" ? "Active" : "Completed";
-    try {
-      api.put(`/faculty/tasks/${task.id || task._id}`, { status: nextStatus }).catch(() => {});
-    } catch (err) {}
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t))
-    );
-    setActiveMenuId(null);
-  };
-
-  const handleDuplicate = (task) => {
-    const duplicated = {
-      ...task,
-      id: `task-${Date.now()}`,
-      title: `${task.title} (Copy)`,
-      createdOn: new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-      status: "Draft",
-    };
-    setTasks([duplicated, ...tasks]);
-    setActiveMenuId(null);
-  };
-
-  // Filter tasks
+  // Filter tasks & projects by search query and type tab
   const filteredTasks = tasks.filter((t) => {
+    const q = searchQuery.toLowerCase().trim();
     const matchesQuery =
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "All" || t.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesQuery && matchesStatus;
+      !q ||
+      (t.title && t.title.toLowerCase().includes(q)) ||
+      (t.subject && t.subject.toLowerCase().includes(q)) ||
+      (t.type && t.type.toLowerCase().includes(q)) ||
+      (t.meta?.studentName && t.meta.studentName.toLowerCase().includes(q));
+
+    let matchesFilter = true;
+    if (statusFilter === "All") {
+      matchesFilter = true;
+    } else if (statusFilter === "Quiz") {
+      matchesFilter = String(t.type || "").toLowerCase().includes("quiz");
+    } else if (statusFilter === "Aptitude") {
+      matchesFilter =
+        String(t.type || "").toLowerCase().includes("aptitude") ||
+        String(t.subject || "").toLowerCase().includes("aptitude");
+    } else if (statusFilter === "Test") {
+      matchesFilter = String(t.type || "").toLowerCase().includes("test");
+    } else if (statusFilter === "Project") {
+      matchesFilter = String(t.type || "").toLowerCase().includes("project");
+    } else if (statusFilter === "Coding") {
+      matchesFilter =
+        String(t.type || "").toLowerCase().includes("coding") ||
+        String(t.type || "").toLowerCase().includes("challenge");
+    }
+
+    return matchesQuery && matchesFilter;
   });
 
-  // Display top 5 unless expanded or searching/filtering
+  // Display top 5 unless expanded or active filter
   const displayedTasks =
     isExpanded || searchQuery || statusFilter !== "All"
       ? filteredTasks
       : filteredTasks.slice(0, 5);
 
+  const getTypeClass = (type) => {
+    const t = String(type || "").toLowerCase();
+    if (t.includes("quiz")) return "type-quiz";
+    if (t.includes("aptitude")) return "type-aptitude";
+    if (t.includes("project")) return "type-project";
+    if (t.includes("coding") || t.includes("challenge")) return "type-challenge";
+    return "type-test";
+  };
+
+  const getStatusClass = (status) => {
+    const s = String(status || "").toLowerCase();
+    if (s.includes("active") || s.includes("approved")) return "status-active";
+    if (s.includes("completed")) return "status-completed";
+    if (s.includes("scheduled")) return "status-scheduled";
+    return "status-draft";
+  };
+
   return (
     <div className="tasks-created-card">
-      {/* CARD HEADER */}
+      {/* CARD HEADER (VIEW-ONLY, CREATE BUTTON REMOVED) */}
       <div className="tasks-header">
         <div className="tasks-header-left">
-          <div className="tasks-icon-box" title="Tasks Created">
+          <div className="tasks-icon-box" title="Tasks & Projects Created">
             <svg
               width="24"
               height="24"
@@ -273,217 +350,126 @@ export default function TasksCreatedView() {
               <path d="m9 14 2 2 4-4" />
             </svg>
           </div>
-          <h2 className="tasks-title">Tasks Created</h2>
-        </div>
-
-        <button
-          type="button"
-          className="tasks-create-btn"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>Create New Task</span>
-        </button>
-      </div>
-
-      {/* FILTER & SEARCH BAR (WHEN EXPANDED OR ACTIVE SEARCH) */}
-      {(isExpanded || tasks.length > 5) && (
-        <div className="tasks-filter-bar">
-          <input
-            type="text"
-            className="tasks-search-input"
-            placeholder="Search by Task Title or Subject..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <div className="tasks-status-tabs">
-            {["All", "Active", "Completed", "Scheduled", "Draft"].map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`tasks-tab-pill ${statusFilter === tab ? "active" : ""}`}
-                onClick={() => setStatusFilter(tab)}
-              >
-                {tab}
-              </button>
-            ))}
+          <div>
+            <h2 className="tasks-title">Tasks & Projects Created</h2>
+            <p className="tasks-subtitle">
+              Live repository of recently created tests, quizzes, aptitude assessments, and student projects
+            </p>
           </div>
         </div>
-      )}
 
-      {/* TABLE */}
+        <div className="tasks-header-right">
+          <div className="tasks-summary-pill">
+            <span className="live-dot-pulse"></span>
+            <strong>{filteredTasks.length}</strong>
+            <span>Records Available</span>
+          </div>
+        </div>
+      </div>
+
+      {/* FILTER & SEARCH BAR */}
+      <div className="tasks-filter-bar">
+        <input
+          type="text"
+          className="tasks-search-input"
+          placeholder="Search by Title, Subject, Student, or Category..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <div className="tasks-status-tabs">
+          {["All", "Quiz", "Aptitude", "Test", "Project", "Coding"].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`tasks-tab-pill ${statusFilter === tab ? "active" : ""}`}
+              onClick={() => setStatusFilter(tab)}
+            >
+              {tab === "All" ? "All Records" : tab === "Coding" ? "Coding Labs" : `${tab}s`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* TABLE (READ-ONLY INSPECTION VIEW) */}
       <div className="tasks-table-container">
         <table className="tasks-table">
           <thead>
             <tr>
               <th className="th-num">#</th>
-              <th>Task Title</th>
+              <th>Title & Details</th>
               <th>Type</th>
-              <th>Subject / Course</th>
+              <th>Subject / Domain</th>
               <th>Created On</th>
-              <th>Due Date</th>
+              <th>Timeline / Duration</th>
               <th>Status</th>
-              <th className="th-actions">Actions</th>
+              <th className="th-actions">Action</th>
             </tr>
           </thead>
           <tbody>
             {displayedTasks.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: "center", padding: "2.5rem", color: "#64748b" }}>
-                  No tasks found matching your filter.
+                  {loading ? "Loading recently created records..." : "No tests, quizzes, or projects found matching your search."}
                 </td>
               </tr>
             ) : (
-              displayedTasks.map((task, idx) => {
-                const typeClass =
-                  task.type === "Quiz"
-                    ? "type-quiz"
-                    : task.type === "Assignment"
-                    ? "type-assignment"
-                    : task.type === "Test"
-                    ? "type-test"
-                    : "type-challenge";
-
-                const statusClass =
-                  task.status === "Active"
-                    ? "status-active"
-                    : task.status === "Completed"
-                    ? "status-completed"
-                    : task.status === "Scheduled"
-                    ? "status-scheduled"
-                    : "status-draft";
-
-                return (
-                  <tr key={task.id}>
-                    <td className="td-num">{idx + 1}</td>
-                    <td className="tasks-title-cell">{task.title}</td>
-                    <td>
-                      <span className={`task-type-pill ${typeClass}`}>
-                        {task.type}
-                      </span>
-                    </td>
-                    <td>{task.subject}</td>
-                    <td>{task.createdOn}</td>
-                    <td>{task.dueDate}</td>
-                    <td>
-                      <span className={`task-status-pill ${statusClass}`}>
-                        {task.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="tasks-actions-group">
-                        {/* VIEW ACTION */}
-                        <button
-                          type="button"
-                          className="task-action-btn view-btn"
-                          title="View Task Details"
-                          onClick={() => setViewingTask(task)}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </button>
-
-                        {/* EDIT ACTION */}
-                        <button
-                          type="button"
-                          className="task-action-btn edit-btn"
-                          title="Edit Task"
-                          onClick={() => setEditingTask({ ...task })}
-                        >
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                          </svg>
-                        </button>
-
-                        {/* MORE OPTIONS ACTION */}
-                        <button
-                          type="button"
-                          className="task-action-btn more-btn"
-                          title="More Options"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveMenuId(activeMenuId === task.id ? null : task.id);
-                          }}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <circle cx="12" cy="12" r="1" />
-                            <circle cx="12" cy="5" r="1" />
-                            <circle cx="12" cy="19" r="1" />
-                          </svg>
-                        </button>
-
-                        {/* DROPDOWN MENU */}
-                        {activeMenuId === task.id && (
-                          <div className="task-dropdown-menu" ref={menuRef}>
-                            <button
-                              type="button"
-                              className="task-dropdown-item"
-                              onClick={() => handleToggleComplete(task)}
-                            >
-                              <span>{task.status === "Completed" ? "↩️ Mark as Active" : "✓ Mark Completed"}</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="task-dropdown-item"
-                              onClick={() => handleDuplicate(task)}
-                            >
-                              <span>📋 Duplicate Task</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="task-dropdown-item danger"
-                              onClick={() => handleDeleteTask(task.id)}
-                            >
-                              <span>🗑️ Delete Task</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+              displayedTasks.map((task, idx) => (
+                <tr
+                  key={task.id || task._id || idx}
+                  className="task-table-row-clickable"
+                  onClick={() => setViewingTask(task)}
+                >
+                  <td className="td-num">{idx + 1}</td>
+                  <td className="tasks-title-cell">
+                    <strong className="item-primary-title">{task.title}</strong>
+                    {task.meta?.studentName && (
+                      <span className="item-sub-meta">Student: {task.meta.studentName} ({task.meta.studentId || "Student"})</span>
+                    )}
+                    {task.questionsCount && (
+                      <span className="item-sub-meta">{task.questionsCount} Questions • {task.totalMarks || (task.questionsCount * 2)} Total Marks</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`task-type-pill ${getTypeClass(task.type)}`}>
+                      {task.type}
+                    </span>
+                  </td>
+                  <td>{task.subject}</td>
+                  <td>{task.createdOn}</td>
+                  <td>{task.dueDate}</td>
+                  <td>
+                    <span className={`task-status-pill ${getStatusClass(task.status)}`}>
+                      {task.status}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className="tasks-view-btn-pill"
+                      title="View Details"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingTask(task);
+                      }}
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                      <span>View</span>
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -496,7 +482,7 @@ export default function TasksCreatedView() {
           className="tasks-view-all-btn"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <span>{isExpanded ? "Show Top 5 Tasks" : "View All Tasks"}</span>
+          <span>{isExpanded ? "Show Top 5 Records" : `View All (${filteredTasks.length}) Records`}</span>
           <svg
             width="16"
             height="16"
@@ -517,141 +503,19 @@ export default function TasksCreatedView() {
         </button>
       </div>
 
-      {/* MODAL: CREATE NEW TASK */}
-      {showCreateModal && (
-        <div className="task-modal-backdrop" onClick={() => setShowCreateModal(false)}>
-          <div className="task-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="task-modal-header">
-              <h3>Create New Student Task</h3>
-              <button
-                type="button"
-                className="task-modal-close"
-                onClick={() => setShowCreateModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <form onSubmit={handleCreateTask}>
-              <div className="task-modal-body">
-                <div className="task-form-group">
-                  <label>Task Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Computer Networks Lab Quiz - Unit 2"
-                    value={newTaskForm.title}
-                    onChange={(e) =>
-                      setNewTaskForm({ ...newTaskForm, title: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="task-form-row">
-                  <div className="task-form-group">
-                    <label>Task Type</label>
-                    <select
-                      value={newTaskForm.type}
-                      onChange={(e) =>
-                        setNewTaskForm({ ...newTaskForm, type: e.target.value })
-                      }
-                    >
-                      <option value="Quiz">Quiz</option>
-                      <option value="Assignment">Assignment</option>
-                      <option value="Test">Test</option>
-                      <option value="Challenge">Coding Challenge</option>
-                    </select>
-                  </div>
-
-                  <div className="task-form-group">
-                    <label>Initial Status</label>
-                    <select
-                      value={newTaskForm.status}
-                      onChange={(e) =>
-                        setNewTaskForm({ ...newTaskForm, status: e.target.value })
-                      }
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Scheduled">Scheduled</option>
-                      <option value="Draft">Draft</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="task-form-row">
-                  <div className="task-form-group">
-                    <label>Subject / Course</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Database Management Systems"
-                      value={newTaskForm.subject}
-                      onChange={(e) =>
-                        setNewTaskForm({ ...newTaskForm, subject: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="task-form-group">
-                    <label>Due Date</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 24 May 2026"
-                      value={newTaskForm.dueDate}
-                      onChange={(e) =>
-                        setNewTaskForm({ ...newTaskForm, dueDate: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="task-form-group">
-                  <label>Target Department / Batch</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CSE 6th Sem - Section A"
-                    value={newTaskForm.targetBatch}
-                    onChange={(e) =>
-                      setNewTaskForm({ ...newTaskForm, targetBatch: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="task-form-group">
-                  <label>Task Instructions & Description</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Enter instructions, syllabus covered, or submission format guidelines..."
-                    value={newTaskForm.description}
-                    onChange={(e) =>
-                      setNewTaskForm({ ...newTaskForm, description: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="task-modal-footer">
-                <button
-                  type="button"
-                  className="task-btn-secondary"
-                  onClick={() => setShowCreateModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="task-btn-primary">
-                  Create Task
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: VIEW TASK DETAILS */}
+      {/* MODAL: VIEW ITEM DETAILS (READ-ONLY) */}
       {viewingTask && (
         <div className="task-modal-backdrop" onClick={() => setViewingTask(null)}>
           <div className="task-modal" onClick={(e) => e.stopPropagation()}>
             <div className="task-modal-header">
-              <h3>Task Details</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span className={`task-type-pill ${getTypeClass(viewingTask.type)}`}>
+                  {viewingTask.type}
+                </span>
+                <span className={`task-status-pill ${getStatusClass(viewingTask.status)}`}>
+                  {viewingTask.status}
+                </span>
+              </div>
               <button
                 type="button"
                 className="task-modal-close"
@@ -661,47 +525,17 @@ export default function TasksCreatedView() {
               </button>
             </div>
             <div className="task-modal-body">
-              <div style={{ marginBottom: "1rem" }}>
-                <span
-                  className={`task-type-pill ${
-                    viewingTask.type === "Quiz"
-                      ? "type-quiz"
-                      : viewingTask.type === "Assignment"
-                      ? "type-assignment"
-                      : viewingTask.type === "Test"
-                      ? "type-test"
-                      : "type-challenge"
-                  }`}
-                  style={{ marginRight: "0.5rem" }}
-                >
-                  {viewingTask.type}
-                </span>
-                <span
-                  className={`task-status-pill ${
-                    viewingTask.status === "Active"
-                      ? "status-active"
-                      : viewingTask.status === "Completed"
-                      ? "status-completed"
-                      : viewingTask.status === "Scheduled"
-                      ? "status-scheduled"
-                      : "status-draft"
-                  }`}
-                >
-                  {viewingTask.status}
-                </span>
-              </div>
-
-              <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0 0 1rem 0", color: "#0f172a" }}>
+              <h2 style={{ fontSize: "1.35rem", fontWeight: 800, margin: "0 0 1rem 0", color: "#0f172a" }}>
                 {viewingTask.title}
               </h2>
 
               <div className="task-detail-grid">
                 <div className="task-detail-item">
-                  <div className="task-detail-label">SUBJECT / COURSE</div>
+                  <div className="task-detail-label">SUBJECT / DOMAIN</div>
                   <div className="task-detail-val">{viewingTask.subject}</div>
                 </div>
                 <div className="task-detail-item">
-                  <div className="task-detail-label">TARGET BATCH</div>
+                  <div className="task-detail-label">TARGET BATCH / AUDIENCE</div>
                   <div className="task-detail-val">{viewingTask.targetBatch || "All Batches"}</div>
                 </div>
                 <div className="task-detail-item">
@@ -709,14 +543,77 @@ export default function TasksCreatedView() {
                   <div className="task-detail-val">{viewingTask.createdOn}</div>
                 </div>
                 <div className="task-detail-item">
-                  <div className="task-detail-label">DUE DATE</div>
+                  <div className="task-detail-label">TIMELINE / DURATION</div>
                   <div className="task-detail-val">{viewingTask.dueDate}</div>
                 </div>
+
+                {viewingTask.questionsCount && (
+                  <div className="task-detail-item">
+                    <div className="task-detail-label">QUESTIONS COUNT</div>
+                    <div className="task-detail-val">{viewingTask.questionsCount} Questions</div>
+                  </div>
+                )}
+
+                {viewingTask.totalMarks && (
+                  <div className="task-detail-item">
+                    <div className="task-detail-label">TOTAL MARKS</div>
+                    <div className="task-detail-val">{viewingTask.totalMarks} Marks</div>
+                  </div>
+                )}
+
+                {viewingTask.meta?.studentName && (
+                  <div className="task-detail-item">
+                    <div className="task-detail-label">SUBMITTED BY</div>
+                    <div className="task-detail-val">
+                      {viewingTask.meta.studentName} ({viewingTask.meta.studentId || "Student"})
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="task-desc-box">
-                <div className="task-detail-label">INSTRUCTIONS / DESCRIPTION</div>
-                <p>{viewingTask.description || "No specific instructions provided."}</p>
+              {viewingTask.meta?.techStack && viewingTask.meta.techStack.length > 0 && (
+                <div style={{ marginTop: "1rem" }}>
+                  <div className="task-detail-label">TECH STACK</div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+                    {viewingTask.meta.techStack.map((tech, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          background: "#eff6ff",
+                          color: "#1d4ed8",
+                          border: "1px solid #bfdbfe",
+                          padding: "3px 10px",
+                          borderRadius: "6px",
+                          fontSize: "0.78rem",
+                          fontWeight: 700
+                        }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {viewingTask.meta?.githubUrl && (
+                <div style={{ marginTop: "1rem" }}>
+                  <div className="task-detail-label">PROJECT REPOSITORY</div>
+                  <a
+                    href={viewingTask.meta.githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#2563eb", fontWeight: 600, fontSize: "0.88rem", textDecoration: "underline" }}
+                  >
+                    {viewingTask.meta.githubUrl}
+                  </a>
+                </div>
+              )}
+
+              <div className="task-desc-box" style={{ marginTop: "1.25rem" }}>
+                <div className="task-detail-label">DESCRIPTION / INSTRUCTIONS</div>
+                <p style={{ margin: "4px 0 0 0", color: "#334155", lineHeight: 1.55 }}>
+                  {viewingTask.description || "No specific instructions provided."}
+                </p>
               </div>
             </div>
 
@@ -730,144 +627,25 @@ export default function TasksCreatedView() {
               </button>
               <button
                 type="button"
-                className="task-btn-primary"
-                onClick={() => {
-                  setEditingTask({ ...viewingTask });
-                  setViewingTask(null);
+                className="task-btn-danger"
+                style={{
+                  background: "#fee2e2",
+                  color: "#b91c1c",
+                  border: "1px solid #fca5a5",
+                  padding: "0.55rem 1rem",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  cursor: "pointer"
                 }}
+                onClick={() => handleDeleteTask(viewingTask.id || viewingTask._id)}
               >
-                Edit Task
+                Remove from List
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: EDIT TASK */}
-      {editingTask && (
-        <div className="task-modal-backdrop" onClick={() => setEditingTask(null)}>
-          <div className="task-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="task-modal-header">
-              <h3>Edit Task</h3>
-              <button
-                type="button"
-                className="task-modal-close"
-                onClick={() => setEditingTask(null)}
-              >
-                ✕
-              </button>
-            </div>
-            <form onSubmit={handleSaveEdit}>
-              <div className="task-modal-body">
-                <div className="task-form-group">
-                  <label>Task Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingTask.title}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, title: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="task-form-row">
-                  <div className="task-form-group">
-                    <label>Task Type</label>
-                    <select
-                      value={editingTask.type}
-                      onChange={(e) =>
-                        setEditingTask({ ...editingTask, type: e.target.value })
-                      }
-                    >
-                      <option value="Quiz">Quiz</option>
-                      <option value="Assignment">Assignment</option>
-                      <option value="Test">Test</option>
-                      <option value="Challenge">Coding Challenge</option>
-                    </select>
-                  </div>
-
-                  <div className="task-form-group">
-                    <label>Status</label>
-                    <select
-                      value={editingTask.status}
-                      onChange={(e) =>
-                        setEditingTask({ ...editingTask, status: e.target.value })
-                      }
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Scheduled">Scheduled</option>
-                      <option value="Draft">Draft</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="task-form-row">
-                  <div className="task-form-group">
-                    <label>Subject / Course</label>
-                    <input
-                      type="text"
-                      required
-                      value={editingTask.subject}
-                      onChange={(e) =>
-                        setEditingTask({ ...editingTask, subject: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="task-form-group">
-                    <label>Due Date</label>
-                    <input
-                      type="text"
-                      value={editingTask.dueDate}
-                      onChange={(e) =>
-                        setEditingTask({ ...editingTask, dueDate: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="task-form-group">
-                  <label>Target Department / Batch</label>
-                  <input
-                    type="text"
-                    value={editingTask.targetBatch || ""}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, targetBatch: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="task-form-group">
-                  <label>Task Instructions & Description</label>
-                  <textarea
-                    rows={3}
-                    value={editingTask.description || ""}
-                    onChange={(e) =>
-                      setEditingTask({ ...editingTask, description: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="task-modal-footer">
-                <button
-                  type="button"
-                  className="task-btn-secondary"
-                  onClick={() => setEditingTask(null)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="task-btn-primary">
-                  Save Changes
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
     </div>
   );
 }
-

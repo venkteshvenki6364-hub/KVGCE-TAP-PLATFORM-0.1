@@ -837,7 +837,7 @@ export default function DashboardOverview({ role = "admin" }) {
           </div>
 
           {/* Placement Readiness Overview */}
-          <div className="ov-card-box">
+          <div className="ov-card-box ov-placement-card">
             <div className="ov-card-box-header">
               <h3>Placement Readiness Overview</h3>
             </div>
