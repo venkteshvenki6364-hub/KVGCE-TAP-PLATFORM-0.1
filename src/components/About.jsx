@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./About.css";
+import { collegeLogoUrl } from "../assets";
 
 const heroPillars = [
   {
@@ -93,7 +94,7 @@ function About() {
         {/* ABOUT KVG COLLEGE OF ENGINEERING INSTITUTION HIGHLIGHT */}
         <div className="institution-highlight-card">
           <div className="inst-header-row">
-            <img src="/KVGCE_logo.png" alt="KVGCE Logo" className="inst-badge-logo" />
+            <img src={collegeLogoUrl} alt="KVGCE Logo" className="inst-badge-logo" />
             <div>
               <span className="inst-sub-eyebrow">ESTABLISHED 1989 • SULLIA, D.K.</span>
               <h3 className="inst-title">KVG College of Engineering</h3>

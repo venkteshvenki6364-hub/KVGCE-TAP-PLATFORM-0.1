@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import "./DashboardLayout.css";
+import { collegeLogoUrl } from "../assets";
 
 const SEARCH_INDEX = [
   // STUDENTS & PEOPLE
@@ -877,6 +878,7 @@ const DashboardLayout = ({ children, title }) => {
       return [
         { path: "/admin/dashboard?tab=pending", label: "Pending Approvals", icon: "pending" },
         { path: "/admin/dashboard?tab=analysis", label: "Overall Analysis", icon: "analysis" },
+        { path: "/admin/dashboard?tab=tasks", label: "Tasks Created", icon: "tasks" },
         { path: "/admin/dashboard?tab=faculty", label: "Faculty", icon: "faculty" },
         { path: "/admin/dashboard?tab=users", label: "User Management", icon: "users" },
         { path: "/admin/dashboard?tab=departments", label: "Departments", icon: "departments" },
@@ -913,13 +915,9 @@ const DashboardLayout = ({ children, title }) => {
 
           <div className="brand-logo-box">
             <img
-              src="/KVGCE_logo.png"
+              src={collegeLogoUrl}
               alt="KVGCE Logo"
               className="app-header-logo"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://via.placeholder.com/40?text=KVG";
-              }}
             />
           </div>
           <div className="brand-title-meta">

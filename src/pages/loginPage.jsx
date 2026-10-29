@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import "./LoginPage.css";
+import { collegeLogoUrl } from "../assets";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -434,13 +435,9 @@ const isValidEmail = (emailStr) => {
         {/* EMBLEM LOGO */}
         <div className="college-logo-wrapper">
           <img
-            src="/KVGCE_logo.png"
+            src={collegeLogoUrl}
             alt="KVG College of Engineering Emblem"
             className="emblem-img"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = "/kvg_logo.png";
-            }}
           />
         </div>
 

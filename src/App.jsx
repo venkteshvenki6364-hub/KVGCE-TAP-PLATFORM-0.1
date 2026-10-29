@@ -347,6 +347,14 @@ function App() {
 
           {/* Admin Protected Routes */}
           <Route
+            path="/admin/tasks"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminHomePage defaultTab="tasks" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>

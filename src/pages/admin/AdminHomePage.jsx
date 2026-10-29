@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
-import SingleStudentOverview from "../../components/SingleStudentOverview";
 import DashboardOverview from "../../components/DashboardOverview";
+import TasksCreatedView from "../../components/faculty/TasksCreatedView";
 import AdminFacultyView from "../../components/admin/AdminFacultyView";
 import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
 import CodingProblemBuilder from "../../components/quiz/CodingProblemBuilder";
@@ -216,7 +216,7 @@ const ALL_STUDENTS_DATA = [
   }
 ];
 
-function AdminHomePage() {
+function AdminHomePage({ defaultTab } = {}) {
   const location = useLocation();
   const [data, setData] = useState(null);
   const [users, setUsers] = useState([]);
@@ -227,6 +227,10 @@ function AdminHomePage() {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
     if (tabParam) return tabParam;
+    if (defaultTab) return defaultTab;
+    if (typeof window !== "undefined" && (window.location.pathname.includes("/tasks") || window.location.search.includes("tab=tasks"))) {
+      return "tasks";
+    }
     if (typeof window !== "undefined" && window.location.pathname.includes("/faculty")) {
       return "faculty";
     }
@@ -1037,116 +1041,20 @@ function AdminHomePage() {
           </div>
         )}
 
+        {/* TAB: TASKS CREATED */}
+        {activeTab === "tasks" && (
+          <div className="tab-content" style={{ padding: 0 }}>
+            <TasksCreatedView />
+          </div>
+        )}
+
         {/* TAB 0: FACULTIES VIEW */}
         {activeTab === "faculty" && <AdminFacultyView />}
 
         {/* TAB 1: OVERALL DATA ANALYSIS & SKILL TRACKING */}
         {activeTab === "analysis" && (
-          <div className="analysis-dashboard-section">
-            {/* FILTER TOOLBAR CARD */}
-            <div className="dashboard-filter-card">
-              <div className="filter-card-header">
-                <div>
-                  <h3 className="filter-section-title">Dashboard Overview</h3>
-                  <p className="filter-section-sub">
-                    Real-time overview of all students' performance, skill tracking, and activities
-                  </p>
-                </div>
-
-
-              </div>
-
-              {/* INTERACTIVE SKILL ANALYSIS FILTER CONTROLS */}
-              <div className="filter-controls-row">
-                <div className="filter-group">
-                  <label className="filter-label">Analytics Scope Mode:</label>
-                  <div className="filter-tabs-pills">
-                    <button
-                      className={`pill-btn ${filterMode === "all" ? "active" : ""}`}
-                      onClick={() => setFilterMode("all")}
-                    >
-                      All Students
-                    </button>
-                    <button
-                      className={`pill-btn ${filterMode === "class" ? "active" : ""}`}
-                      onClick={() => setFilterMode("class")}
-                    >
-                      Filter by Class / Branch / Year
-                    </button>
-                    <button
-                      className={`pill-btn ${filterMode === "single" ? "active" : ""}`}
-                      onClick={() => setFilterMode("single")}
-                    >
-                      Single Student Lookup
-                    </button>
-                  </div>
-                </div>
-
-                {/* CONDITIONAL CONTROLS: CLASS / BRANCH / YEAR */}
-                {filterMode === "class" && (
-                  <div className="sub-filter-row">
-                    <div className="filter-select-item">
-                      <label className="sub-lbl">Department / Branch:</label>
-                      <select
-                        value={selectedDept}
-                        onChange={(e) => setSelectedDept(e.target.value)}
-                        className="filter-dropdown-select"
-                      >
-                        <option value="all">All Departments</option>
-                        <option value="CSE">Computer Science (CSE)</option>
-                        <option value="ECE">Electronics (ECE)</option>
-                        <option value="ME">Mechanical (ME)</option>
-                        <option value="ISE">Information Science (ISE)</option>
-                        <option value="CV">Civil Engineering (CV)</option>
-                      </select>
-                    </div>
-
-                    <div className="filter-select-item">
-                      <label className="sub-lbl">Academic Year:</label>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="filter-dropdown-select"
-                      >
-                        <option value="all">All Years</option>
-                        <option value="1st Year">1st Year</option>
-                        <option value="2nd Year">2nd Year</option>
-                        <option value="3rd Year">3rd Year</option>
-                        <option value="4th Year">4th Year</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* CONDITIONAL CONTROLS: SINGLE STUDENT LOOKUP */}
-                {filterMode === "single" && (
-                  <div className="single-student-search-box">
-                    <label className="sub-lbl">Select Student USN or Name:</label>
-                    <select
-                      value={selectedStudentUSN}
-                      onChange={(e) => setSelectedStudentUSN(e.target.value)}
-                      className="student-picker-select"
-                    >
-                      {ALL_STUDENTS_DATA.map((s) => (
-                        <option key={s.usn} value={s.usn}>
-                          {s.usn} - {s.name} ({s.dept}, {s.year})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {filterMode === "single" ? (
-              <div style={{ marginTop: "1rem" }}>
-                <SingleStudentOverview defaultUsn={selectedStudentUSN} userRole="admin" />
-              </div>
-            ) : (
-              <div style={{ marginTop: "1rem" }}>
-                <DashboardOverview role="admin" />
-              </div>
-            )}
+          <div className="analysis-dashboard-section" style={{ padding: 0 }}>
+            <DashboardOverview role="admin" />
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./Navbar.css";
+import { collegeLogoUrl } from "../assets";
 
 const navLinks = [
   {
@@ -68,7 +69,7 @@ function Navbar({ activeSection: initialActiveSection }) {
           onClick={closeMenu}
         >
           <img
-            src="/KVGCE_logo.png"
+            src={collegeLogoUrl}
             alt="KVG College of Engineering Logo"
             className="college-logo"
           />

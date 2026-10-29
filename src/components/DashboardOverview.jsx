@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 import "./DashboardOverview.css";
 
@@ -105,11 +106,6 @@ export default function DashboardOverview({ role = "admin" }) {
   const [studentOptions, setStudentOptions] = useState([]);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  // Category Detailed Popup Modal states
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [selectedCatModalKey, setSelectedCatModalKey] = useState("overall");
-  const [categoryDetails, setCategoryDetails] = useState({});
-
   // Live KPI metrics
   const [liveStats, setLiveStats] = useState({
     totalStudents: 1248,
@@ -174,10 +170,6 @@ export default function DashboardOverview({ role = "admin" }) {
         hrComm: analysis.categoryScores.hrComm !== undefined ? analysis.categoryScores.hrComm : 70,
         overall: analysis.categoryScores.overall !== undefined ? analysis.categoryScores.overall : (analysis.avgSkillScore || 82.5)
       });
-    }
-
-    if (analysis.categoryDetails) {
-      setCategoryDetails(analysis.categoryDetails);
     }
 
     if (analysis.departmentScores && analysis.departmentScores.length > 0) {
@@ -320,40 +312,7 @@ export default function DashboardOverview({ role = "admin" }) {
   const pct40 = Math.round((dist40 / totalDist) * 100);
   const pctBelow = Math.max(0, 100 - pct90 - pct75 - pct60 - pct40);
 
-  // Popup Modal Handlers
-  const handleOpenCategoryModal = (catKey = "overall") => {
-    setSelectedCatModalKey(catKey || "overall");
-    setIsCategoryModalOpen(true);
-  };
 
-  const handleCloseCategoryModal = () => {
-    setIsCategoryModalOpen(false);
-  };
-
-  // Active Category Details Object with fallback
-  const activeCategoryMeta = CATEGORY_ITEMS.find((c) => c.key === selectedCatModalKey) || CATEGORY_ITEMS[5];
-  const backendCatData = categoryDetails[selectedCatModalKey] || {};
-  const currentCategoryScore = categoryScores[selectedCatModalKey] || activeCategoryMeta.benchmark || 80;
-
-  const currentCategoryTiers = backendCatData.tiers || {
-    above85: Math.round(liveStats.totalStudents * 0.42),
-    tier60_84: Math.round(liveStats.totalStudents * 0.45),
-    below60: Math.round(liveStats.totalStudents * 0.13)
-  };
-
-  const currentCategoryRankings = backendCatData.rankings && backendCatData.rankings.length > 0
-    ? backendCatData.rankings
-    : topPerformers.slice(0, 5).map((p, idx) => ({
-        rank: idx + 1,
-        name: p.name,
-        usn: p.usn,
-        dept: p.dept,
-        score: Math.round(parseFloat(p.score) * (0.95 + idx * 0.01))
-      }));
-
-  const currentTopPerformer = backendCatData.topPerformer || (currentCategoryRankings[0]
-    ? { name: currentCategoryRankings[0].name, usn: currentCategoryRankings[0].usn, score: currentCategoryRankings[0].score }
-    : { name: "Karthik M", usn: "4KV21CS018", score: 96 });
 
   return (
     <div className="dashboard-overview-container">
@@ -575,23 +534,7 @@ export default function DashboardOverview({ role = "admin" }) {
         {/* CHART 1: Overall Performance by Category */}
         <div className="ov-chart-card">
           <div className="ov-chart-card-header">
-            <div className="ov-chart-header-left">
-              <h3>Overall Performance by Category</h3>
-              <span className="ov-mini-badge">{hasActiveFilters ? "Filtered Cohort" : "All Students"}</span>
-            </div>
-            <button
-              type="button"
-              className="ov-card-details-btn"
-              onClick={() => handleOpenCategoryModal("overall")}
-              title="Click to view detailed category breakdown popup"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
-              View Details ↗
-            </button>
+            <h3>Overall Performance by Category</h3>
           </div>
 
           {/* Clean 2-Tier Layout: Bars Above Baseline, Labels Below Baseline (NO OVERLAPPING!) */}
@@ -613,8 +556,7 @@ export default function DashboardOverview({ role = "admin" }) {
                     <div
                       key={cat.key}
                       className="ov-vbar-col"
-                      onClick={() => handleOpenCategoryModal(cat.key)}
-                      title={`Click to view ${cat.label} breakdown`}
+                      title={`${cat.label}: ${score}%`}
                     >
                       <span className="ov-vbar-val">{score}%</span>
                       <div className="ov-vbar-track">
@@ -634,16 +576,18 @@ export default function DashboardOverview({ role = "admin" }) {
 
             {/* Bottom Dedicated X-Axis Labels Row (Strictly separated to prevent overlap) */}
             <div className="ov-vbars-labels-row">
-              {CATEGORY_ITEMS.map((cat) => (
-                <div
-                  key={cat.key}
-                  className="ov-vbar-label-item"
-                  onClick={() => handleOpenCategoryModal(cat.key)}
-                  title={`Click to view ${cat.label} breakdown`}
-                >
-                  <span className="ov-vbar-name-text">{cat.shortLabel}</span>
-                </div>
-              ))}
+              <div className="ov-yaxis-spacer" aria-hidden="true" />
+              <div className="ov-vbars-labels-content">
+                {CATEGORY_ITEMS.map((cat) => (
+                  <div
+                    key={cat.key}
+                    className="ov-vbar-label-item"
+                    title={cat.label}
+                  >
+                    <span className="ov-vbar-name-text">{cat.shortLabel}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -652,7 +596,6 @@ export default function DashboardOverview({ role = "admin" }) {
         <div className="ov-chart-card">
           <div className="ov-chart-card-header">
             <h3>Department Wise Average Skill Score</h3>
-            <span className="ov-mini-badge">{hasActiveFilters ? "Filtered Cohort" : "All Students"}</span>
           </div>
 
           <div className="ov-hbars-wrapper">
@@ -739,8 +682,16 @@ export default function DashboardOverview({ role = "admin" }) {
           {/* Top Performers */}
           <div className="ov-card-box">
             <div className="ov-card-box-header">
-              <h3>Top Performers</h3>
-              <span className="ov-card-counter">{topPerformers.length} Students</span>
+              <div className="ov-card-header-title-box">
+                <h3>Top Performers</h3>
+                <span className="ov-card-counter">{topPerformers.length} Students</span>
+              </div>
+              <Link to="/student/rankings" className="ov-rankings-pill-btn" title="View all on Rankings page">
+                <span>View All</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
             <table className="ov-data-table">
@@ -783,7 +734,16 @@ export default function DashboardOverview({ role = "admin" }) {
           <div className="ov-card-box">
             <div className="ov-card-box-header">
               <h3>Recent Activity</h3>
-              <a href="#viewall" className="ov-view-all-link" onClick={(e) => e.preventDefault()}>View All</a>
+              <Link
+                to={role === "faculty" ? "/faculty/dashboard?tab=tasks" : "/admin/dashboard?tab=tasks"}
+                className="ov-rankings-pill-btn"
+                title="View all created tasks"
+              >
+                <span>View All</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
             <div className="ov-activity-feed">
@@ -827,8 +787,16 @@ export default function DashboardOverview({ role = "admin" }) {
           {/* At-Risk Students */}
           <div className="ov-card-box">
             <div className="ov-card-box-header">
-              <h3>At-Risk Students</h3>
-              <span className="ov-card-counter">{atRiskStudents.length} Students</span>
+              <div className="ov-card-header-title-box">
+                <h3>At-Risk Students</h3>
+                <span className="ov-card-counter">{atRiskStudents.length} Students</span>
+              </div>
+              <Link to="/student/rankings" className="ov-rankings-pill-btn" title="View all on Rankings page">
+                <span>View All</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
             <table className="ov-data-table">
@@ -872,7 +840,6 @@ export default function DashboardOverview({ role = "admin" }) {
           <div className="ov-card-box">
             <div className="ov-card-box-header">
               <h3>Placement Readiness Overview</h3>
-              <span className="ov-mini-badge">{hasActiveFilters ? "Filtered Cohort" : "All Students"}</span>
             </div>
 
             <div className="ov-placement-gauge-box">
@@ -904,273 +871,57 @@ export default function DashboardOverview({ role = "admin" }) {
                 </div>
               </div>
 
-              <div className="ov-legend-list">
-                <div className="ov-legend-item">
-                  <span className="ov-legend-dot green"></span>
-                  <span className="ov-legend-txt">Ready (80% and above)</span>
-                  <strong className="ov-legend-val">
-                    {Math.round((liveStats.totalStudents * 0.26))} ({Math.round(liveStats.placementReadiness * 0.33)}%)
-                  </strong>
+              {/* CONTENT BELOW GRAPH */}
+              <div className="ov-pr-tier-list">
+                <div className="ov-pr-tier-item">
+                  <div className="ov-pr-tier-top">
+                    <div className="ov-pr-tier-name">
+                      <span className="ov-legend-dot green"></span>
+                      <span>Ready (80% and above)</span>
+                    </div>
+                    <strong className="ov-pr-tier-val">
+                      {Math.round((liveStats.totalStudents * 0.26))} ({Math.round(liveStats.placementReadiness * 0.33)}%)
+                    </strong>
+                  </div>
+                  <div className="ov-pr-tier-track">
+                    <div className="ov-pr-tier-bar green" style={{ width: `${Math.round(liveStats.placementReadiness * 0.33)}%` }}></div>
+                  </div>
                 </div>
-                <div className="ov-legend-item">
-                  <span className="ov-legend-dot blue"></span>
-                  <span className="ov-legend-txt">Developing (60% - 80%)</span>
-                  <strong className="ov-legend-val">
-                    {Math.round((liveStats.totalStudents * 0.47))} ({Math.round(liveStats.placementReadiness * 0.60)}%)
-                  </strong>
+
+                <div className="ov-pr-tier-item">
+                  <div className="ov-pr-tier-top">
+                    <div className="ov-pr-tier-name">
+                      <span className="ov-legend-dot blue"></span>
+                      <span>Developing (60% - 80%)</span>
+                    </div>
+                    <strong className="ov-pr-tier-val">
+                      {Math.round((liveStats.totalStudents * 0.47))} ({Math.round(liveStats.placementReadiness * 0.60)}%)
+                    </strong>
+                  </div>
+                  <div className="ov-pr-tier-track">
+                    <div className="ov-pr-tier-bar blue" style={{ width: `${Math.round(liveStats.placementReadiness * 0.60)}%` }}></div>
+                  </div>
                 </div>
-                <div className="ov-legend-item">
-                  <span className="ov-legend-dot red"></span>
-                  <span className="ov-legend-txt">Needs Improvement (Below 60%)</span>
-                  <strong className="ov-legend-val">
-                    {liveStats.atRiskStudents} ({liveStats.totalStudents > 0 ? Math.round((liveStats.atRiskStudents / liveStats.totalStudents) * 100) : 0}%)
-                  </strong>
+
+                <div className="ov-pr-tier-item">
+                  <div className="ov-pr-tier-top">
+                    <div className="ov-pr-tier-name">
+                      <span className="ov-legend-dot red"></span>
+                      <span>Needs Improvement (Below 60%)</span>
+                    </div>
+                    <strong className="ov-pr-tier-val">
+                      {liveStats.atRiskStudents} ({liveStats.totalStudents > 0 ? Math.round((liveStats.atRiskStudents / liveStats.totalStudents) * 100) : 0}%)
+                    </strong>
+                  </div>
+                  <div className="ov-pr-tier-track">
+                    <div className="ov-pr-tier-bar red" style={{ width: `${liveStats.totalStudents > 0 ? Math.round((liveStats.atRiskStudents / liveStats.totalStudents) * 100) : 10}%` }}></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* 6. IN-DEPTH CATEGORY PERFORMANCE POPUP MODAL */}
-      {isCategoryModalOpen && (
-        <div className="ov-modal-backdrop" onClick={handleCloseCategoryModal}>
-          <div className="ov-modal-dialog" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="ov-modal-header">
-              <div className="ov-modal-header-left">
-                <div className="ov-modal-icon-badge" style={{ backgroundColor: `${activeCategoryMeta.color}15`, color: activeCategoryMeta.color }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <line x1="18" y1="20" x2="18" y2="10"/>
-                    <line x1="12" y1="20" x2="12" y2="4"/>
-                    <line x1="6" y1="20" x2="6" y2="14"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="ov-modal-title">Performance by Category — Detailed Breakdown</h3>
-                  <p className="ov-modal-sub">
-                    In-depth student evaluation metrics, benchmark comparison &amp; tier distribution
-                  </p>
-                </div>
-              </div>
-
-              <div className="ov-modal-header-right">
-                <span className="ov-modal-cohort-pill">
-                  {hasActiveFilters ? "Filtered Cohort" : `All ${liveStats.totalStudents} Students`}
-                </span>
-                <button
-                  type="button"
-                  className="ov-modal-close-cross"
-                  onClick={handleCloseCategoryModal}
-                  aria-label="Close modal"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Category Selector Tabs */}
-            <div className="ov-modal-tabs-bar">
-              {CATEGORY_ITEMS.map((cat) => {
-                const isSelected = selectedCatModalKey === cat.key;
-                const score = categoryScores[cat.key] || 0;
-                return (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    className={`ov-modal-tab-pill ${isSelected ? "active" : ""}`}
-                    onClick={() => setSelectedCatModalKey(cat.key)}
-                  >
-                    <span className="ov-tab-indicator-dot" style={{ backgroundColor: cat.color }}></span>
-                    <span className="ov-tab-label-text">{cat.shortLabel}</span>
-                    <span className="ov-tab-val-chip">{score}%</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Modal Body Area */}
-            <div className="ov-modal-body">
-              {/* Top 4 KPI Metrics Grid */}
-              <div className="ov-modal-kpi-grid">
-                <div className="ov-modal-kpi-card">
-                  <span className="ov-mkpi-label">Category Average</span>
-                  <div className="ov-mkpi-row">
-                    <strong className="ov-mkpi-number">{currentCategoryScore}%</strong>
-                    <span className={`ov-mkpi-badge ${currentCategoryScore >= activeCategoryMeta.benchmark ? "pass" : "warn"}`}>
-                      {currentCategoryScore >= activeCategoryMeta.benchmark ? "Above Cutoff" : "Below Cutoff"}
-                    </span>
-                  </div>
-                  <span className="ov-mkpi-sub">Evaluated across all verified submissions</span>
-                </div>
-
-                <div className="ov-modal-kpi-card">
-                  <span className="ov-mkpi-label">Placement Target Cutoff</span>
-                  <div className="ov-mkpi-row">
-                    <strong className="ov-mkpi-number">{activeCategoryMeta.benchmark.toFixed(1)}%</strong>
-                    <span className="ov-mkpi-badge info">Standard Target</span>
-                  </div>
-                  <span className="ov-mkpi-sub">Minimum score required for campus eligibility</span>
-                </div>
-
-                <div className="ov-modal-kpi-card">
-                  <span className="ov-mkpi-label">Top Performer</span>
-                  <div className="ov-mkpi-row">
-                    <strong className="ov-mkpi-student-name">{currentTopPerformer.name}</strong>
-                    <span className="ov-mkpi-score-pill">{currentTopPerformer.score}%</span>
-                  </div>
-                  <span className="ov-mkpi-sub">USN: {currentTopPerformer.usn}</span>
-                </div>
-
-                <div className="ov-modal-kpi-card">
-                  <span className="ov-mkpi-label">Readiness Pass Rate</span>
-                  <div className="ov-mkpi-row">
-                    <strong className="ov-mkpi-number">
-                      {liveStats.totalStudents > 0
-                        ? `${Math.round(((currentCategoryTiers.above85 + currentCategoryTiers.tier60_84) / liveStats.totalStudents) * 100)}%`
-                        : "85%"}
-                    </strong>
-                    <span className="ov-mkpi-badge pass">Qualified</span>
-                  </div>
-                  <span className="ov-mkpi-sub">{currentCategoryTiers.above85 + currentCategoryTiers.tier60_84} out of {liveStats.totalStudents} eligible</span>
-                </div>
-              </div>
-
-              {/* Middle Section: Performance Tiers & Category Description */}
-              <div className="ov-modal-tiers-section">
-                <div className="ov-modal-tiers-left">
-                  <h4 className="ov-msection-title">Cohort Performance Tier Breakdown</h4>
-                  <p className="ov-msection-desc">{activeCategoryMeta.desc}</p>
-
-                  <div className="ov-tier-bars-list">
-                    {/* Tier 1: High */}
-                    <div className="ov-tier-item">
-                      <div className="ov-tier-meta">
-                        <span className="ov-tier-name green">★ High Proficiency (85%+)</span>
-                        <strong className="ov-tier-count">{currentCategoryTiers.above85} Students</strong>
-                      </div>
-                      <div className="ov-tier-track">
-                        <div
-                          className="ov-tier-bar green"
-                          style={{
-                            width: `${liveStats.totalStudents > 0 ? (currentCategoryTiers.above85 / liveStats.totalStudents) * 100 : 42}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Tier 2: Average */}
-                    <div className="ov-tier-item">
-                      <div className="ov-tier-meta">
-                        <span className="ov-tier-name blue">◆ Developing / Proficient (60% - 84%)</span>
-                        <strong className="ov-tier-count">{currentCategoryTiers.tier60_84} Students</strong>
-                      </div>
-                      <div className="ov-tier-track">
-                        <div
-                          className="ov-tier-bar blue"
-                          style={{
-                            width: `${liveStats.totalStudents > 0 ? (currentCategoryTiers.tier60_84 / liveStats.totalStudents) * 100 : 45}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Tier 3: Needs Improvement */}
-                    <div className="ov-tier-item">
-                      <div className="ov-tier-meta">
-                        <span className="ov-tier-name red">▲ Needs Improvement (&lt; 60%)</span>
-                        <strong className="ov-tier-count">{currentCategoryTiers.below60} Students</strong>
-                      </div>
-                      <div className="ov-tier-track">
-                        <div
-                          className="ov-tier-bar red"
-                          style={{
-                            width: `${liveStats.totalStudents > 0 ? (currentCategoryTiers.below60 / liveStats.totalStudents) * 100 : 13}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ov-modal-insight-box">
-                  <div className="ov-insight-badge">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
-                    Actionable Recommendations
-                  </div>
-                  <h5 className="ov-insight-title">Focus Area for {activeCategoryMeta.shortLabel}</h5>
-                  <p className="ov-insight-body">
-                    {currentCategoryScore >= 80
-                      ? `The cohort demonstrates robust grasp in ${activeCategoryMeta.shortLabel.toLowerCase()}. Recommend advanced mock interviews and problem-solving hackathons to prepare them for Tier-1 placements.`
-                      : `Average score in ${activeCategoryMeta.shortLabel.toLowerCase()} is currently ${currentCategoryScore}%. Faculty intervention with targeted practice assessments is recommended before campus drives.`}
-                  </p>
-                  <div className="ov-insight-footer">
-                    <span>Target Goal: &gt; 80%</span>
-                    <span>Current Gap: {Math.max(0, 80 - currentCategoryScore)}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Section: Top Ranked Students in this Category */}
-              <div className="ov-modal-table-section">
-                <div className="ov-modal-table-header">
-                  <h4 className="ov-msection-title">Top 5 Students in {activeCategoryMeta.label}</h4>
-                  <span className="ov-msection-sub">Ranked by performance score in this dimension</span>
-                </div>
-
-                <table className="ov-modal-data-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "80px" }}>Rank</th>
-                      <th>Student Name</th>
-                      <th>USN</th>
-                      <th>Department</th>
-                      <th style={{ textAlign: "right" }}>{activeCategoryMeta.shortLabel} Score</th>
-                      <th style={{ textAlign: "center" }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentCategoryRankings.map((st, idx) => (
-                      <tr key={st.usn || idx}>
-                        <td>
-                          <span className={`ov-rank-pill r${idx + 1}`}>#{idx + 1}</span>
-                        </td>
-                        <td style={{ fontWeight: 700, color: "#0f172a" }}>{st.name}</td>
-                        <td className="ov-usn-cell">{st.usn}</td>
-                        <td>{st.dept}</td>
-                        <td style={{ textAlign: "right", fontWeight: 800, color: activeCategoryMeta.color }}>
-                          {st.score}%
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <span className={`ov-status-tag ${st.score >= 85 ? "top" : "good"}`}>
-                            {st.score >= 85 ? "Excellent" : "Proficient"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="ov-modal-footer">
-              <span className="ov-mfooter-note">
-                💡 Real-time metrics computed directly from database assessment results and student score history.
-              </span>
-              <button
-                type="button"
-                className="ov-modal-done-btn"
-                onClick={handleCloseCategoryModal}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
