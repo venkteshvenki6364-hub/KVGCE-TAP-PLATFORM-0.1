@@ -297,6 +297,14 @@ function App() {
             }
           />
           <Route
+            path="/faculty/tasks"
+            element={
+              <ProtectedRoute allowedRoles={["faculty", "admin"]}>
+                <FacultyHomePage defaultTab="tasks" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/faculty/projects"
             element={
               <ProtectedRoute allowedRoles={["faculty", "admin"]}>

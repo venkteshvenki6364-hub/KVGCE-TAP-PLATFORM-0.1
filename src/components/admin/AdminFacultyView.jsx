@@ -143,6 +143,7 @@ const FACULTIES_DATA = [
 
 export default function AdminFacultyView() {
   const [facultiesList, setFacultiesList] = useState(FACULTIES_DATA);
+  const [selectedDept, setSelectedDept] = useState("all");
   const [selectedSem, setSelectedSem] = useState("all");
   const [selectedSec, setSelectedSec] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -203,15 +204,16 @@ export default function AdminFacultyView() {
 
   // Filter faculties
   const filteredFaculties = facultiesList.filter((f) => {
+    const matchesDept = selectedDept === "all" || f.dept === selectedDept;
     const matchesSem = selectedSem === "all" || String(f.semester) === selectedSem;
     const matchesSec = selectedSec === "all" || f.section === selectedSec;
-    return matchesSem && matchesSec;
+    return matchesDept && matchesSem && matchesSec;
   });
 
   const exportExcel = () => {
-    const headers = ["Faculty Name,Subjects and Classes"];
+    const headers = ["Faculty ID,Faculty Name,Department,Section,Semester,Classes Handling,Overall Performance"];
     const rows = filteredFaculties.map(
-      (f) => `"${f.name}","${f.classesHandled.map((item) => item.course).join("; ")}"`
+      (f) => `${f.id},"${f.name}",${f.dept},${f.section},${f.semester},${f.classesCount},${f.overallPerformance}%`
     );
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -223,10 +225,68 @@ export default function AdminFacultyView() {
     document.body.removeChild(link);
   };
 
+  // Helper to render Circular Ring Gauge
+  const renderCircularGauge = (percentage) => {
+    const radius = 18;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    let strokeColor = "#10b981"; // green
+    if (percentage < 80 && percentage >= 74) {
+      strokeColor = "#f59e0b"; // orange
+    } else if (percentage < 74) {
+      strokeColor = "#ef4444"; // red
+    }
+
+    return (
+      <div className="circular-gauge-container" title={`Overall Performance: ${percentage}%`}>
+        <svg width="48" height="48" viewBox="0 0 48 48" className="gauge-svg">
+          <circle
+            cx="24"
+            cy="24"
+            r={radius}
+            fill="none"
+            stroke="#e2e8f0"
+            strokeWidth="3.5"
+          />
+          <circle
+            cx="24"
+            cy="24"
+            r={radius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth="3.5"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            transform="rotate(-90 24 24)"
+          />
+        </svg>
+        <span className="gauge-text">{percentage}%</span>
+      </div>
+    );
+  };
+
   return (
     <div className="admin-faculty-view-wrapper">
       {/* 1. TOP FILTER CONTROLS ROW */}
       <div className="admin-faculty-filter-bar">
+        {/* Department Select */}
+        <div className="fac-filter-item">
+          <select
+            value={selectedDept}
+            onChange={(e) => setSelectedDept(e.target.value)}
+            className="fac-select-input"
+          >
+            <option value="all">Select All Department</option>
+            <option value="CSE">CSE</option>
+            <option value="ECE">ECE</option>
+            <option value="ISE">ISE</option>
+            <option value="ME">ME</option>
+            <option value="CV">CV</option>
+          </select>
+        </div>
+
         {/* Semester Select */}
         <div className="fac-filter-item">
           <select
@@ -305,7 +365,12 @@ export default function AdminFacultyView() {
               <tr>
                 <th style={{ width: "40px" }}></th>
                 <th>Faculty Name</th>
-                <th>Subjects and Classes Maintained</th>
+                <th>Faculty ID</th>
+                <th>Department</th>
+                <th>Section</th>
+                <th>Semester</th>
+                <th>Classes Handling</th>
+                <th style={{ textAlign: "center" }}>Overall Performance</th>
               </tr>
             </thead>
             <tbody>
@@ -333,6 +398,10 @@ export default function AdminFacultyView() {
                         </div>
                         <span className="fac-name-text">{faculty.name}</span>
                       </td>
+                      <td className="fac-id-text">{faculty.id}</td>
+                      <td>{faculty.dept}</td>
+                      <td>{faculty.section}</td>
+                      <td>{faculty.semester}</td>
                       <td>
                         <button
                           className="classes-link-btn"
@@ -341,12 +410,15 @@ export default function AdminFacultyView() {
                           {faculty.classesCount} {faculty.classesCount === 1 ? "Class" : "Classes"}
                         </button>
                       </td>
+                      <td style={{ textAlign: "center" }}>
+                        {renderCircularGauge(faculty.overallPerformance)}
+                      </td>
                     </tr>
 
                     {/* EXPANDED CLASSES SUB-TABLE ROW */}
                     {isExpanded && (
                       <tr className="classes-expanded-container-row">
-                        <td colSpan="3">
+                        <td colSpan="8">
                           <div className="expanded-classes-card">
                             <h4 className="classes-handled-title">
                               Classes Handled by {faculty.name}
@@ -354,19 +426,33 @@ export default function AdminFacultyView() {
                             <table className="classes-sub-table">
                               <thead>
                                 <tr>
-                                  <th>Subject</th>
+                                  <th>Class / Course</th>
+                                  <th>Department</th>
                                   <th>Section</th>
                                   <th>Semester</th>
                                   <th>Students</th>
+                                  <th>Overall Performance</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {faculty.classesHandled.map((cls, idx) => (
                                   <tr key={idx}>
                                     <td className="font-semibold text-slate-800">{cls.course}</td>
+                                    <td>{cls.dept}</td>
                                     <td>{cls.section}</td>
                                     <td>{cls.semester}</td>
                                     <td>{cls.students}</td>
+                                    <td>
+                                      <div className="sub-performance-bar-row">
+                                        <div className="horizontal-track-bg">
+                                          <div
+                                            className="horizontal-fill-bar"
+                                            style={{ width: `${cls.performance}%` }}
+                                          ></div>
+                                        </div>
+                                        <span className="perf-percent-lbl">{cls.performance}%</span>
+                                      </div>
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>

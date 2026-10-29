@@ -474,6 +474,8 @@ function CodingPracticeModule() {
       let errDetail = "Failed to communicate with compiler backend API.";
       if (err.response?.data?.detail) {
         errDetail = typeof err.response.data.detail === "string" ? err.response.data.detail : JSON.stringify(err.response.data.detail);
+      } else if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+        errDetail = "Cannot connect to KVGCE-TAP Backend server on http://127.0.0.1:8000.\nPlease verify that the FastAPI backend server is running:\n  cd backend\n  python -m uvicorn app.main:app --port 8000";
       } else if (err.message) {
         errDetail = err.message;
       }
@@ -553,7 +555,14 @@ function CodingPracticeModule() {
       }
     } catch (err) {
       console.error("Submission error:", err);
-      const errDetail = err.response?.data?.detail || err.message || "Submission service connection failed.";
+      let errDetail = "Submission service connection failed.";
+      if (err.response?.data?.detail) {
+        errDetail = typeof err.response.data.detail === "string" ? err.response.data.detail : JSON.stringify(err.response.data.detail);
+      } else if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+        errDetail = "Cannot connect to KVGCE-TAP Backend server on http://127.0.0.1:8000.\nPlease verify that the FastAPI backend server is running:\n  cd backend\n  python -m uvicorn app.main:app --port 8000";
+      } else if (err.message) {
+        errDetail = err.message;
+      }
       setOutputResult({
         isSubmit: true,
         isError: true,

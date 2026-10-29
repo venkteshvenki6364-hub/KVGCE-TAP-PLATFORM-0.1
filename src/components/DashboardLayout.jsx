@@ -103,7 +103,7 @@ const SEARCH_INDEX = [
     subtitle: "HOD • Computer Science & Engineering",
     tag: "Faculty",
     badgeColor: "#7c3aed",
-    path: "/faculty/students",
+    path: "/faculty/dashboard?tab=overview",
     keywords: ["ramesh", "sharma", "hod", "faculty", "professor", "cse"],
   },
   {
@@ -114,7 +114,7 @@ const SEARCH_INDEX = [
     subtitle: "Professor • Electronics & Communication",
     tag: "Faculty",
     badgeColor: "#7c3aed",
-    path: "/faculty/students",
+    path: "/faculty/dashboard?tab=overview",
     keywords: ["savitha", "doctor", "dr", "professor", "ece", "faculty"],
   },
 
@@ -313,6 +313,32 @@ const SEARCH_INDEX = [
     keywords: ["history", "test history", "scores", "my attempts", "continue test"],
   },
 ];
+
+const DashboardNavIcon = ({ name }) => {
+  const paths = {
+    tasks: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" /><path d="m9 14 2 2 4-4" /></>,
+    overview: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
+    projects: <><path d="M3 7h18v13H3z" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 12h18" /></>,
+    verification: <><path d="M5 4h14v16H5z" /><path d="m8 12 2.5 2.5L16 9" /></>,
+    feedback: <><path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.5 8.5 0 0 1-4-.9L4 20l1.2-3.1A7.4 7.4 0 0 1 4 12a7.5 7.5 0 0 1 8-7.5 7.5 7.5 0 0 1 8 7Z" /><path d="M8 12h.01M12 12h.01M16 12h.01" /></>,
+    student: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    quiz: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h8M8 11h8M8 15h5" /></>,
+    coding: <><polyline points="8 6 2 12 8 18" /><polyline points="16 6 22 12 16 18" /></>,
+    pending: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+    analysis: <><path d="M4 19V5M4 19h17" /><path d="m7 15 3-4 3 2 5-7" /></>,
+    faculty: <><path d="M4 21v-8l8-5 8 5v8" /><path d="M2 21h20M9 21v-5h6v5" /></>,
+    users: <><circle cx="9" cy="8" r="3" /><path d="M3 20v-1a6 6 0 0 1 12 0v1M16 5.5a3 3 0 0 1 0 5.8M18 14a5 5 0 0 1 3 4.5" /></>,
+    departments: <><path d="M3 21h18M5 21V5h14v16M8 8h2M14 8h2M8 12h2M14 12h2M8 16h2M14 16h2" /></>,
+    analytics: <><path d="M4 19V5M4 19h17" /><rect x="7" y="12" width="3" height="5" /><rect x="12" y="9" width="3" height="8" /><rect x="17" y="6" width="3" height="11" /></>,
+    rankings: <><path d="m12 3 2.5 5.1 5.5.8-4 4 1 5.5-5-2.6-5 2.6 1-5.5-4-4 5.5-.8L12 3Z" /></>,
+  };
+
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[name] || paths.overview}
+    </svg>
+  );
+};
 
 const DashboardLayout = ({ children, title }) => {
   const { user, role, logout } = useAuth();
@@ -839,26 +865,26 @@ const DashboardLayout = ({ children, title }) => {
       ];
     } else if (role === "faculty") {
       return [
-        { path: "/faculty/dashboard", label: "Overview", icon: "📊" },
-        { path: "/faculty/projects", label: "Project Evaluation", icon: "💡" },
-        { path: "/student/overview", label: "Student Single Overview", icon: "👤" },
-        { path: "/student/rankings", label: "Rankings", icon: "🏆" },
-        { path: "/faculty/assessments", label: "Assessments", icon: "📝" },
-        { path: "/faculty/questions", label: "Question Bank", icon: "❓" },
-        { path: "/faculty/activities", label: "Activity Verification", icon: "✅" },
-        { path: "/faculty/performance", label: "Analytics", icon: "📈" },
-        { path: "/faculty/feedback", label: "Student Feedback", icon: "💬" },
+        { path: "/faculty/dashboard?tab=overview", label: "Department Overview", icon: "overview" },
+        { path: "/faculty/dashboard?tab=tasks", label: "Tasks Created", icon: "tasks" },
+        { path: "/faculty/dashboard?tab=projects", label: "Project Evaluation", icon: "projects" },
+        { path: "/faculty/dashboard?tab=singleOverview", label: "Student Overview", icon: "student" },
+        { path: "/faculty/dashboard?tab=quizBuilder", label: "Create Quiz", icon: "quiz" },
+        { path: "/faculty/dashboard?tab=codingBuilder", label: "Create Coding Challenge", icon: "coding" },
+        { path: "/student/rankings", label: "Rankings", icon: "rankings" },
       ];
     } else if (role === "admin") {
       return [
-        { path: "/admin/dashboard?tab=overview", label: "Dashboard Overview", icon: "📊" },
-        { path: "/admin/dashboard?tab=pending", label: "Pending Approvals", icon: "⏳" },
-        { path: "/admin/dashboard?tab=analysis", label: "Overall Analysis", icon: "📈" },
-        { path: "/admin/dashboard?tab=faculty", label: "Faculties", icon: "👨‍🏫" },
-        { path: "/admin/dashboard?tab=users", label: "User Management", icon: "👤" },
-        { path: "/admin/dashboard?tab=quizBuilder", label: "Quiz & Aptitude Builder", icon: "📝" },
-        { path: "/admin/dashboard?tab=codingBuilder", label: "Coding Lab Builder", icon: "💻" },
-        { path: "/student/rankings", label: "Rankings", icon: "🏆" },
+        { path: "/admin/dashboard?tab=pending", label: "Pending Approvals", icon: "pending" },
+        { path: "/admin/dashboard?tab=analysis", label: "Overall Analysis", icon: "analysis" },
+        { path: "/admin/dashboard?tab=faculty", label: "Faculty", icon: "faculty" },
+        { path: "/admin/dashboard?tab=users", label: "User Management", icon: "users" },
+        { path: "/admin/dashboard?tab=departments", label: "Departments", icon: "departments" },
+        { path: "/admin/dashboard?tab=quizBuilder", label: "Quiz Builder", icon: "quiz" },
+        { path: "/admin/dashboard?tab=codingBuilder", label: "Coding Lab", icon: "coding" },
+        { path: "/admin/dashboard?tab=analytics", label: "System Health", icon: "analytics" },
+        { path: "/admin/students", label: "Students", icon: "student" },
+        { path: "/student/rankings", label: "Rankings", icon: "rankings" },
       ];
     }
     return [];
@@ -1061,6 +1087,7 @@ const DashboardLayout = ({ children, title }) => {
                 fullPath === item.path ||
                 (location.pathname === item.path && !location.search) ||
                 (location.pathname === "/admin/dashboard" && !location.search && item.path === "/admin/dashboard?tab=pending") ||
+                (location.pathname === "/faculty/dashboard" && !location.search && (item.path === "/faculty/dashboard" || item.path === "/faculty/dashboard?tab=overview")) ||
                 (item.path.includes("?") && fullPath.includes(item.path));
 
               return (
@@ -1074,7 +1101,9 @@ const DashboardLayout = ({ children, title }) => {
                     }
                   }}
                 >
-                  <span className="card-item-icon">{item.icon}</span>
+                  <span className="card-item-icon">
+                    {typeof item.icon === "string" ? <DashboardNavIcon name={item.icon} /> : item.icon}
+                  </span>
                   <span className="card-item-label">{item.label}</span>
                 </Link>
               );

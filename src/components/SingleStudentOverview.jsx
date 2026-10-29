@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import "./SingleStudentOverview.css";
 
@@ -223,8 +224,26 @@ export default function SingleStudentOverview({ defaultUsn = "4KV21CS042", userR
   const [selectedSem, setSelectedSem] = useState("all");
   const [selectedSec, setSelectedSec] = useState("all");
 
-  // Find active student object
-  const currentStudent =
+  const [dbStudent, setDbStudent] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchOverview = async () => {
+      try {
+        const res = await api.get(`/faculty/students/${encodeURIComponent(searchUsn)}/overview`);
+        if (isMounted && res.data?.success && res.data?.data) {
+          setDbStudent(res.data.data);
+        }
+      } catch (err) {
+        if (isMounted) setDbStudent(null);
+      }
+    };
+    if (searchUsn) fetchOverview();
+    return () => { isMounted = false; };
+  }, [searchUsn]);
+
+  // Find active student object (database-backed with mock fallback)
+  const currentStudent = dbStudent ||
     ALL_STUDENTS_MOCK_DATA.find(
       (s) => s.usn.toLowerCase() === searchUsn.toLowerCase() || s.name.toLowerCase().includes(searchUsn.toLowerCase())
     ) || ALL_STUDENTS_MOCK_DATA[0];

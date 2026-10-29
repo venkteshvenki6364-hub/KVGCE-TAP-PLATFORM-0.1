@@ -321,3 +321,436 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 56, 150, 0.35);
 }
+
+/* ==========================================================================
+   PROJECT EVALUATION PAGE STYLES (CLEAN & MODERN)
+   ========================================================================== */
+.project-eval-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.project-search-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.project-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.15rem;
+}
+
+.project-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.project-main-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+
+.project-sub-desc {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.project-search-form {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 580px;
+}
+
+.project-id-input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 0.95rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.project-id-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.project-search-btn {
+  padding: 0.7rem 1.35rem;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.project-search-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.project-quick-samples {
+  margin-top: 0.85rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.project-sample-chip {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.project-sample-chip:hover {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+}
+
+.project-alert-error {
+  margin-top: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Searched Project Details Card */
+.project-details-card {
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.08);
+  animation: fadeInProject 0.3s ease-out;
+}
+
+@keyframes fadeInProject {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.project-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.project-id-tag {
+  background: #2563eb;
+  color: #ffffff;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.project-title-text {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.project-student-meta {
+  font-size: 0.9rem;
+  color: #475569;
+  margin: 0.4rem 0 0 0;
+}
+
+.project-evaluated-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 20px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  color: #15803d;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.project-pending-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 20px;
+  background: #fefce8;
+  border: 1.5px solid #fef08a;
+  color: #854d0e;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.project-description-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 0.92rem;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 1.15rem;
+}
+
+.project-tech-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.15rem;
+}
+
+.project-tech-chip {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.project-links-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.project-link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.project-link-pill.github { background: #0f172a; color: #ffffff; }
+.project-link-pill.github:hover { background: #1e293b; }
+
+.project-link-pill.demo { background: #2563eb; color: #ffffff; }
+.project-link-pill.demo:hover { background: #1d4ed8; }
+
+.project-link-pill.ppt { background: #ea580c; color: #ffffff; }
+.project-link-pill.ppt:hover { background: #c2410c; }
+
+.project-link-pill.pdf { background: #dc2626; color: #ffffff; }
+.project-link-pill.pdf:hover { background: #b91c1c; }
+
+/* Evaluation Panel Form */
+.project-eval-panel {
+  padding-top: 1.25rem;
+  border-top: 1.5px dashed #cbd5e1;
+}
+
+.project-eval-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+
+.project-eval-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+}
+
+.project-eval-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.project-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.project-input-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.project-marks-input {
+  padding: 0.65rem 0.95rem;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  width: 170px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.project-marks-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+.project-submit-btn {
+  padding: 0.7rem 1.45rem;
+  border-radius: 8px;
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.92rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.project-submit-btn:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+/* Evaluated Projects List */
+.project-list-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.project-list-header {
+  margin-bottom: 1.15rem;
+}
+
+.project-list-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+
+.project-list-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.project-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.project-empty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.project-empty-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.35rem 0;
+}
+
+.project-empty-text {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.project-table-id {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 800;
+  background: #f1f5f9;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  color: #334155;
+  font-size: 0.82rem;
+}
+
+.project-score-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.project-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #86efac;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
