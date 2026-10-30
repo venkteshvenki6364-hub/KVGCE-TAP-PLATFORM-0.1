@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../../services/api";
 import "./QuizQuestionBuilder.css";
 
@@ -45,14 +45,14 @@ const INITIAL_QUESTIONS = [
   },
 ];
 
-export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defaultCategory = "Technical", onBack, onPublish }) {
+export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defaultCategory = "Technical", initialQuiz = null, onBack, onPublish }) {
   // Stepper state: 1 = Add Question, 2 = Question List, 3 = Review & Publish
   const [currentStep, setCurrentStep] = useState(1);
   const [assessmentTitle, setAssessmentTitle] = useState(quizTitle);
   const [quizCategory, setQuizCategory] = useState(defaultCategory);
 
   // Question list state
-  const [questions, setQuestions] = useState(INITIAL_QUESTIONS);
+  const [questions, setQuestions] = useState([]);
 
   // Active question being edited or created
   const [editingQuestionId, setEditingQuestionId] = useState(null);
@@ -74,11 +74,38 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
   const [passingScore, setPassingScore] = useState(40); // percent
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [publishing, setPublishing] = useState(false);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!initialQuiz) return;
+    setAssessmentTitle(initialQuiz.title || quizTitle);
+    setQuizCategory(initialQuiz.category || defaultCategory);
+    setTimeLimit(initialQuiz.duration_minutes || 60);
+    setPassingScore(initialQuiz.total_marks ? Math.round((initialQuiz.pass_marks || 0) / initialQuiz.total_marks * 100) : 40);
+    setQuestions((initialQuiz.questions || []).map((question, index) => ({
+      ...question,
+      id: question.id || index + 1,
+      options: (question.options || []).map((option, optionIndex) => ({
+        text: typeof option === "object" ? option.text : String(option),
+        isCorrect: typeof option === "object" ? Boolean(option.isCorrect) : optionIndex === Number(question.correct_answer),
+      })),
+    })));
+  }, [initialQuiz, quizTitle, defaultCategory]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Calculate totals
   const totalQuestions = questions.length;
   const totalMarks = questions.reduce((acc, q) => acc + (q.marks || 0), 0);
+
+  const addStarterQuestions = (count) => {
+    const starterQuestions = INITIAL_QUESTIONS.slice(0, count).map((question, index) => ({
+      ...question,
+      id: `${Date.now()}-${index}`,
+      options: question.options.map((option) => ({ ...option })),
+    }));
+    setQuestions((current) => [...current, ...starterQuestions]);
+    setCurrentStep(2);
+  };
 
 
   // Handle Option Text Change
@@ -90,9 +117,10 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
 
   // Handle Selecting Correct Answer
   const handleSetCorrectOption = (index) => {
+    const isMultipleCorrect = questionType === "MCQ (Multiple Correct)";
     const updated = options.map((opt, i) => ({
       ...opt,
-      isCorrect: i === index,
+      isCorrect: isMultipleCorrect ? (i === index ? !opt.isCorrect : opt.isCorrect) : i === index,
     }));
     setOptions(updated);
   };
@@ -141,6 +169,14 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
   const handleSaveQuestion = (addNext = false) => {
     if (!questionText.trim()) {
       alert("Please enter question text before saving.");
+      return;
+    }
+    if (options.filter((option) => option.text.trim()).length < 2) {
+      alert("Add at least two answer options.");
+      return;
+    }
+    if (!options.some((option) => option.isCorrect)) {
+      alert("Select at least one correct answer.");
       return;
     }
 
@@ -203,14 +239,32 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
     }
   };
 
+  const goToStep = (step) => {
+    if (step === 2 && questions.length === 0) {
+      alert("Add at least one question before opening the question list.");
+      return;
+    }
+    if (step === 3 && questions.length === 0) {
+      alert("Add at least one question before reviewing the quiz.");
+      return;
+    }
+    if (step === 3 && !assessmentTitle.trim()) {
+      alert("Enter a quiz title before reviewing.");
+      return;
+    }
+    setCurrentStep(step);
+  };
+
   // Publish Quiz
   const handlePublishQuiz = async () => {
+    if (!assessmentTitle.trim()) {
+      alert("Enter a quiz title before publishing.");
+      return;
+    }
     if (questions.length === 0) {
       alert("Please add at least one question before publishing.");
       return;
     }
-
-    setPublishing(true);
 
     const formattedQuestions = questions.map((q) => {
       let correctIdx = 0;
@@ -222,7 +276,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
         id: q.id,
         question: q.question,
         type: q.type || "MCQ (Single Correct)",
-        options: (q.options || []).map((o) => (typeof o === "object" ? o.text : String(o))),
+        options: (q.options || []).filter((o) => (typeof o === "object" ? o.text.trim() : String(o).trim())).map((o) => (typeof o === "object" ? o.text : String(o))),
         correct_answer: correctIdx,
         explanation: q.explanation || "",
         marks: q.marks || 2,
@@ -242,8 +296,14 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
     };
 
     try {
-      await api.post("/assessments", quizPayload);
-      setSuccessMsg(`Quiz "${quizPayload.title}" published successfully to student portal!`);
+      const quizId = initialQuiz?._id || initialQuiz?.id;
+      if (quizId) {
+        await api.put(`/assessments/${quizId}`, quizPayload);
+        setSuccessMsg(`Quiz "${quizPayload.title}" updated successfully!`);
+      } else {
+        await api.post("/assessments", quizPayload);
+        setSuccessMsg(`Quiz "${quizPayload.title}" published successfully to student portal!`);
+      }
     } catch (err) {
       console.warn("Backend API save issue, applying local fallback sync:", err);
       setSuccessMsg(`Quiz "${quizPayload.title}" published locally!`);
@@ -251,10 +311,12 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
 
     // Local Storage synchronization
     const localQuizzes = JSON.parse(localStorage.getItem("kvgce_published_quizzes") || "[]");
-    localQuizzes.unshift({ ...quizPayload, _id: "quiz_" + Date.now(), created_at: new Date().toISOString() });
+    const localQuiz = { ...quizPayload, _id: initialQuiz?._id || "quiz_" + Date.now(), created_at: initialQuiz?.created_at || new Date().toISOString() };
+    const existingIndex = localQuizzes.findIndex((quiz) => quiz._id === localQuiz._id);
+    if (existingIndex >= 0) localQuizzes[existingIndex] = localQuiz;
+    else localQuizzes.unshift(localQuiz);
     localStorage.setItem("kvgce_published_quizzes", JSON.stringify(localQuizzes));
 
-    setPublishing(false);
     setTimeout(() => setSuccessMsg(""), 4000);
 
     if (onPublish) onPublish(quizPayload);
@@ -303,7 +365,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
               ← Back to Dashboard
             </button>
             <button className="btn-solid-blue" onClick={() => setShowPreviewModal(true)}>
-              👁️ Preview Quiz
+              Preview Quiz
             </button>
           </div>
         </div>
@@ -324,7 +386,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
           <div className="stepper-line"></div>
 
           <div className={`stepper-item ${currentStep === 2 ? "active" : currentStep > 2 ? "completed" : ""}`}>
-            <button className="stepper-circle-btn" onClick={() => setCurrentStep(2)}>
+            <button className="stepper-circle-btn" onClick={() => goToStep(2)}>
               2
             </button>
             <span className="stepper-lbl">Question List</span>
@@ -332,7 +394,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
           <div className="stepper-line"></div>
 
           <div className={`stepper-item ${currentStep === 3 ? "active" : ""}`}>
-            <button className="stepper-circle-btn" onClick={() => setCurrentStep(3)}>
+            <button className="stepper-circle-btn" onClick={() => goToStep(3)}>
               3
             </button>
             <span className="stepper-lbl">Review & Publish</span>
@@ -343,6 +405,16 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
         <div className="q-form-center-card">
           {currentStep === 1 && (
             <div className="question-form-workspace">
+              {questions.length === 0 && (
+                <div className="starter-question-box">
+                  <strong>Start faster</strong>
+                  <span>Add 2 or 3 editable sample questions, then customize them.</span>
+                  <div>
+                    <button type="button" className="btn-outline-blue-small" onClick={() => addStarterQuestions(2)}>Add 2 questions</button>
+                    <button type="button" className="btn-outline-blue-small" onClick={() => addStarterQuestions(3)}>Add 3 questions</button>
+                  </div>
+                </div>
+              )}
               {/* Question Type & Marks */}
               <div className="type-marks-row">
                 <div className="form-group-item flex-2">
@@ -418,7 +490,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
                         onClick={() => handleRemoveOption(idx)}
                         title="Remove option"
                       >
-                        🗑️
+                        Remove
                       </button>
                     </div>
                   ))}
@@ -429,7 +501,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
                     + Add Option
                   </button>
                   <button type="button" className="btn-outline-red-small" onClick={handleClearOptions}>
-                    🗑️ Clear Options
+                    Clear options
                   </button>
                 </div>
               </div>
@@ -467,7 +539,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
                   className="btn-solid-blue"
                   onClick={() => handleSaveQuestion(true)}
                 >
-                  Save & Add Next →
+                  Save & create next →
                 </button>
               </div>
             </div>
@@ -485,7 +557,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
                       <span className="q-marks-tag">{q.marks} Marks</span>
                       <div className="q-card-actions">
                         <button className="q-action-icon" onClick={() => handleEditQuestion(q)}>✏️ Edit</button>
-                        <button className="q-action-icon text-red" onClick={() => handleDeleteQuestion(q.id)}>🗑️ Delete</button>
+                        <button className="q-action-icon text-red" onClick={() => handleDeleteQuestion(q.id)}>Delete</button>
                       </div>
                     </div>
                     <p className="q-text-body">{q.question}</p>
@@ -509,7 +581,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
               <div className="review-summary-card">
                 <div className="review-stat-item">
                   <span className="r-lbl">Quiz Name:</span>
-                  <span className="r-val">{quizTitle}</span>
+                  <span className="r-val">{assessmentTitle || "Untitled quiz"}</span>
                 </div>
                 <div className="review-stat-item">
                   <span className="r-lbl">Total Questions:</span>
@@ -594,7 +666,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
                       ✏️
                     </button>
                     <button className="icon-delete-btn" onClick={() => handleDeleteQuestion(q.id)} title="Delete">
-                      🗑️
+                      Remove
                     </button>
                   </div>
                 </div>
@@ -617,7 +689,7 @@ export default function QuizQuestionBuilder({ quizTitle = "Technical Quiz", defa
             )}
 
             {currentStep < 3 ? (
-              <button className="btn-dark-blue" onClick={() => setCurrentStep((prev) => prev + 1)}>
+              <button className="btn-dark-blue" onClick={() => goToStep(currentStep + 1)}>
                 Next: {currentStep === 1 ? "Question List" : "Review Quiz"} →
               </button>
             ) : (

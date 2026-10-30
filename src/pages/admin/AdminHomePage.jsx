@@ -5,8 +5,7 @@ import DashboardOverview from "../../components/DashboardOverview";
 import SingleStudentOverview from "../../components/SingleStudentOverview";
 import TasksCreatedView from "../../components/faculty/TasksCreatedView";
 import AdminFacultyView from "../../components/admin/AdminFacultyView";
-import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
-import CodingProblemBuilder from "../../components/quiz/CodingProblemBuilder";
+import CreationWorkspace from "../../components/quiz/CreationWorkspace";
 import api from "../../services/api";
 import "./AdminHomePage.css";
 
@@ -1035,14 +1034,14 @@ function AdminHomePage({ defaultTab } = {}) {
         {/* TAB: QUIZ BUILDER */}
         {activeTab === "quizBuilder" && (
           <div style={{ marginTop: "1rem" }}>
-            <QuizQuestionBuilder quizTitle="Aptitude & Technical Quiz Editor" onBack={() => setActiveTab("analysis")} />
+            <CreationWorkspace mode="quiz" onDone={() => setActiveTab("analysis")} />
           </div>
         )}
 
         {/* TAB: CODING LAB BUILDER */}
         {activeTab === "codingBuilder" && (
           <div style={{ marginTop: "1rem" }}>
-            <CodingProblemBuilder onBack={() => setActiveTab("analysis")} onPublishSuccess={() => setActiveTab("analysis")} />
+            <CreationWorkspace mode="coding" onDone={() => setActiveTab("analysis")} />
           </div>
         )}
 

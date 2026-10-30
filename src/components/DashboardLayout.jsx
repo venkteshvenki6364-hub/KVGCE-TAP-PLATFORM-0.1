@@ -855,6 +855,16 @@ const DashboardLayout = ({ children, title }) => {
           ),
         },
         {
+          path: "/student/tasks",
+          label: "My Tasks",
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="3" width="16" height="18" rx="2" />
+              <path d="M8 8h8M8 12h8M8 16h5" />
+            </svg>
+          ),
+        },
+        {
           path: "/student/rankings",
           label: "Rankings",
           icon: (

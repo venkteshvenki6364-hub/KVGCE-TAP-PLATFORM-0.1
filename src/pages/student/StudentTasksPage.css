@@ -1,0 +1,151 @@
+.student-tasks-page {
+  padding: 1.5rem;
+  color: #172033;
+}
+
+.student-tasks-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.student-tasks-kicker {
+  margin: 0 0 .35rem;
+  color: #2563eb;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.student-tasks-heading h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.student-tasks-heading p:last-child {
+  margin: .45rem 0 0;
+  color: #64748b;
+}
+
+.student-tasks-refresh,
+.student-task-filters button,
+.student-task-actions button {
+  border: 1px solid #dbe3ef;
+  border-radius: .6rem;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 700;
+  padding: .65rem .9rem;
+}
+
+.student-task-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.student-task-filters button.selected,
+.student-task-actions button.complete {
+  background: #173b73;
+  border-color: #173b73;
+  color: #fff;
+}
+
+.student-task-error {
+  border-radius: .6rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: .75rem 1rem;
+}
+
+.student-task-empty {
+  color: #64748b;
+  padding: 2rem 0;
+}
+
+.student-task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+.student-task-card {
+  display: flex;
+  min-height: 245px;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: .9rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+  padding: 1.1rem;
+}
+
+.student-task-card-top,
+.student-task-meta,
+.student-task-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.student-task-card-top {
+  justify-content: space-between;
+}
+
+.student-task-type,
+.student-task-status {
+  border-radius: 999px;
+  padding: .25rem .55rem;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.student-task-type { background: #eff6ff; color: #1d4ed8; }
+.status-pending { background: #fff7ed; color: #c2410c; }
+.status-in_progress { background: #eef2ff; color: #4338ca; }
+.status-completed { background: #ecfdf5; color: #047857; }
+
+.student-task-card h2 {
+  margin: 1rem 0 .25rem;
+  font-size: 1.1rem;
+}
+
+.student-task-subject,
+.student-task-description {
+  color: #64748b;
+  font-size: .9rem;
+}
+
+.student-task-description {
+  line-height: 1.5;
+  margin: .65rem 0;
+}
+
+.student-task-meta {
+  margin-top: auto;
+  color: #64748b;
+  font-size: .78rem;
+}
+
+.student-task-actions {
+  margin-top: 1rem;
+}
+
+.student-task-actions button:disabled,
+.student-tasks-refresh:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+.student-task-done {
+  color: #047857;
+  font-size: .85rem;
+  font-weight: 800;
+}

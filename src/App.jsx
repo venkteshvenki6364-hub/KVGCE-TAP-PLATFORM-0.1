@@ -17,6 +17,7 @@ import StudentProjectsPage from "./pages/student/StudentProjectsPage";
 import HRInterviewPage from "./pages/student/HRInterviewPage";
 import StudentRankingsPage from "./pages/student/StudentRankingsPage";
 import StudentHistoryPage from "./pages/student/StudentHistoryPage";
+import StudentTasksPage from "./pages/student/StudentTasksPage";
 
 import SingleStudentOverviewPage from "./pages/student/SingleStudentOverviewPage";
 
@@ -195,6 +196,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["student", "admin"]}>
                 <StudentHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/tasks"
+            element={
+              <ProtectedRoute allowedRoles={["student"]}>
+                <StudentTasksPage />
               </ProtectedRoute>
             }
           />

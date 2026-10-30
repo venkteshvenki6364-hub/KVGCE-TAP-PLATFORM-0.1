@@ -4,8 +4,7 @@ import { useLocation } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import SingleStudentOverview from "../../components/SingleStudentOverview";
 import DashboardOverview from "../../components/DashboardOverview";
-import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
-import CodingProblemBuilder from "../../components/quiz/CodingProblemBuilder";
+import CreationWorkspace from "../../components/quiz/CreationWorkspace";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import "./FacultyHomePage.css";
@@ -312,13 +311,13 @@ Date: ${new Date().toLocaleDateString()}`;
 
         {activeTab === "quizBuilder" && (
           <div className="tab-content" style={{ marginTop: "1rem" }}>
-            <QuizQuestionBuilder quizTitle="Technical Quiz" onBack={() => setActiveTab("overview")} />
+            <CreationWorkspace mode="quiz" onDone={() => setActiveTab("overview")} />
           </div>
         )}
 
         {activeTab === "codingBuilder" && (
           <div className="tab-content" style={{ marginTop: "1rem" }}>
-            <CodingProblemBuilder onBack={() => setActiveTab("overview")} onPublishSuccess={() => setActiveTab("overview")} />
+            <CreationWorkspace mode="coding" onDone={() => setActiveTab("overview")} />
           </div>
         )}
 

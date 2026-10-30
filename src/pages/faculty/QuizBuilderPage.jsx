@@ -1,17 +1,10 @@
-import React from "react";
 import DashboardLayout from "../../components/DashboardLayout";
-import QuizQuestionBuilder from "../../components/quiz/QuizQuestionBuilder";
+import CreationWorkspace from "../../components/quiz/CreationWorkspace";
 
-export default function QuizBuilderPage() {
+export default function QuizBuilderPage({ mode = "quiz" }) {
   return (
     <DashboardLayout title="Quiz & Question Builder">
-      <QuizQuestionBuilder
-        quizTitle="Technical Quiz"
-        onBack={() => window.history.back()}
-        onPublish={(quizData) => {
-          console.log("Quiz published:", quizData);
-        }}
-      />
+      <CreationWorkspace mode={mode} />
     </DashboardLayout>
   );
 }

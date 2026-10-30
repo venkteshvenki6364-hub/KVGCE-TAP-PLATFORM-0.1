@@ -41,6 +41,15 @@
   gap: 1rem;
 }
 
+.q-builder-title-row > div:first-child {
+  min-width: 0;
+}
+
+.q-builder-title-row input,
+.q-builder-title-row select {
+  min-width: 0;
+}
+
 .q-builder-main-title {
   font-size: 1.5rem;
   font-weight: 800;
@@ -68,6 +77,83 @@
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.starter-question-box {
+  display: grid;
+  gap: .55rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px dashed #93c5fd;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.starter-question-box span {
+  color: #475569;
+  font-size: .86rem;
+}
+
+.starter-question-box div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.coding-stepper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .65rem;
+  margin-bottom: 1rem;
+}
+
+.coding-stepper button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 700;
+  padding: .7rem;
+}
+
+.coding-stepper button span {
+  display: inline-grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #e2e8f0;
+}
+
+.coding-stepper button.active,
+.coding-stepper button.complete {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.coding-stepper button.active span,
+.coding-stepper button.complete span {
+  background: #2563eb;
+  color: #fff;
+}
+
+.coding-step-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-top: .25rem;
+}
+
+@media (max-width: 700px) {
+  .coding-stepper {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* BUTTON STYLES */
@@ -138,7 +224,7 @@
 /* 2. THREE-COLUMN MAIN GRID */
 .q-builder-main-grid {
   display: grid;
-  grid-template-columns: 140px 1fr 340px;
+  grid-template-columns: 150px minmax(0, 1fr) minmax(280px, 320px);
   gap: 1.25rem;
   align-items: start;
 }
@@ -217,6 +303,7 @@
 
 /* CENTER QUESTION WORKSPACE */
 .q-form-center-card {
+  min-width: 0;
   background: #ffffff;
   border-radius: 14px;
   padding: 1.5rem;
@@ -228,10 +315,12 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .flex-2 { flex: 2; }
 .flex-1 { flex: 1; }
+.type-marks-row .form-group-item { min-width: 180px; }
 
 .form-group-item {
   display: flex;
@@ -317,6 +406,7 @@
 }
 
 .option-row {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -340,6 +430,7 @@
 
 .option-text-input {
   flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
   font-size: 0.9rem;
@@ -357,14 +448,18 @@
 }
 
 .delete-opt-btn {
-  background: transparent;
-  border: none;
+  flex: 0 0 auto;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #b91c1c;
   cursor: pointer;
-  opacity: 0.6;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: .3rem .5rem;
 
   &:hover {
-    opacity: 1;
+    background: #fef2f2;
   }
 }
 
@@ -384,6 +479,11 @@
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+  &:hover {
+    background: #2563eb;
+    color: #fff;
+  }
 }
 
 .btn-outline-red-small {
@@ -395,6 +495,9 @@
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  &:hover {
+    background: #fef2f2;
+  }
 }
 
 .q-form-bottom-actions {
@@ -405,10 +508,12 @@
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
 }
 
 /* RIGHT SUMMARY CARD */
 .q-summary-right-card {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -505,6 +610,8 @@
 }
 
 .q-items-scroll-stack {
+  max-height: 420px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
@@ -616,6 +723,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* FULL VIEW & REVIEW STEPPER STYLES */

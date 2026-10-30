@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../../services/api";
 import "./QuizQuestionBuilder.css";
 
-export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
+export default function CodingProblemBuilder({ initialProblem = null, onBack, onPublishSuccess }) {
   const [title, setTitle] = useState("Sum of Two Numbers");
   const [difficulty, setDifficulty] = useState("Easy");
   const [category, setCategory] = useState("Data Structures");
@@ -34,6 +34,27 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // The builder must hydrate its controlled fields when an existing record is selected.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!initialProblem || typeof initialProblem !== "object") return;
+    setTitle(initialProblem.title || "");
+    setDifficulty(initialProblem.difficulty || "Easy");
+    setCategory(initialProblem.category || "Data Structures");
+    setDescription(initialProblem.description || "");
+    setInputFormat(initialProblem.inputFormat || "");
+    setOutputFormat(initialProblem.outputFormat || "");
+    setConstraints(initialProblem.constraints || "");
+    setExampleInput(initialProblem.exampleInput || "");
+    setExampleOutput(initialProblem.exampleOutput || "");
+    setCppCode(initialProblem.starterCode?.cpp || "");
+    setPythonCode(initialProblem.starterCode?.python || "");
+    setJavaCode(initialProblem.starterCode?.java || "");
+    setJsCode(initialProblem.starterCode?.javascript || "");
+  }, [initialProblem]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handlePublish = async (e) => {
     e.preventDefault();
@@ -65,9 +86,12 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
     };
 
     try {
-      const res = await api.post("/assessments/coding/problems", problemDoc);
+      const problemId = initialProblem?._id || initialProblem?.id;
+      const res = problemId
+        ? await api.put(`/assessments/coding/problems/${problemId}`, problemDoc)
+        : await api.post("/assessments/coding/problems", problemDoc);
       if (res.data && res.data.success) {
-        setMsg("✅ Coding problem published successfully to Student Coding Lab!");
+        setMsg(problemId ? "✅ Coding problem updated successfully!" : "✅ Coding problem published successfully to Student Coding Lab!");
       }
     } catch (err) {
       console.warn("Backend API issue, using local storage sync:", err);
@@ -76,7 +100,10 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
 
     // Always update local storage key kvgce_coding_problems
     const localProbs = JSON.parse(localStorage.getItem("kvgce_coding_problems") || "[]");
-    localProbs.unshift({ ...problemDoc, id: "prob_" + Date.now() });
+    const localProblem = { ...problemDoc, id: initialProblem?._id || initialProblem?.id || "prob_" + Date.now() };
+    const existingIndex = localProbs.findIndex((problem) => problem.id === localProblem.id);
+    if (existingIndex >= 0) localProbs[existingIndex] = localProblem;
+    else localProbs.unshift(localProblem);
     localStorage.setItem("kvgce_coding_problems", JSON.stringify(localProbs));
 
     setSaving(false);
@@ -84,6 +111,18 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
       setMsg("");
       if (onPublishSuccess) onPublishSuccess();
     }, 2500);
+  };
+
+  const goToStep = (step) => {
+    if (step >= 2 && (!title.trim() || !description.trim())) {
+      alert("Complete the problem title and description first.");
+      return;
+    }
+    if (step === 3 && (!exampleInput.trim() || !exampleOutput.trim())) {
+      alert("Add both sample input and sample output before reviewing.");
+      return;
+    }
+    setCurrentStep(step);
   };
 
   return (
@@ -109,7 +148,26 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
 
       {msg && <div className="builder-alert-success" style={{ marginBottom: "1rem" }}>{msg}</div>}
 
+      <div className="coding-stepper" aria-label="Coding problem creation steps">
+        {[
+          ["1", "Problem details"],
+          ["2", "Examples & rules"],
+          ["3", "Starter code & publish"],
+        ].map(([step, label]) => (
+          <button
+            type="button"
+            key={step}
+            className={currentStep === Number(step) ? "active" : currentStep > Number(step) ? "complete" : ""}
+            onClick={() => goToStep(Number(step))}
+          >
+            <span>{step}</span>{label}
+          </button>
+        ))}
+      </div>
+
       <form onSubmit={handlePublish} style={{ display: "grid", gap: "1.2rem", background: "#ffffff", padding: "1.8rem", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+        {currentStep === 1 && (
+          <>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "1rem" }}>
           <div>
             <label className="input-lbl font-bold">Problem Title *</label>
@@ -155,7 +213,11 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
             required
           />
         </div>
+          </>
+        )}
 
+        {currentStep === 2 && (
+          <>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           <div>
             <label className="input-lbl font-bold">Input Format</label>
@@ -210,7 +272,11 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
             />
           </div>
         </div>
+          </>
+        )}
 
+        {currentStep === 3 && (
+          <>
         <hr style={{ margin: "1rem 0", borderColor: "#f1f5f9" }} />
 
         <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#1e293b" }}>Starter Code Templates</h3>
@@ -261,6 +327,12 @@ export default function CodingProblemBuilder({ onBack, onPublishSuccess }) {
         <button type="submit" className="btn-solid-blue" style={{ marginTop: "1rem", padding: "0.9rem", fontSize: "1rem" }} disabled={saving}>
           {saving ? "Publishing Problem..." : "🚀 Publish Problem to Student Coding Lab"}
         </button>
+          </>
+        )}
+        <div className="coding-step-actions">
+          {currentStep > 1 && <button type="button" className="btn-outline-blue" onClick={() => setCurrentStep((step) => step - 1)}>← Previous</button>}
+          {currentStep < 3 && <button type="button" className="btn-dark-blue" onClick={() => goToStep(currentStep + 1)}>Next →</button>}
+        </div>
       </form>
     </div>
   );
